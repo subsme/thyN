@@ -45,8 +45,8 @@ import static com.thyn.backend.datastore.OfyService.ofy;
 @Api(name = "userAPI",
         version = "v1",
         description = "User API",
-        namespace = @ApiNamespace(ownerDomain = "backend.thyn.com",
-                ownerName = "backend.thyn.com",
+        namespace = @ApiNamespace(ownerDomain = "backend.android.thyn.com",
+                ownerName = "backend.android.thyn.com",
                 packagePath=""))
 
 public class UserAPI {

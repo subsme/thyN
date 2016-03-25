@@ -38,8 +38,8 @@ import java.util.ArrayList;
         name = "myTaskApi",
         version = "v1",
         namespace = @ApiNamespace(
-                ownerDomain = "backend.thyn.com",
-                ownerName = "backend.thyn.com",
+                ownerDomain = "backend.android.thyn.com",
+                ownerName = "backend.android.thyn.com",
                 packagePath = ""
         )
 )
