@@ -2,7 +2,7 @@ apply plugin: 'java'
 apply plugin: 'maven'
 
 
-group = 'com.thyn.backend'
+group = 'com.thyn.android.backend'
 archivesBaseName = 'userAPI'
 version = 'v1-1.21.0-SNAPSHOT'
 
