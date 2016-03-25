@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="photogallery.android.bignerdranch.com.thyn">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@android:style/Theme.Holo">
+        <activity android:name=".tasklist.TaskListActivity"></activity>
+        <activity android:name=".tab.MyTaskListActivity"></activity>
+        <activity
+            android:name=".form.view.TaskPagerViewOnlyActivity"
+            android:label="@string/app_name">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".tab.MyTaskListActivity" />
+        </activity>
+        <activity
+            android:name=".form.view.my.MyTaskPagerViewOnlyActivity"
+            android:label="@string/app_name">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".tasklist.my.completed.MyCompletedTaskListActivity" />
+        </activity>
+        <activity
+            android:name=".tasklist.my.completed.MyCompletedTaskListActivity"
+            android:label="@string/app_name">
+        </activity>
+        <activity
+            android:name=".form.TaskActivity"
+            android:label="@string/app_name"
+            android:windowSoftInputMode="stateHidden">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".tasklist.TaskListActivity" />
+        </activity>
+        <activity
+            android:name=".field.AddressActivity"
+            android:label="@string/app_name">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".form.TaskActivity" />
+        </activity>
+        <activity
+            android:name=".user.SignupActivity"
+            android:label="@string/title_activity_signup"
+            android:theme="@style/AppTheme.Bluey">
+        </activity>
+        <activity
+            android:name=".user.LoginActivity"
+            android:label="@string/title_activity_login"
+            android:theme="@style/AppTheme.Bluey">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+    <!-- Header aligned to top -->
+    <RelativeLayout
+        android:id="@+id/header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:background="#1565C0"
+        android:gravity="center" >
+
+        <EditText android:id="@+id/task_description"
+            style="@style/TextWithNoUnderline"
+            android:inputType="textMultiLine"
+            android:paddingTop="40dp"
+            android:hint="Enter description here"/>
+    </RelativeLayout>
+    <!-- Footer aligned to bottom -->
+    <RelativeLayout
+        android:id="@+id/footer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:background="#1565C0"
+        android:gravity="center" >
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:textColor="#000000"
+            android:textSize="20sp" />
+        <Button android:id="@+id/task_done"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:text="Done"
+            style="?android:attr/borderlessButtonStyle"
+            />
+    </RelativeLayout>
+    <!-- Scrollable Content below header and above footer -->
+        <ScrollView
+            android:id="@+id/container"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:layout_above="@id/footer"
+            android:layout_below="@id/header">
+            <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+                <EditText android:id="@+id/task_from"
+                    android:hint="@string/task_from_hint"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:drawableLeft="@android:drawable/ic_menu_mylocation"
+                    android:drawablePadding="16dp"
+                    android:focusableInTouchMode="false"
+                    android:layout_marginLeft="16dp"
+                    android:layout_marginRight="16dp"
+                    android:editable="false"
+                    android:inputType="text"/>
+                <EditText android:id="@+id/task_to"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/task_from"
+                    android:drawableLeft="@android:drawable/ic_menu_mylocation"
+                    android:drawablePadding="16dp"
+                    android:hint="@string/task_to_hint"
+                    android:layout_marginLeft="16dp"
+                    android:layout_marginRight="16dp"
+                    android:inputType="text"/>
+                <TextView
+                    android:id="@+id/taskdatetime_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="When do you need help?"
+                    android:layout_below="@id/task_to"
+                    android:layout_margin="5dp"
+                    android:textColor="#000000"
+                    android:textSize="20sp" />
+                    <Button android:id="@+id/task_time"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_below="@id/taskdatetime_label"
+                        android:layout_alignParentRight="true"
+                        android:layout_marginRight="16dp"
+                        style="?android:attr/borderlessButtonStyle"
+                        />
+                    <Button android:id="@+id/task_date"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_alignParentLeft="true"
+                        android:layout_below="@id/taskdatetime_label"
+                        android:layout_marginLeft="72dp"
+                        style="?android:attr/borderlessButtonStyle"
+                        />
+
+             </RelativeLayout>
+        </ScrollView>
+
+    </RelativeLayout>
