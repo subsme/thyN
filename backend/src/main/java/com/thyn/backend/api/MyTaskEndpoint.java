@@ -3,6 +3,8 @@ package com.thyn.backend.api;
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;
 import com.google.api.server.spi.config.ApiMethod.HttpMethod;
+import com.google.api.server.spi.config.AnnotationBoolean;
+import com.google.api.server.spi.config.ApiAuth;
 import com.google.api.server.spi.config.ApiNamespace;
 import com.google.api.server.spi.config.Nullable;
 import com.google.api.server.spi.response.CollectionResponse;
@@ -12,7 +14,9 @@ import com.google.appengine.api.datastore.QueryResultIterator;
 import com.google.appengine.repackaged.com.google.api.services.datastore.client.DatastoreHelper;
 import com.googlecode.objectify.cmd.Query;
 import com.thyn.backend.entities.MyTask;
+import com.thyn.backend.entities.users.Device;
 import com.thyn.backend.entities.users.User;
+import com.thyn.backend.gcm.GcmSender;
 import com.thyn.backend.utilities.security.SecurityUtilities;
 import com.thyn.backend.utilities.security.ThyNSession;
 
@@ -21,6 +25,8 @@ import java.util.Date;
 
 import javax.inject.Named;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.Cookie;
+import javax.validation.constraints.Null;
 
 import static com.thyn.backend.datastore.OfyService.ofy;
 import com.thyn.backend.datastore.DatastoreHelpers;
@@ -28,7 +34,7 @@ import com.thyn.backend.entities.users.Profile;
 
 import java.util.List;
 import java.util.ArrayList;
-
+import java.text.ParseException;
 
 
 /**
@@ -41,7 +47,8 @@ import java.util.ArrayList;
                 ownerDomain = "backend.android.thyn.com",
                 ownerName = "backend.android.thyn.com",
                 packagePath = ""
-        )
+        ),
+        auth = @ApiAuth(allowCookieAuth = AnnotationBoolean.TRUE)
 )
 public class MyTaskEndpoint {
 
@@ -66,24 +73,38 @@ public class MyTaskEndpoint {
      * @param count The number of tasks
      * @return a list of Tasks
      */
+
     @ApiMethod(name = "listTasks", httpMethod = HttpMethod.GET, path="mytask/list")
     public CollectionResponse<MyTask> listTasks(@Nullable @Named("count") Integer count,
                                                 @Named("helper") Boolean helper,
                                                 @Named("solved") Boolean isSolved,
+                                                @Named("profileId") Long profileID,
                                                 HttpServletRequest req) throws APIErrorException{
-        ThyNSession currentSession = SecurityUtilities.enforceAuthenticationForCurrentAPICall(req);
+  /*      ThyNSession currentSession = SecurityUtilities.enforceAuthenticationForCurrentAPICall(req);
         User sessionUser = currentSession.getSessionUser();
         if(sessionUser == null)
             throw new APIErrorException(401, "UADU01 - Unauthorized.");
 
-        Long profileID = sessionUser.getProfileId();
+        profileID = sessionUser.getProfileId();
+**/
+        Cookie cookies[] = req.getCookies();
+        if(cookies!= null) {
+            for (int i = 0; i < cookies.length; i++) {
+                Cookie c = cookies[i];
+                logger.info("cookies: " + c.getName() + "-" + c.getValue());
+            }
+        }
+
+                logger.info("In listTasks. The profile id is : " + profileID);
         Query<MyTask> query = null;
         if(helper){
+            logger.info("i am in if");
             if(!isSolved) query = ofy().load().type(MyTask.class).filter("helperUserProfileKey",profileID);
             else query = ofy().load().type(MyTask.class).filter("helperUserProfileKey",profileID).filter("isSolved",true);
         }
         else {
-            if(!isSolved) query = ofy().load().type(MyTask.class);
+            logger.info("no i am in else");
+            if(!isSolved) query = ofy().load().type(MyTask.class).filter("helperUserProfileKey ==",null);
             else query = ofy().load().type(MyTask.class).filter("isSolved",true);
         }
         logger.info("The query is : " + query);
@@ -119,14 +140,15 @@ public class MyTaskEndpoint {
      * @return The object to be added.
      */
     @ApiMethod(name = "insertMyTask", httpMethod = HttpMethod.POST)
-    public void insertMyTask(MyTask myTask, HttpServletRequest req) throws ConflictException, APIErrorException{
+    public void insertMyTask(MyTask myTask, @Named("profileID") Long profileID, HttpServletRequest req) throws ConflictException, APIErrorException{
         // TODO: Implement this function
         logger.info("Calling insertMyTask method");
-        ThyNSession currentSession = SecurityUtilities.enforceAuthenticationForCurrentAPICall(req);
+        logger.info("The profile id is : " + profileID);
+  /*      ThyNSession currentSession = SecurityUtilities.enforceAuthenticationForCurrentAPICall(req);
         User sessionUser = currentSession.getSessionUser();
         if(sessionUser == null)
             throw new APIErrorException(401, "UADU01 - Unauthorized.");
-
+*/
         if(myTask.getId() != null){
             if(DatastoreHelpers.tryLoadEntityFromDatastore(MyTask.class,myTask.getId()) != null){
                 throw new ConflictException("Object already exists");
@@ -134,57 +156,102 @@ public class MyTaskEndpoint {
         }
         /* Setting the user name in myTask is Redundant.
         But thats the easy way to get all the task information when TaskListFragment calls the server */
-        Long profileID = sessionUser.getProfileId();
-        Profile prof = DatastoreHelpers.tryLoadEntityFromDatastore(Profile.class,profileID);
+        //Long profileID = sessionUser.getProfileId();
+        Profile prof = DatastoreHelpers.tryLoadEntityFromDatastore(Profile.class, profileID);
         myTask.setUserProfileName(prof.getFirstName()+ " " + prof.getLastName());
         myTask.setCreateDate(new Date().toString());
         ofy().save().entity(myTask).now();
         //myTask.setTaskDescription("Mutating the task description: " + myTask.getTaskDescription());
 
     }
-
-    @ApiMethod(name = "updateTaskHelper", httpMethod = HttpMethod.POST)
-    public void updateTaskHelper(@Named("taskId") Long taskId, HttpServletRequest req) throws APIErrorException
-    {
-        logger.info("Calling updateTaskHelper method. task id is: " + taskId);
-
-        ThyNSession currentSession = SecurityUtilities.enforceAuthenticationForCurrentAPICall(req);
+    /**
+     * This inserts a new <code>MyTask</code> object.
+     *
+     * @param myTask The object to be added.
+     * @return The object to be added.
+     */
+    @ApiMethod(name = "updateMyTask", httpMethod = HttpMethod.POST)
+    public void updateMyTask(MyTask myTask, HttpServletRequest req) throws ParseException, NullPointerException, APIErrorException{
+        // TODO: Implement this function
+        logger.info("Calling updateMyTask method");
+  /*      ThyNSession currentSession = SecurityUtilities.enforceAuthenticationForCurrentAPICall(req);
         User sessionUser = currentSession.getSessionUser();
         if(sessionUser == null)
             throw new APIErrorException(401, "UADU01 - Unauthorized.");
+*/
+        MyTask task = null;
+        if(myTask.getId() != null){
+            task = DatastoreHelpers.tryLoadEntityFromDatastore(MyTask.class,myTask.getId());
+        }
+        if(task == null) throw new NullPointerException("Task object is null");
 
-        Long profileID = sessionUser.getProfileId();
+        task.setTaskDescription(myTask.getTaskDescription());
+        task.setBeginLocation(myTask.getBeginLocation());
+        task.setServiceDate(myTask.getServiceDate());
+        task.setUpdateDate(new Date().toString());
+        DatastoreHelpers.trySaveEntityOnDatastore(task);
+    }
+
+    @ApiMethod(name = "updateTaskHelper", httpMethod = HttpMethod.POST)
+    public void updateTaskHelper(@Named("taskId") Long taskId, @Named("profileID") Long profileID, HttpServletRequest req) throws APIErrorException
+    {
+        logger.info("Calling updateTaskHelper method. task id is: " + taskId);
+        logger.info("The profile id is : " + profileID);
+       /* ThyNSession currentSession = SecurityUtilities.enforceAuthenticationForCurrentAPICall(req);
+        User sessionUser = currentSession.getSessionUser();
+        if(sessionUser == null)
+            throw new APIErrorException(401, "UADU01 - Unauthorized.");
+*/
+      //  Long profileID = sessionUser.getProfileId();
         MyTask mTask = DatastoreHelpers.tryLoadEntityFromDatastore(MyTask.class, taskId);
 
         if(mTask.getHelperUserProfileKey() == null) {
             mTask.setHelperUserProfileKey(profileID);
             logger.info("Saving Task with new helper user profile key");
-            ofy().save().entity(mTask).now();
+            //ofy().save().entity(mTask).now();
+            DatastoreHelpers.trySaveEntityOnDatastore(mTask);
 
+            /* Retrieve the profile */
+            Profile prof = DatastoreHelpers.tryLoadEntityFromDatastore(Profile.class,profileID);
+
+            //Device device = DatastoreHelpers.tryLoadEntityFromDatastore(Device.class, "profile_key ==", profileID.toString());
+            // the above line didnt work because profile_key is Long but the profileID that I was passing is String. So made sure profileID is passed as Long.
+            Device device = ofy().load().type(Device.class).filter("profile_key ==", mTask.getUserProfileKey()).first().get();
+            if(device == null) throw new APIErrorException(500, "UADU03 - Internal Server Error. Can't find the device based on profile id " +  profileID);
+            GcmSender.sendMessageToDeviceGroup(device.getNotification_key(),"Yay! " + prof.getFirstName() + " " + prof.getLastName() + " is interested in helping you.");
         }
         else
         {
-            com.thyn.backend.utilities.Logger.logWarning("Exception while assigning Task to HELPER (" + sessionUser.getId() + ").");
+          //  com.thyn.backend.utilities.Logger.logWarning("Exception while assigning Task to HELPER (" + sessionUser.getId() + ").");
             throw new APIErrorException(500, "UADU02 - Internal Server Error.");
         }
     }
 
     @ApiMethod(name = "markComplete", httpMethod = HttpMethod.POST)
-    public void markComplete(@Named("taskId") Long taskId, HttpServletRequest req) throws APIErrorException
+    public void markComplete(@Named("taskId") Long taskId, @Named("profileID") Long profileID, HttpServletRequest req) throws APIErrorException
     {
         logger.info("Calling markComplete method. task id is: " + taskId);
 
-        ThyNSession currentSession = SecurityUtilities.enforceAuthenticationForCurrentAPICall(req);
+       /* ThyNSession currentSession = SecurityUtilities.enforceAuthenticationForCurrentAPICall(req);
         User sessionUser = currentSession.getSessionUser();
         if(sessionUser == null)
             throw new APIErrorException(401, "UADU01 - Unauthorized.");
-
+*/
         //Long profileID = sessionUser.getProfileId();
         MyTask mTask = DatastoreHelpers.tryLoadEntityFromDatastore(MyTask.class, taskId);
 
         mTask.setIsSolved(true);
         logger.info("Saving Task after the task is complete");
         ofy().save().entity(mTask).now();
+
+        /* Retrieve the profile */
+        Profile prof = DatastoreHelpers.tryLoadEntityFromDatastore(Profile.class,profileID);
+
+        //Device device = DatastoreHelpers.tryLoadEntityFromDatastore(Device.class, "profile_key ==", profileID.toString());
+        // the above line didnt work because profile_key is Long but the profileID that I was passing is String. So made sure profileID is passed as Long.
+        Device device = ofy().load().type(Device.class).filter("profile_key ==", profileID).first().get();
+        if(device == null) throw new APIErrorException(500, "UADU03 - Internal Server Error. Can't find the device based on profile id " +  profileID);
+        GcmSender.sendMessageToDeviceGroup(device.getNotification_key(), "Yay! " + prof.getFirstName() + " " + prof.getLastName() + " has marked the task Complete.");
 
     }
 

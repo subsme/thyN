@@ -34,6 +34,8 @@ import com.thyn.DatePickerFragment;
 import com.thyn.collection.Task;
 import com.thyn.collection.MyTaskLab;
 import com.thyn.TimePickerFragment;
+import com.thyn.common.MyServerSettings;
+import com.thyn.connection.GoogleAPIConnector;
 import com.thyn.field.AddressActivity;
 import com.thyn.field.AddressFragment;
 import com.thyn.user.LoginActivity;
@@ -50,6 +52,8 @@ import com.thyn.android.backend.myTaskApi.model.MyTask;
 
 import java.text.SimpleDateFormat;
 import com.thyn.R;
+import java.text.DateFormat;
+import java.util.TimeZone;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -58,10 +62,12 @@ public class TaskFragment extends Fragment {
     private static final String TAG = "TaskFragment";
     public static final String EXTRA_TASK_ID =
             "com.android.android.thyn.task_id";
+    public static final String OPERATION = "com.android.android.thyn.TaskFragment.Operation";
     private static final int ADDRESS_ACTIVITY_REQUEST_CODE=1;
     private static final int DESCRIPTION_ACTIVITY_REQUEST_CODE=1;
 
     private Task mTask;
+    private String operation;
     private EditText mTaskDescriptionField;
     private EditText mTaskFromAddress;
     private EditText mTaskToAddress;
@@ -76,6 +82,8 @@ public class TaskFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         Long taskID = (Long)getArguments().getSerializable(EXTRA_TASK_ID);
+        operation = (String)getArguments().getSerializable(OPERATION);
+        Log.d(TAG, "The operation is: " + operation);
         mTask = MyTaskLab.get(getActivity()).getTask(taskID);
 //         Log.d(TAG,"Retrieving task id: " + mTask.getId());
         setHasOptionsMenu(true);
@@ -95,9 +103,10 @@ public class TaskFragment extends Fragment {
                 return super.onOptionsItemSelected(item);
         }
     }
-    public static TaskFragment newInstance(Long taskId){
+    public static TaskFragment newInstance(Long taskId, String operation){
         Bundle args = new Bundle();
         args.putSerializable(EXTRA_TASK_ID, taskId);
+        args.putSerializable(OPERATION, operation);
 
         TaskFragment fragment = new TaskFragment();
         fragment.setArguments(args);
@@ -164,6 +173,7 @@ public class TaskFragment extends Fragment {
             }
         });
         mTaskFromAddress    = (EditText)v.findViewById(R.id.task_from);
+        if(mTask != null) mTaskFromAddress.setText(mTask.getBeginLocation());
         mTaskFromAddress.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -173,7 +183,7 @@ public class TaskFragment extends Fragment {
                 startActivityForResult(i, ADDRESS_ACTIVITY_REQUEST_CODE);
             }
         });
-        mTaskToAddress    = (EditText)v.findViewById(R.id.task_to);
+       /* mTaskToAddress    = (EditText)v.findViewById(R.id.task_to);
         mTaskToAddress.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -182,14 +192,18 @@ public class TaskFragment extends Fragment {
                 i.putExtra("t","to");
                 startActivityForResult(i, ADDRESS_ACTIVITY_REQUEST_CODE);
             }
-        });
+        });*/
         mTaskDone = (Button)v.findViewById(R.id.task_done);
         mTaskDone.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 if(NavUtils.getParentActivityName(getActivity()) != null){
                     NavUtils.navigateUpFromSameTask(getActivity());
                     Log.d(TAG, "Done button clicked");
-                    new SendToServerAsyncTask().execute(mTask);
+                    Log.d(TAG, "operation value is: " + operation);
+                    if(operation==null)
+                        new InsertAsyncTask().execute(mTask);
+                    else
+                        new UpdateAsyncTask().execute(mTask);
                 }
             }
         });
@@ -197,11 +211,13 @@ public class TaskFragment extends Fragment {
     }
     private void updateDate(){
         if(mTask.getServiceDate() == null) mTask.setServiceDate(new Date());
+        Log.d(TAG, "In updateDate(). The service date is: " + mTask.getServiceDate());
         SimpleDateFormat sdFormat = new SimpleDateFormat("EEE, MMM d");
         mDateButton.setText(sdFormat.format(mTask.getServiceDate()));
     }
     private void updateTime(){
         if(mTask.getServiceDate() == null) mTask.setServiceDate(new Date());
+        Log.d(TAG, "In updateTime(). The service date is: " + mTask.getServiceDate());
         SimpleDateFormat sdFormat = new SimpleDateFormat("h:mm a");
         mTimeButton.setText(sdFormat.format(mTask.getServiceDate()));
     }
@@ -231,6 +247,7 @@ public class TaskFragment extends Fragment {
         else if(requestCode == REQUEST_DATE){
             Date date = (Date)data
                     .getSerializableExtra(DatePickerFragment.EXTRA_DATE);
+
             mTask.setServiceDate(date);
             updateDate();
         }
@@ -258,38 +275,19 @@ public class TaskFragment extends Fragment {
 
     private static MyTaskApi myApiService = null;
 
-    private class SendToServerAsyncTask extends AsyncTask<Task, Void, Void> {
+    private class InsertAsyncTask extends AsyncTask<Task, String, Void> {
 
 
         @Override
         protected Void doInBackground(Task... params) {
-            if (myApiService == null) {  // Only do this once
-                MyTaskApi.Builder builder = new MyTaskApi.Builder(AndroidHttp.newCompatibleTransport(),
-                        new AndroidJsonFactory(), null)
-                        // options for running against local devappserver
-                        // - 10.0.2.2 is localhost's IP address in Android emulator
-                        // - turn off compression when running against local devappserver
-                        .setRootUrl("http://10.0.2.2:8080/_ah/api/")
-                        .setGoogleClientRequestInitializer(new GoogleClientRequestInitializer() {
-                            @Override
-                            public void initialize(AbstractGoogleClientRequest<?> abstractGoogleClientRequest) throws IOException {
-                                abstractGoogleClientRequest.setDisableGZipContent(true);
-                            }
-                        });
-                // end options for devappserver
-
-                myApiService = builder.build();
-            }
-
-            // context = params[0].first;
-            // String name = params[0].second;
-
             try {
                 MyTask a = copyToEndpointTask(params[0]);
                 //Log.d(TAG, params[0].toString());
                 //a.setTaskDescription("take off homie 2");
                 //return myApiService.replay(2,a).execute().getTaskDescription();
-                myApiService.insertMyTask(a).execute();
+                Long userprofileid = MyServerSettings.getUserProfileId(getActivity());
+                Log.d(TAG, "Sending user profile id:" + userprofileid);
+                GoogleAPIConnector.connect_TaskAPI().insertMyTask(userprofileid, a).execute();
                 //return myApiService2.sayHi("joojoo").execute().getData();
             } catch (IOException e) {
                 e.getMessage();
@@ -306,11 +304,54 @@ public class TaskFragment extends Fragment {
             myTask.setIsSolved(task.isSolved());
             myTask.setWaitResponseTime(task.getmWaitResponseTime());
             myTask.setServiceDate(task.getServiceDate().toString());
+            //DateFormat converter = new SimpleDateFormat("E MMM dd HH:mm:ss z y");
+            //converter.setTimeZone(TimeZone.getTimeZone("GMT"));
+           // myTask.setServiceDate(converter.format(task.getServiceDate()));
+
             myTask.setUserProfileKey(
-                    PreferenceManager
-                            .getDefaultSharedPreferences(getActivity())
-                            .getLong(LoginActivity.PREF_USERPROFILE_ID, -1)
+                    MyServerSettings.getUserProfileId(getActivity())
             );
+            return myTask;
+        }
+    }
+    private class UpdateAsyncTask extends AsyncTask<Task, String, Void> {
+
+
+        @Override
+        protected Void doInBackground(Task... params) {
+            try {
+                MyTask a = copyToEndpointTask(params[0]);
+                //Log.d(TAG, params[0].toString());
+                //a.setTaskDescription("take off homie 2");
+                //return myApiService.replay(2,a).execute().getTaskDescription();
+                //Long userprofileid = MyServerSettings.getUserProfileId(getActivity());
+                Log.d(TAG, "Sending task:" + a.getId());
+                GoogleAPIConnector.connect_TaskAPI().updateMyTask(a).execute();
+                //return myApiService2.sayHi("joojoo").execute().getData();
+            } catch (IOException e) {
+                e.getMessage();
+            }
+            return null;
+        }
+
+
+        private MyTask copyToEndpointTask(Task task){
+            MyTask myTask = new MyTask();
+            /* For update - setting this field is the difference */
+            myTask.setId(task.getId());
+            Log.d(TAG, "Task description: " + task.getTaskDescription());
+            myTask.setTaskDescription(task.getTaskDescription());
+            Log.d(TAG, "Task Begin location: " + task.getBeginLocation());
+            myTask.setBeginLocation(task.getBeginLocation());
+            myTask.setWaitResponseTime(task.getmWaitResponseTime());
+            myTask.setServiceDate(task.getServiceDate().toString());
+            //DateFormat converter = new SimpleDateFormat("E MMM dd HH:mm:ss z y");
+            //converter.setTimeZone(TimeZone.getTimeZone("GMT"));
+            // myTask.setServiceDate(converter.format(task.getServiceDate()));
+
+            /*myTask.setUserProfileKey(
+                    MyServerSettings.getUserProfileId(getActivity())
+            );*/
             return myTask;
         }
     }

@@ -5,7 +5,7 @@
         <servlet-class>com.google.api.server.spi.SystemServiceServlet</servlet-class>
         <init-param>
             <param-name>services</param-name>
-            <param-value>com.thyn.backend.api.MyTaskEndpoint, com.thyn.backend.api.UserAPI</param-value>
+            <param-value>com.thyn.backend.api.MyTaskEndpoint, com.thyn.backend.api.UserAPI, com.thyn.backend.gcm.RegistrationEndpoint, com.thyn.backend.gcm.MessagingEndpoint</param-value>
         </init-param>
     </servlet>
     <servlet-mapping>

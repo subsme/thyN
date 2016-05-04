@@ -9,6 +9,7 @@ import com.thyn.backend.entities.MyTask;
 import com.thyn.backend.utilities.Logger;
 import com.thyn.backend.entities.users.User;
 import com.thyn.backend.entities.users.Profile;
+import com.thyn.backend.entities.users.Device;
 /**
  * Created by subu sundaram on 3/3/16.
  */
@@ -18,7 +19,8 @@ public class OfyService {
         factory().register(MyTask.class);
         factory().register(User.class);
         factory().register(Profile.class);
-        Logger.logWarning("Performed Classes registrations");
+        factory().register(Device.class);
+        Logger.logInfo("Performed Classes registrations");
     }
 
     public static Objectify ofy() {

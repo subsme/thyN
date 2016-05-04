@@ -1,6 +1,7 @@
 package com.thyn.tasklist;
 
 import android.os.AsyncTask;
+import android.preference.PreferenceManager;
 import android.support.v4.app.ListFragment;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -20,10 +21,6 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 
-import com.google.api.client.extensions.android.http.AndroidHttp;
-import com.google.api.client.extensions.android.json.AndroidJsonFactory;
-import com.google.api.client.googleapis.services.AbstractGoogleClientRequest;
-import com.google.api.client.googleapis.services.GoogleClientRequestInitializer;
 import com.thyn.android.backend.myTaskApi.MyTaskApi;
 import com.thyn.android.backend.myTaskApi.model.MyTask;
 
@@ -33,12 +30,16 @@ import java.util.Iterator;
 
 
 import com.thyn.collection.Task;
+import com.thyn.common.MyServerSettings;
+import com.thyn.connection.GoogleAPIConnector;
 import com.thyn.form.TaskActivity;
 import com.thyn.form.TaskFragment;
 import com.thyn.collection.MyTaskLab;
 import com.thyn.form.view.TaskPagerViewOnlyActivity;
 import com.thyn.form.view.TaskPagerViewOnlyFragment;
 import com.thyn.R;
+import com.thyn.user.LoginActivity;
+
 /**
  * Created by shalu on 2/22/16.
  */
@@ -74,7 +75,7 @@ public class TaskListFragment extends ListFragment{
                 MyTaskLab.get(getActivity()).addTask(t);
 
                 Intent i = new Intent(getActivity(), TaskActivity.class);
-                Log.d(TAG,"Adding task id: "+t.getId());
+                //Log.d(TAG,"Adding task id: "+t.getId());
                 i.putExtra(TaskFragment.EXTRA_TASK_ID, t.getId());
                 startActivityForResult(i,0);
                 return true;
@@ -86,10 +87,22 @@ public class TaskListFragment extends ListFragment{
    @Override
    public void onListItemClick(ListView l, View v, int position, long id){
        Task t = ((TaskAdapter)getListAdapter()).getItem(position);
-       Log.d(TAG, "Clicked task id: "+t.getId());
-       Intent i = new Intent(getActivity(), TaskPagerViewOnlyActivity.class);
-       i.putExtra(TaskPagerViewOnlyFragment.EXTRA_TASK_ID, t.getId());
-       startActivity(i);
+      // Log.d(TAG, "Clicked task id: "+t.getId());
+       Long userprofileid = MyServerSettings.getUserProfileId(getActivity());
+       Log.i(TAG, "user profile id is: " + userprofileid);
+       Log.i(TAG, "my profile key is: " + t.getUserProfileKey());
+       if(userprofileid.equals(t.getUserProfileKey())){
+           Log.i(TAG, "The userprofileid and profilekey are the same. This is my task. I created it.");
+           Intent i = new Intent(getActivity(), TaskActivity.class);
+           i.putExtra(TaskFragment.EXTRA_TASK_ID, t.getId());
+           i.putExtra(TaskFragment.OPERATION, "UPDATE");
+           startActivity(i);
+       }
+       else {
+           Intent i = new Intent(getActivity(), TaskPagerViewOnlyActivity.class);
+           i.putExtra(TaskPagerViewOnlyFragment.EXTRA_TASK_ID, t.getId());
+           startActivity(i);
+       }
    }
 
 
@@ -107,7 +120,7 @@ public class TaskListFragment extends ListFragment{
             }
             //Configure the view for this task
             Task t = getItem(position);
-
+            Log.i(TAG, "User profile key is: " + t.getUserProfileKey());
             TextView descTextView = (TextView)convertView.findViewById(R.id.task_list_item_titleTextView);
             descTextView.setText(t.getTaskDescription());
             TextView dateTextView = (TextView)convertView.findViewById(R.id.task_list_item_createDateTextView);
@@ -118,6 +131,11 @@ public class TaskListFragment extends ListFragment{
             userTextView.setText(t.getUserProfileName());
             TextView locationTextView = (TextView)convertView.findViewById(R.id.task_list_item_locationTextView);
             locationTextView.setText(t.getBeginLocation());
+
+            if(t.isAccepted()) {
+                TextView isAcceptedTextView = (TextView) convertView.findViewById(R.id.task_list_item_Is_Accepted);
+                isAcceptedTextView.setText("Accepted");
+            }
             return convertView;
         }
     }
@@ -135,29 +153,10 @@ public class TaskListFragment extends ListFragment{
         @Override
         protected List doInBackground(Void... params) {
             List l = null;
-            if (myApiService == null) {  // Only do this once
-                MyTaskApi.Builder builder = new MyTaskApi.Builder(AndroidHttp.newCompatibleTransport(),
-                        new AndroidJsonFactory(), null)
-                        // options for running against local devappserver
-                        // - 10.0.2.2 is localhost's IP address in Android emulator
-                        // - turn off compression when running against local devappserver
-                        .setRootUrl("http://10.0.2.2:8080/_ah/api/")
-                        .setGoogleClientRequestInitializer(new GoogleClientRequestInitializer() {
-                            @Override
-                            public void initialize(AbstractGoogleClientRequest<?> abstractGoogleClientRequest) throws IOException {
-                                abstractGoogleClientRequest.setDisableGZipContent(true);
-                            }
-                        });
-                // end options for devappserver
-
-                myApiService = builder.build();
-            }
-
-            // context = params[0].first;
-            // String name = params[0].second;
-
             try {
-                l = myApiService.listTasks(false,false).execute().getItems();
+                Long userprofileid = MyServerSettings.getUserProfileId(getActivity());
+                //Log.d(TAG, "Sending user profile id:"+userprofileid);
+                l = GoogleAPIConnector.connect_TaskAPI().listTasks(false,userprofileid,false).execute().getItems();
             } catch (IOException e) {
                  e.getMessage();
             }
@@ -177,6 +176,8 @@ public class TaskListFragment extends ListFragment{
                 Log.d(TAG, "Description: " + myTask.getTaskDescription());
                 Log.d(TAG, "Task create date: " + myTask.getCreateDate());
                 Log.d(TAG, "Task service date: " + myTask.getServiceDate());
+                Log.d(TAG, "Who is going to help this task: " + myTask.getHelperUserProfileKey());
+                Log.d(TAG, "profile key" + myTask.getUserProfileKey());
                 if(myTask.getId() != null) Log.d(TAG, myTask.getId().toString());
                 MyTaskLab.get(getActivity()).convertRemotetoLocalTask(myTask);
             }

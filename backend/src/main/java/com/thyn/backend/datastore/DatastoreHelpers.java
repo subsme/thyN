@@ -87,6 +87,18 @@ public class DatastoreHelpers {
             return null;
         }
     }
+    public final static <T extends EntityObject> T tryLoadEntityFromDatastore(Class<T> classType, String operator, Long value)
+    {
+        try
+        {
+            T entity = ofy().load().type(classType).filter(operator, value).first().get();
+            return entity;
+        }catch(Exception e)
+        {
+            Logger.logError("Exception in tryLoadEntity.", e);
+            return null;
+        }
+    }
 
 
 }

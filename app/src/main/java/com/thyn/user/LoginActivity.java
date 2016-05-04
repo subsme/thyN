@@ -2,6 +2,9 @@ package com.thyn.user;
 
 
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -12,6 +15,7 @@ import android.content.Intent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,24 +29,29 @@ import java.io.IOException;
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 
+import com.thyn.common.MyServerSettings;
 import com.thyn.tab.MyTaskListActivity;
 import com.thyn.connection.GoogleAPIConnector;
 
 import com.thyn.R;
+import com.thyn.broadcast.MainActivity;
+
 
 public class LoginActivity extends AppCompatActivity {
     private static final String TAG = "LoginActivity";
     private static final int REQUEST_SIGNUP = 0;
     APIGeneralResult rslt = null;
     Profile prof = null;
-    public static final String PREF_USERPROFILE_ID = "userProfileID";
-    public static final String PREF_USERPROFILE_NAME = "userProfileName";
+
+
+    private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
 
 
     @InjectView(R.id.input_email) EditText _emailText;
     @InjectView(R.id.input_password) EditText _passwordText;
     @InjectView(R.id.btn_login) Button _loginButton;
     @InjectView(R.id.link_signup) TextView _signupLink;
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -68,6 +77,10 @@ public class LoginActivity extends AppCompatActivity {
                 startActivityForResult(intent, REQUEST_SIGNUP);
             }
         });
+
+        /* initialize the environment and remove any cache */
+        MyServerSettings.initializeEnvironment(getBaseContext());
+
     }
     public void storeUserProfile(){
 
@@ -81,12 +94,10 @@ public class LoginActivity extends AppCompatActivity {
                 String fname = prof.getFirstName();
                 String lname = prof.getLastName()!=null?prof.getLastName().substring(0,1).toUpperCase():null;
                 fname = fname + lname!=null?" " + lname+".":"";
-                Log.d(TAG, "Name extracted is: " + fname + " " + lname+".");
-                PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
-                        .edit()
-                        .putLong(LoginActivity.PREF_USERPROFILE_ID,prof.getId())
-                        .putString(LoginActivity.PREF_USERPROFILE_NAME,fname)
-                        .commit();
+                Log.d(TAG, "Name extracted is: " + fname + " " + lname + ".");
+
+                MyServerSettings.initializeUserProfile(getApplicationContext(), prof.getId(), fname);
+
             }
 
         }
@@ -115,24 +126,29 @@ public class LoginActivity extends AppCompatActivity {
         String password = _passwordText.getText().toString();
 
         // TODO: Implement your own authentication logic here.
-        new SendToServerAsyncTask().execute(email,password);
+        new SendToServerAsyncTask().execute(email, password);
 
         new android.os.Handler().postDelayed(
                 new Runnable() {
                     public void run() {
+                        Log.i(TAG, "Result is: " + rslt);
+                        Log.i(TAG, "Result status code: " + rslt.getStatusCode());
                         // On complete call either onLoginSuccess or onLoginFailed
-                        if( rslt != null && rslt.getStatusCode().equalsIgnoreCase("OK")) {
-                            onLoginSuccess();
-                            //Intent i = new Intent(getBaseContext(), TaskListActivity.class);
-                            Intent i = new Intent(getBaseContext(), MyTaskListActivity.class);
-                            startActivity(i);
+                        // if( rslt != null && rslt.getStatusCode().equalsIgnoreCase("OK")) {
+                        if (rslt != null) {
+                            if (rslt.getStatusCode() != null && Long.parseLong(rslt.getStatusCode()) > 0) {
+                                onLoginSuccess();
 
-                        }
-                        else
+                                Intent i = new Intent(getBaseContext(), MainActivity.class);
+                                startActivity(i);
+                            }
+                            else onLoginFailed();
+
+                        } else
                             onLoginFailed();
                         progressDialog.dismiss();
                     }
-                }, 3000);
+                }, 10000);
     }
 
 
@@ -144,6 +160,7 @@ public class LoginActivity extends AppCompatActivity {
 
                 // TODO: Implement successful signup logic here
                 // By default we just finish the Activity and log them in automatically
+
 
                 this.finish();
             }
@@ -158,6 +175,10 @@ public class LoginActivity extends AppCompatActivity {
 
     public void onLoginSuccess() {
         _loginButton.setEnabled(true);
+
+        //Calling GCM Main Activity class after successfull login.
+        //Log.d(TAG, "Calling GCM Main Activity class after successfull login.");
+        //new StartMainActivityAsyncTask().execute();
         finish();
     }
 
@@ -189,6 +210,7 @@ public class LoginActivity extends AppCompatActivity {
 
         return valid;
     }
+
     private static UserAPI myApiService = null;
 
     private class SendToServerAsyncTask extends AsyncTask<String, Void, Void> {
@@ -211,9 +233,19 @@ public class LoginActivity extends AppCompatActivity {
                     tnlp.setPassword(password);
                     //rslt = myApiService.logonWithThyN(tnlp).execute();
                     rslt = GoogleAPIConnector.connect_UserAPI().logonWithThyN(tnlp).execute();
-                    if (rslt != null) {
-                        //Log.d(TAG, rslt.getMessage());
-                        storeUserProfile();
+                    if (rslt!= null && rslt.getStatusCode() != null) {
+                        //Log.d(TAG, prof.toString());
+                        //storeUserProfile();
+
+                            Log.d(TAG, "Retrieved profile object.");
+
+                           // String fname = prof.getFirstName();
+                           // String lname = prof.getLastName()!=null?prof.getLastName().substring(0,1).toUpperCase():null;
+                           // fname = fname + lname!=null?" " + lname+".":"";
+                           String fname = rslt.getMessage();
+                            Log.d(TAG, "Name extracted is: " + fname );
+                            /* Setting the user profile information retrieved from the server */
+                            MyServerSettings.initializeUserProfile(getApplicationContext(), Long.parseLong(rslt.getStatusCode()), fname);
                     }
 
 
@@ -223,8 +255,6 @@ public class LoginActivity extends AppCompatActivity {
             }
             return null;
         }
-
-
-
     }
+
 }

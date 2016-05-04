@@ -10,7 +10,9 @@ public class TaskActivity extends SingleFragmentActivity {
     protected Fragment createFragment() {
        Long taskID = (Long)getIntent()
                .getSerializableExtra(TaskFragment.EXTRA_TASK_ID);
-       return TaskFragment.newInstance(taskID);
+       String operation = (String)getIntent()
+               .getSerializableExtra(TaskFragment.OPERATION);
+       return TaskFragment.newInstance(taskID,operation);
 
    }
 }

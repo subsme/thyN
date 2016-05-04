@@ -1,12 +1,17 @@
 package com.thyn.backend.api;
 
+import com.google.api.server.spi.config.AnnotationBoolean;
+import com.google.api.server.spi.config.ApiAuth;
 import com.google.api.server.spi.config.ApiMethod;
 import com.google.api.server.spi.config.ApiMethod.HttpMethod;
+
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 
 import com.google.appengine.repackaged.com.google.api.services.datastore.client.Datastore;
 
 
+import com.thyn.backend.gcm.GcmSender;
 import com.thyn.backend.utilities.security.ThyNLogonPackage;
 import com.thyn.backend.utilities.InputValidation;
 import com.thyn.backend.utilities.Logger;
@@ -25,20 +30,18 @@ import com.thyn.backend.WPT.UserRole;
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiNamespace;
 
-import com.google.api.server.spi.response.CollectionResponse;
-import com.google.api.server.spi.config.Nullable;
 
 import com.google.api.server.spi.response.ConflictException;
-import com.google.appengine.api.datastore.Cursor;
-import com.google.appengine.api.datastore.QueryResultIterator;
-import com.googlecode.objectify.cmd.Query;
+
 import javax.inject.Named;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.List;
-import java.util.ArrayList;
+
 import static com.thyn.backend.datastore.OfyService.ofy;
+import com.thyn.backend.entities.users.Device;
 /**
  * Created by subu sundaram on 3/4/16.
  */
@@ -47,7 +50,8 @@ import static com.thyn.backend.datastore.OfyService.ofy;
         description = "User API",
         namespace = @ApiNamespace(ownerDomain = "backend.android.thyn.com",
                 ownerName = "backend.android.thyn.com",
-                packagePath=""))
+                packagePath=""),
+        auth = @ApiAuth(allowCookieAuth = AnnotationBoolean.TRUE))
 
 public class UserAPI {
     static enum RegistrationStatusCode
@@ -82,6 +86,7 @@ public class UserAPI {
     /*TODO: change API in order to accept hashed pwd */
     @ApiMethod(name = "LogonWithThyN", httpMethod = HttpMethod.POST)
     public APIGeneralResult LogonWithThyNUser(ThyNLogonPackage logonPackage, HttpServletRequest req) throws APIErrorException {
+        Logger.logInfo("Calling LogonWithThyN");
         if (!InputValidation.validateEmailAddressInput(logonPackage.getEmail()))
             throw new APIErrorException(400, "UALM01 - Invalid email.");
 
@@ -89,11 +94,16 @@ public class UserAPI {
             throw new APIErrorException(400, "UALM02 - Invalid password.");
 
         User user = null;
+        Profile prof = null;
         try
         {
             user = validateThyNLogin(logonPackage.getEmail(), logonPackage.getPassword());
-            if (user != null)
+            if (user != null) {
                 ThyNSession.SetNewSession(req, user);
+                prof = DatastoreHelpers.tryLoadEntityFromDatastore(Profile.class, user.getProfileId());
+            }
+
+
         }catch(Exception e)
         {
             Logger.logError("UALM03 - Exception while logging user in through thyN logon. Email: " + logonPackage.getEmail() + ". ", e);
@@ -101,9 +111,10 @@ public class UserAPI {
         }
 
         if (user == null)
-            throw new APIErrorException(401, "UALM04 - Invalid credentials.");
+            return new APIGeneralResult(null, "UALM04 - Invalid credentials.");
 
-        return new APIGeneralResult("OK", "User authenticated successfully.");
+
+        return new APIGeneralResult(prof.getId().toString(), prof.getFirstName() + " " + prof.getLastName());
     }
 
     private User validateThyNLogin(String email, String password) throws Exception
@@ -126,27 +137,14 @@ public class UserAPI {
         String email = registerPackage2.getEmail();
         String password = registerPackage2.getPassword();
         String name = registerPackage2.getName();
-        UserRegistrationStatus statusRegistration = tryRegisterNewUser(email,name);
-
+        UserRegistrationStatus statusRegistration = tryRegisterNewUser(email,name, password);
+        Logger.logInfo("In registerNewThynUser");
         switch(statusRegistration.getStatus())
         {
             case OK:
                 User user = DatastoreHelpers.tryGetUserByEmailAddress(email);
-                Profile profile = DatastoreHelpers.tryLoadEntityFromDatastore(Profile.class, user.getProfileId());
-                try {
-                    profile.setPassword(password);
-                }
-                catch(InvalidKeySpecException ikse){
-                    Logger.logError("UACM02 - InvalidKeySpecException while setting the password when registering the user.", ikse);
-                    throw new APIErrorException(500, "UACM02 - Internal Server Error.");
-                }
-                catch(NoSuchAlgorithmException nsae){
-                    Logger.logError("UACM02 - NoSuchAlgorithmException while setting the password when registering the user.", nsae);
-                    throw new APIErrorException(500, "UACM02 - Internal Server Error.");
-                }
-                user.setUserStatus(UserStatus.ACTIVE);
-
-                return new APIGeneralResult("OK", "User registered successfully.");
+                Profile prof = DatastoreHelpers.tryLoadEntityFromDatastore(Profile.class, user.getProfileId());
+                return new APIGeneralResult(prof.getId().toString(), prof.getFirstName() + " " + prof.getLastName());
             case MailAddressAlreadyInUse:
                 throw new APIErrorException(400, "UANM01 - The mail address is already used by another user");
             case InvalidMailAddress:
@@ -157,7 +155,7 @@ public class UserAPI {
         }
     }
     @ApiMethod(name = "completeRegistrationAndLogonThyNUser", httpMethod = HttpMethod.POST)
-    public APIGeneralResult completeRegistrationAndLogonThyNUser(ThyNValidationPackage validationPackage, HttpServletRequest req) throws APIErrorException
+    public Profile completeRegistrationAndLogonThyNUser(ThyNValidationPackage validationPackage, HttpServletRequest req) throws APIErrorException
     {
         String email = validationPackage.getEmail();
         String validationKey = validationPackage.getValidationKey();
@@ -179,7 +177,8 @@ public class UserAPI {
                     user.setUserStatus(UserStatus.ACTIVE);
                     //GravatarHelper.tryUpdateProfileThroughGravatar(user, profile);
                     ThyNSession.SetNewSession(req, user);
-                    return new APIGeneralResult("OK", "User registration completed successfully.");
+                    //return new APIGeneralResult("OK", user.getProfileId().toString());
+                    return profile;
                 }
             }
         }catch(Exception e)
@@ -221,8 +220,52 @@ public class UserAPI {
         return prof;
     }
 
+    @ApiMethod(name = "setGCMRegistrationToken", httpMethod = HttpMethod.POST)
+    public APIGeneralResult setGCMRegistrationToken(HttpServletRequest req, @Named("profileID") Long profileID, @Named("token") String token) throws APIErrorException{
+
+        try{
+            token = URLDecoder.decode(token, "UTF-8");
+        }
+        catch(UnsupportedEncodingException uee){
+            uee.printStackTrace();
+        }
+        Logger.logInfo("token value is: " + token);
+        Logger.logInfo("profileId value is: " + profileID);
+
+       /* ThyNSession currentSession = SecurityUtilities.enforceAuthenticationForCurrentAPICall(req);
+        User sessionUser = currentSession.getSessionUser();
+        if(sessionUser == null)
+            throw new APIErrorException(401, "UADU01 - Unauthorized.");
+*/
+
+        Device device = DatastoreHelpers.tryLoadEntityFromDatastore(Device.class, "registration_token ==", token);
+        if(device != null) {
+            Device device1 = DatastoreHelpers.tryLoadEntityFromDatastore(Device.class, "profile_key ==", profileID);
+            if(device1 != null) return new APIGeneralResult("OK", "Not adding device. This device already added previously");
+            else{
+                device.setProfile_key(profileID);
+                DatastoreHelpers.trySaveEntityOnDatastore(device);
+            }
+        }
+
+        //Profile prof = DatastoreHelpers.tryLoadEntityFromDatastore(Profile.class, sessionUser.getProfileId());
+        /* Retrieve the profile */
+        Profile prof = DatastoreHelpers.tryLoadEntityFromDatastore(Profile.class,profileID);
+        device = new Device(prof.getFirstName(), token, prof.getId());
+
+       // if device creation was successful. Send the device information to GCM
+        if(device.getNotification_key() == null) {
+            String notification_key = GcmSender.createDeviceGroup(device.getNotification_key_name(), token);
+            if(notification_key != null){
+                device.setNotification_key(notification_key);
+                Device.createNewDeviceOnDatastore(device);
+            }
+        }
+        return new APIGeneralResult("OK", "Device sent to GSM API and saved in our database");
+    }
+
     /* Helper class */
-    protected static UserRegistrationStatus tryRegisterNewUser(String email, String name) throws APIErrorException
+    protected static UserRegistrationStatus tryRegisterNewUser(String email, String name, String password) throws APIErrorException
     {
         //Validate input
         if (!InputValidation.validateEmailAddressInput(email))
@@ -244,7 +287,7 @@ public class UserAPI {
 
         try
         {
-            user = User.createNewUserOnDatastore(UserRole.USER, email, name);
+            user = User.createNewUserOnDatastore(UserRole.USER, email, name, password);
             if (user != null)
                 return new UserAPI.UserRegistrationStatus(UserAPI.RegistrationStatusCode.OK, user);
             else
@@ -252,6 +295,13 @@ public class UserAPI {
                 Logger.logWarning("UANU02 - Exception while storing new user. Email: " + email + ".");
                 throw new APIErrorException(500, "UANU02 - Internal Server Error.");
             }
+        }catch(InvalidKeySpecException ikse){
+            Logger.logError("UACM02 - InvalidKeySpecException while setting the password when registering the user.", ikse);
+            throw new APIErrorException(500, "UACM02 - Internal Server Error.");
+        }
+        catch(NoSuchAlgorithmException nsae){
+            Logger.logError("UACM02 - NoSuchAlgorithmException while setting the password when registering the user.", nsae);
+            throw new APIErrorException(500, "UACM02 - Internal Server Error.");
         }catch(Exception e)
         {
             Logger.logError("UANU03 - Exception while creating new user. Email: " + email + ".", e);
@@ -259,6 +309,5 @@ public class UserAPI {
         }
 
     }
-
 
 }

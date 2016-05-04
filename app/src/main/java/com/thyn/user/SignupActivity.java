@@ -30,8 +30,11 @@ import butterknife.InjectView;
 
 import com.thyn.R;
 
-import com.thyn.tasklist.TaskListActivity;
-
+import com.thyn.broadcast.MainActivity;
+import com.thyn.common.MyServerSettings;
+import com.thyn.connection.GoogleAPIConnector;
+import com.thyn.tab.MyTaskListActivity;
+import android.os.HandlerThread;
 public class SignupActivity extends AppCompatActivity {
     private static final String TAG = "SignupActivity";
     APIGeneralResult rslt = null;
@@ -41,6 +44,7 @@ public class SignupActivity extends AppCompatActivity {
     @InjectView(R.id.input_password) EditText _passwordText;
     @InjectView(R.id.btn_signup) Button _signupButton;
     @InjectView(R.id.link_login) TextView _loginLink;
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -87,26 +91,34 @@ public class SignupActivity extends AppCompatActivity {
         // TODO: Implement your own signup logic here.
         new SendToServerAsyncTask().execute(name,email,password);
 
+
         new android.os.Handler().postDelayed(
                 new Runnable() {
                     public void run() {
                         // On complete call either onSignupSuccess or onSignupFailed 
                         // depending on success
-                        if(rslt != null && rslt.getStatusCode().equalsIgnoreCase("OK")) {
+                            Log.d(TAG, "The result object is: " +  rslt);
+                        if(rslt != null){
+                            Log.d(TAG, rslt.getMessage());
+                            Log.d(TAG, rslt.getStatusCode());
+                        }
+                        if(rslt != null && Long.parseLong(rslt.getStatusCode()) > 0 ) {
                             onSignupSuccess();
-                            Intent i = new Intent(getBaseContext(), TaskListActivity.class);
-                            startActivity(i);
                         }
                         else onSignupFailed();
                         progressDialog.dismiss();
                     }
-                }, 3000);
+                }, 10000);
     }
 
 
     public void onSignupSuccess() {
         _signupButton.setEnabled(true);
         setResult(RESULT_OK, null);
+        Log.d(TAG, "Calling GCM MainActivity from registration class");
+        Intent i = new Intent(getBaseContext(), MainActivity.class);
+        startActivity(i);
+
         finish();
     }
 
@@ -146,33 +158,21 @@ public class SignupActivity extends AppCompatActivity {
 
         return valid;
     }
+
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
+        Log.i(TAG, "Background thread destroyed");
+    }
     private static UserAPI myApiService = null;
+
+
 
     private class SendToServerAsyncTask extends AsyncTask<String, Void, Void> {
 
 
         @Override
         protected Void doInBackground(String... params) {
-            if (myApiService == null) {  // Only do this once
-                UserAPI.Builder builder = new UserAPI.Builder(AndroidHttp.newCompatibleTransport(),
-                        new AndroidJsonFactory(), null)
-                        // options for running against local devappserver
-                        // - 10.0.2.2 is localhost's IP address in Android emulator
-                        // - turn off compression when running against local devappserver
-                        .setRootUrl("http://10.0.2.2:8080/_ah/api/")
-                        .setGoogleClientRequestInitializer(new GoogleClientRequestInitializer() {
-                            @Override
-                            public void initialize(AbstractGoogleClientRequest<?> abstractGoogleClientRequest) throws IOException {
-                                abstractGoogleClientRequest.setDisableGZipContent(true);
-                            }
-                        });
-                // end options for devappserver
-
-                myApiService = builder.build();
-            }
-
-            // context = params[0].first;
-            // String name = params[0].second;
 
             try {
                 String name = params[0].toString();
@@ -185,7 +185,13 @@ public class SignupActivity extends AppCompatActivity {
                 tnrp.setEmail(email);
                 tnrp.setName(name);
                 tnrp.setPassword(password);
-                rslt = myApiService.registerNewThyNUser(tnrp).execute();
+                rslt = GoogleAPIConnector.connect_UserAPI().registerNewThyNUser(tnrp).execute();
+                if (rslt != null && rslt.getStatusCode() != null) {
+                    Log.d(TAG, "Retrieved profile object.");
+                    String fname = rslt.getMessage();
+                    Log.d(TAG, "Name extracted is: " + fname );
+                    MyServerSettings.initializeUserProfile(getApplicationContext(), Long.parseLong(rslt.getStatusCode()), fname);
+                }
             } catch (IOException e) {
                 e.getMessage();
             }

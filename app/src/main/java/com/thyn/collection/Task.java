@@ -1,10 +1,13 @@
 package com.thyn.collection;
 
+import java.text.ParseException;
 import java.util.Date;
 import java.util.Calendar;
+import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 /**
  * Created by shalu on 2/22/16.
  */
@@ -19,7 +22,13 @@ public class Task {
     private String mTaskDescription;
     private int mWaitResponseTime;
     private boolean isSolved;
+    private boolean isAccepted;
+
+
+
     private String userProfileName;
+    private Long userProfileKey;
+
 
     public static int DISPLAY_DATE=0;
     public static int DISPLAY_TIME=1;
@@ -28,7 +37,7 @@ public class Task {
 
     public Task(){
         //Generate unique identifier
-        mId = UUID.randomUUID().getLeastSignificantBits();
+        mId = UUID.randomUUID().getMostSignificantBits();
     }
     public void setId(Long id){this.mId = id;}
 
@@ -116,6 +125,8 @@ public class Task {
 
     public void setServiceDate(Date mDate) {
         this.mServiceDate = mDate;
+
+
     }
 
     public String getTaskDescription() {
@@ -139,5 +150,21 @@ public class Task {
         return len > 40?mTaskDescription.substring(0,len-3)+"...":mTaskDescription;
     }
 
+    public boolean isAccepted() {
+        return isAccepted;
+    }
+
+    public void setIsAccepted(boolean isAccepted) {
+        this.isAccepted = isAccepted;
+    }
+
+
+    public Long getUserProfileKey() {
+        return userProfileKey;
+    }
+
+    public void setUserProfileKey(Long userProfileKey) {
+        this.userProfileKey = userProfileKey;
+    }
 
 }

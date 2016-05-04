@@ -34,7 +34,7 @@ public class SecurityUtilities {
         if (password == null || password.trim().length() == 0)
             throw new IllegalArgumentException("Password is null or is empty.");
 
-        SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
+        SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
         KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 256);
         SecretKey key = factory.generateSecret(spec);
         return new String(Base64.encodeBase64(key.getEncoded()));

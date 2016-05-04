@@ -27,6 +27,11 @@ public class Profile extends EntityObject{
 
     private  String firstName;
     private  String lastName;
+    private Profile(){}
+    public Profile(String firstName, String lastName){
+        this.firstName  = firstName;
+        this.lastName   = lastName;
+    }
 
     public  String getLastName() {
         return lastName;
@@ -46,9 +51,9 @@ public class Profile extends EntityObject{
 
 
 
-    public static Profile createNewProfileOnDatastore()
+    public static Profile createNewProfileOnDatastore(String firstName, String lastName)
     {
-        Profile prof = new Profile();
+        Profile prof = new Profile(firstName, lastName);
         if (DatastoreHelpers.trySaveEntityOnDatastore(prof) != null)
             return prof;
         return null;

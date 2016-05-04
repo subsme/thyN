@@ -2,12 +2,20 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
-<TextView
+    <TextView
+        android:id="@+id/task_list_item_Is_Accepted"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Not Accepted"
+        android:textColor="#C5CAE9"
+        android:layout_alignParentRight="true"
+        android:paddingLeft="4dp"
+        android:paddingRight="4dp" />
+    <TextView
         android:id="@+id/task_list_item_User"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
+        android:layout_toLeftOf="@id/task_list_item_Is_Accepted"
         android:textColor="#000000"
         android:textSize="20dp"
         android:paddingLeft="4dp"

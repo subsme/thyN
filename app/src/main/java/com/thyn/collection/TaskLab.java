@@ -46,6 +46,7 @@ public class TaskLab {
         a.setBeginLocation(t.getBeginLocation());
         a.setTaskDescription(t.getTaskDescription());
         a.setUserProfileName(t.getUserProfileName());
+        a.setUserProfileKey(t.getUserProfileKey());
         SimpleDateFormat sdFormat = new SimpleDateFormat("E MMM dd HH:mm:ss z y");
         try {
             a.setCreateDate(sdFormat.parse(t.getCreateDate()));
@@ -54,6 +55,12 @@ public class TaskLab {
         catch(ParseException e){
             e.printStackTrace();
         }
-        addTask(a);
+       if(t.getHelperUserProfileKey() != null){
+           a.setIsAccepted(true);
+       }
+       else
+           a.setIsAccepted(false);
+
+       addTask(a);
     }
 }

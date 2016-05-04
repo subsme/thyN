@@ -5,17 +5,20 @@ import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Index;
 import com.thyn.backend.WPT.UserRole;
 import com.thyn.backend.entities.EntityObject;
+import com.thyn.backend.utilities.Logger;
 import com.thyn.backend.utilities.security.LoginType;
 import com.thyn.backend.WPT.UserStatus;
 import com.thyn.backend.datastore.DatastoreHelpers;
 
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.Date;
 
 /**
  * Created by shalu on 3/4/16.
  */
 @Entity
-@Cache
 public class User extends EntityObject{
     @Index private String email;
     private Date creationTime;
@@ -25,11 +28,11 @@ public class User extends EntityObject{
     private UserRole userRole;
     private UserStatus userStatus;
 
-    public static User createNewUserOnDatastore(UserRole userRole, String email, String name){
-        return createNewUserOnDatastore(userRole, email, name, null, LoginType.thyN);
+    public static User createNewUserOnDatastore(UserRole userRole, String email, String name, String password) throws NoSuchAlgorithmException, InvalidKeySpecException{
+        return createNewUserOnDatastore(userRole, email, name, null, LoginType.thyN, password);
     }
-    public static User createNewUserOnDatastore(UserRole userRole, String email, String name, String externalUserId, LoginType lType){
-        User user = new User(userRole, email, name);
+    public static User createNewUserOnDatastore(UserRole userRole, String email, String name, String externalUserId, LoginType lType, String password) throws NoSuchAlgorithmException, InvalidKeySpecException{
+        User user = new User(userRole, email, name, password);
         switch(lType)
         {
             case Facebook:
@@ -42,30 +45,33 @@ public class User extends EntityObject{
             return user;
         return null;
     }
-    public static boolean deleteUserFromDatastore(UserRole userRole, String email, String name){
+  /*  public static boolean deleteUserFromDatastore(UserRole userRole, String email, String name){
         User user = new User(userRole, email, name);
         return DatastoreHelpers.removeEntityFromDatastore(user);
 
-    }
+    }*/
 
     private User(){}
 
-    private User(UserRole userRole, String email, String name){
+    private User(UserRole userRole, String email, String name, String password) throws NoSuchAlgorithmException, InvalidKeySpecException{
         this.userRole = userRole;
         this.email = email;
-        this.userStatus = UserStatus.REGISTERED;
+        this.userStatus = UserStatus.ACTIVE;
         //this.displayName = name;
         this.creationTime = new Date();
-        Profile prof = Profile.createNewProfileOnDatastore();
-        this.profileKey = prof.getId();
+        String firstName = name;
+        String lastName = null;
         if(name.trim().contains(" ")){
-            prof.setFirstName(name.substring(0,name.indexOf(" ")));
-            prof.setLastName(name.substring(name.indexOf(" ")));
+            firstName = name.substring(0,name.indexOf(" "));
+            lastName =  name.substring(name.indexOf(" "));
         }
-        else{
-            prof.setFirstName(name);
-            prof.setLastName(null);
-        }
+
+        Profile prof = Profile.createNewProfileOnDatastore(firstName, lastName);
+        this.profileKey = prof.getId();
+
+        prof.setPassword(password);
+
+
 
     }
     @Override

@@ -3,6 +3,8 @@ package com.thyn.tasklist.my.completed;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -26,6 +28,8 @@ import java.util.List;
 
 
 import com.thyn.collection.Task;
+import com.thyn.common.MyServerSettings;
+import com.thyn.connection.GoogleAPIConnector;
 import com.thyn.form.TaskActivity;
 import com.thyn.form.TaskFragment;
 import com.thyn.collection.MyCompletedTaskLab;
@@ -34,6 +38,8 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v4.app.Fragment;
 import com.thyn.R;
+import com.thyn.user.LoginActivity;
+
 /**
  * Created by shalu on 2/22/16.
  */
@@ -147,25 +153,11 @@ public class MyCompletedTaskListFragment extends Fragment{
         @Override
         protected List doInBackground(Void... params) {
             List l = null;
-            if (myApiService == null) {  // Only do this once
-                MyTaskApi.Builder builder = new MyTaskApi.Builder(AndroidHttp.newCompatibleTransport(),
-                        new AndroidJsonFactory(), null)
-                        // options for running against local devappserver
-                        // - 10.0.2.2 is localhost's IP address in Android emulator
-                        // - turn off compression when running against local devappserver
-                        .setRootUrl("http://10.0.2.2:8080/_ah/api/")
-                        .setGoogleClientRequestInitializer(new GoogleClientRequestInitializer() {
-                            @Override
-                            public void initialize(AbstractGoogleClientRequest<?> abstractGoogleClientRequest) throws IOException {
-                                abstractGoogleClientRequest.setDisableGZipContent(true);
-                            }
-                        });
-
-                myApiService = builder.build();
-            }
 
             try {
-                l = myApiService.listTasks(false,true).execute().getItems();
+                Long userprofileid = MyServerSettings.getUserProfileId(getActivity());
+                Log.d(TAG, "Sending user profile id:" + userprofileid);
+                l = GoogleAPIConnector.connect_TaskAPI().listTasks(false, userprofileid, true).execute().getItems();
             } catch (IOException e) {
                  e.getMessage();
             }

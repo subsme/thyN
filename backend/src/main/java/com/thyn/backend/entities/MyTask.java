@@ -1,17 +1,11 @@
 package com.thyn.backend.entities;
 
 import java.text.ParseException;
-import java.util.Calendar;
-import java.util.Date;
-import java.text.DateFormat;
-import java.util.UUID;
+
 
 import com.googlecode.objectify.annotation.Entity;
-import com.googlecode.objectify.annotation.Id;
 import com.googlecode.objectify.annotation.Index;
-import com.googlecode.objectify.annotation.Load;
-import com.googlecode.objectify.Ref;
-import com.thyn.backend.entities.users.Profile;
+
 /**
  * Created by subu sundaram on 3/2/16.
  */
@@ -22,12 +16,13 @@ public class MyTask extends EntityObject{
     private String mEndLocation;
     private String mServiceDate;
     private String mCreateDate;
+    private String mUpdateDate;
     private String mTaskDescription;
     private int mWaitResponseTime;
     @Index
     private boolean isSolved;
-    @Index
-    private Long userProfileKey;
+   @Index
+   private Long userProfileKey;
     private String userProfileName;
     @Index
     private Long helperUserProfileKey;
@@ -117,5 +112,12 @@ public class MyTask extends EntityObject{
 
     public void setCreateDate(String mCreateDate) {
         this.mCreateDate = mCreateDate;
+    }
+    public String getUpdateDate() {
+        return mUpdateDate;
+    }
+
+    public void setUpdateDate(String mUpdateDate) {
+        this.mUpdateDate = mUpdateDate;
     }
 }

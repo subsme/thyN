@@ -24,6 +24,7 @@ import java.io.IOException;
 
 import com.thyn.collection.Task;
 import com.thyn.collection.MyPersonalTaskLab;
+import com.thyn.common.MyServerSettings;
 import com.thyn.connection.GoogleAPIConnector;
 import com.thyn.user.LoginActivity;
 import com.thyn.tab.MyTaskListActivity;
@@ -127,8 +128,7 @@ public class MyTaskViewOnlyFragment extends Fragment {
         if (resultCode == Activity.RESULT_OK) {
             Log.d(LOG_TAG, "RESULT is OK");
 
-            Long userprofileid = PreferenceManager.getDefaultSharedPreferences(getActivity())
-                    .getLong(LoginActivity.PREF_USERPROFILE_ID, -1);
+            Long userprofileid = MyServerSettings.getUserProfileId(getActivity());
             Log.d(LOG_TAG, "User profile id is: " + userprofileid.toString());
             Log.d(LOG_TAG, "TAsk id is: " + mTask.getId());
             new SendToServerAsyncTask().execute(mTask);
@@ -144,7 +144,8 @@ public class MyTaskViewOnlyFragment extends Fragment {
         protected String doInBackground(Task... params) {
             try {
                 Log.d(LOG_TAG, "Calling updateTaskHelper with TaskId: " + mTask.getId());
-                GoogleAPIConnector.connect_TaskAPI().markComplete(mTask.getId()).execute();
+                Long userprofileid = MyServerSettings.getUserProfileId(getActivity());
+                GoogleAPIConnector.connect_TaskAPI().markComplete(mTask.getId(),userprofileid).execute();
             }
             catch(IOException ioe){
                 ioe.printStackTrace();

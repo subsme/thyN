@@ -25,6 +25,7 @@ import java.io.IOException;
 
 import com.thyn.collection.Task;
 import com.thyn.collection.MyTaskLab;
+import com.thyn.common.MyServerSettings;
 import com.thyn.connection.GoogleAPIConnector;
 import com.thyn.tab.MyTaskListActivity;
 import com.thyn.user.LoginActivity;
@@ -104,10 +105,10 @@ public class TaskPagerViewOnlyFragment extends Fragment {
         mTaskDescriptionField.setText(mTask.getTaskDescription());
         mTaskServiceDateField.setText(mTask.getDateReadableFormat(Task.DISPLAY_DATE_TIME,mTask.getServiceDate()));
         mTaskCreateDateField.setText(mTask.getDateReadableFormat());
-
-        mButton = (Button) v.findViewById(R.id.task_accept);
-        mButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
+        if(!mTask.isAccepted()) {//Only the tasks that aren't accepted will show a Accept button.
+            mButton = (Button) v.findViewById(R.id.task_accept);
+            mButton.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
 
 
                 /*if (NavUtils.getParentActivityName(getActivity()) != null) {
@@ -120,8 +121,9 @@ public class TaskPagerViewOnlyFragment extends Fragment {
                     dialog.setTargetFragment(TaskPagerViewOnlyFragment.this, 0);
                     dialog.show(fm, DIALOG_ACCEPT_TASK);
 
-            }
-        });
+                }
+            });
+        }
         return v;
     }
 
@@ -130,8 +132,7 @@ public class TaskPagerViewOnlyFragment extends Fragment {
         if (resultCode == Activity.RESULT_OK) {
             Log.d(LOG_TAG, "RESULT is OK");
 
-            Long userprofileid = PreferenceManager.getDefaultSharedPreferences(getActivity())
-                    .getLong(LoginActivity.PREF_USERPROFILE_ID, -1);
+            Long userprofileid = MyServerSettings.getUserProfileId(getActivity());
             Log.d(LOG_TAG, "User profile id is: " + userprofileid.toString());
             Log.d(LOG_TAG, "TAsk id is: " + mTask.getId());
             new SendToServerAsyncTask().execute(mTask);
@@ -149,7 +150,9 @@ public class TaskPagerViewOnlyFragment extends Fragment {
         protected String doInBackground(Task... params) {
             try {
                 Log.d(LOG_TAG, "Calling updateTaskHelper with TaskId: "+ mTask.getId());
-                GoogleAPIConnector.connect_TaskAPI().updateTaskHelper(mTask.getId()).execute();
+                Long userprofileid = MyServerSettings.getUserProfileId(getActivity());
+                Log.d(LOG_TAG, "Sending user profile id:"+userprofileid);
+                GoogleAPIConnector.connect_TaskAPI().updateTaskHelper(mTask.getId(),userprofileid).execute();
 
 
             }
