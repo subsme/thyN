@@ -23,16 +23,22 @@ public class Task {
     private int mWaitResponseTime;
     private boolean isSolved;
     private boolean isAccepted;
-
-
-
     private String userProfileName;
     private Long userProfileKey;
-
+    private String helperProfileName;
 
     public static int DISPLAY_DATE=0;
     public static int DISPLAY_TIME=1;
     public static int DISPLAY_DATE_TIME=2;
+
+
+    public String getHelperProfileName() {
+        return helperProfileName;
+    }
+
+    public void setHelperProfileName(String helperProfileName) {
+        this.helperProfileName = helperProfileName;
+    }
 
 
     public Task(){
@@ -108,12 +114,12 @@ public class Task {
         Date currentDate = new Date();
         long duration  = currentDate.getTime() - mCreateDate.getTime();
         long diffInMinutes = TimeUnit.MILLISECONDS.toMinutes(duration);
-        if(diffInMinutes < 60) return diffInMinutes +  " mins ago";
-        else if(diffInMinutes/60 < 2) return diffInMinutes/60 + " hour ago";
-        else if(diffInMinutes/60 < 24) return diffInMinutes/60 + " hours ago";
-        else if(diffInMinutes/(60*24) < 2) return diffInMinutes/(60*24) + " day ago";
-        else if(diffInMinutes/(60*24) < 30) return diffInMinutes/(60*24) + " days ago";
-        return (String)android.text.format.DateFormat.format("EEE, MMM d", mCreateDate);
+        if(diffInMinutes < 60) return diffInMinutes +  "Min AGO";
+        else if(diffInMinutes/60 < 2) return diffInMinutes/60 + "H AGO";
+        else if(diffInMinutes/60 < 24) return diffInMinutes/60 + "H AGO";
+        else if(diffInMinutes/(60*24) < 2) return diffInMinutes/(60*24) + "D AGO";
+        return diffInMinutes/(60*24) + "D AGO";
+        //return (String)android.text.format.DateFormat.format("EEE, MMM d", mCreateDate);
 
     }
 

@@ -33,7 +33,7 @@ import android.widget.TextView;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.thyn.common.MyServerSettings;
-import com.thyn.tab.MyTaskListActivity;
+import com.thyn.tab.WelcomePageActivity;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -63,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
                 if (sentToken) {
                     //mInformationTextView.setText(getString(R.string.gcm_send_message));
                     Log.d(TAG, "The token has already been sent to the server. Starting MyTaskListActivity.class");
-                    Intent i = new Intent(getBaseContext(), MyTaskListActivity.class);
+                    Intent i = new Intent(getBaseContext(), WelcomePageActivity.class);
                     startActivity(i);
                 } else {
                     //mInformationTextView.setText(getString(R.string.token_error_message));

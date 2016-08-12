@@ -18,6 +18,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import android.widget.Button;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import java.io.IOException;
@@ -27,9 +28,12 @@ import com.thyn.collection.Task;
 import com.thyn.collection.MyTaskLab;
 import com.thyn.common.MyServerSettings;
 import com.thyn.connection.GoogleAPIConnector;
-import com.thyn.tab.MyTaskListActivity;
-import com.thyn.user.LoginActivity;
+
+
 import com.thyn.R;
+import com.thyn.tab.WelcomePageActivity;
+
+import android.widget.LinearLayout;
 /**
  * A placeholder fragment containing a simple view.
  */
@@ -88,11 +92,12 @@ public class TaskPagerViewOnlyFragment extends Fragment {
                              Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_task_viewmode, container, false);
 
+        /* Subu - I am not going to go back from the action bar. There is a different button to click to go back to dashboar.d
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
             if (NavUtils.getParentActivityName(getActivity()) != null) {
                 getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
             }
-        }
+        }*/
 
         mTaskUserField          =   (TextView)v.findViewById(R.id.task_user);
         mTaskLocationField      =   (TextView)v.findViewById(R.id.task_from_location);
@@ -103,24 +108,39 @@ public class TaskPagerViewOnlyFragment extends Fragment {
         mTaskUserField.setText(mTask.getUserProfileName());
         mTaskLocationField.setText(mTask.getBeginLocation());
         mTaskDescriptionField.setText(mTask.getTaskDescription());
-        mTaskServiceDateField.setText(mTask.getDateReadableFormat(Task.DISPLAY_DATE_TIME,mTask.getServiceDate()));
+        mTaskServiceDateField.setText(mTask.getDateReadableFormat(Task.DISPLAY_DATE_TIME, mTask.getServiceDate()));
         mTaskCreateDateField.setText(mTask.getDateReadableFormat());
+        Log.d(LOG_TAG, "task description is: " + mTask.getTaskDescription());
+        Log.d(LOG_TAG, "isAccepted is " +mTask.isAccepted());
         if(!mTask.isAccepted()) {//Only the tasks that aren't accepted will show a Accept button.
-            mButton = (Button) v.findViewById(R.id.task_accept);
+           /* mButton = (Button) v.findViewById(R.id.task_accept);
             mButton.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
 
-
-                /*if (NavUtils.getParentActivityName(getActivity()) != null) {
-
-                    NavUtils.navigateUpFromSameTask(getActivity());
-                */
                     Log.d(LOG_TAG, "Accept button clicked. Task descr: " + mTask.getTaskDescription());
                     FragmentManager fm = getActivity().getSupportFragmentManager();
                     AcceptTaskDialogFragment dialog = AcceptTaskDialogFragment.newInstance(mTask.getTaskDescription());
                     dialog.setTargetFragment(TaskPagerViewOnlyFragment.this, 0);
                     dialog.show(fm, DIALOG_ACCEPT_TASK);
 
+                }
+            });*/
+            LinearLayout lm = (LinearLayout) v.findViewById(R.id.linear_layout_task_view);
+            if(lm == null) Log.d(LOG_TAG,"Linearlayout is null");
+                    // create the layout params that will be used to define how your
+            // button will be displayed
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            Button btn = new Button(getActivity());
+            btn.setText("Accept");
+            lm.addView(btn, params);
+            btn.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    Log.d(LOG_TAG, "Accept button clicked. Task descr: " + mTask.getTaskDescription());
+                    FragmentManager fm = getActivity().getSupportFragmentManager();
+                    AcceptTaskDialogFragment dialog = AcceptTaskDialogFragment.newInstance(mTask.getTaskDescription());
+                    dialog.setTargetFragment(TaskPagerViewOnlyFragment.this, 0);
+                    dialog.show(fm, DIALOG_ACCEPT_TASK);
                 }
             });
         }
@@ -136,7 +156,7 @@ public class TaskPagerViewOnlyFragment extends Fragment {
             Log.d(LOG_TAG, "User profile id is: " + userprofileid.toString());
             Log.d(LOG_TAG, "TAsk id is: " + mTask.getId());
             new SendToServerAsyncTask().execute(mTask);
-            Intent i = new Intent(getActivity(), MyTaskListActivity.class);
+            Intent i = new Intent(getActivity(), WelcomePageActivity.class);
             i.putExtra("TAB","2");
             startActivity(i);
         } else Log.d(LOG_TAG, "RESult is CANCEL");

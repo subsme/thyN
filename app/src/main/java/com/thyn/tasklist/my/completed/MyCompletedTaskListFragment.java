@@ -94,8 +94,6 @@ public class MyCompletedTaskListFragment extends Fragment{
         public TaskHolder(View itemView){
             super(itemView);
             itemView.setOnClickListener(this);
-            mSolvedCheckBox = (CheckBox) itemView
-                    .findViewById(R.id.task_list_item_solvedCheckBox);
             descTextView = (TextView)itemView.findViewById(R.id.task_list_item_titleTextView);
             dateTextView = (TextView)itemView.findViewById(R.id.task_list_item_createDateTextView);
             timeTextView = (TextView)itemView.findViewById(R.id.task_list_item_serviceDateTextView);
@@ -107,7 +105,7 @@ public class MyCompletedTaskListFragment extends Fragment{
             //mSolvedCheckBox.setChecked(task.isSolved());
             descTextView.setText(task.getTaskDescription());
             if(task.getCreateDate()!=null) dateTextView.setText(task.getDateReadableFormat());
-            if(task.getCreateDate()!=null) timeTextView.setText(android.text.format.DateFormat.format("EEE, MMM d h:mm a", task.getServiceDate()));
+//            if(task.getCreateDate()!=null) timeTextView.setText(android.text.format.DateFormat.format("EEE, MMM d h:mm a", task.getServiceDate()));
             locationTextView.setText(task.getBeginLocation());
             userTextView.setText(task.getUserProfileName());
         }

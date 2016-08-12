@@ -27,7 +27,7 @@ import com.thyn.collection.MyPersonalTaskLab;
 import com.thyn.common.MyServerSettings;
 import com.thyn.connection.GoogleAPIConnector;
 import com.thyn.user.LoginActivity;
-import com.thyn.tab.MyTaskListActivity;
+import com.thyn.tab.WelcomePageActivity;
 import com.thyn.R;
 /**
  * A placeholder fragment containing a simple view.
@@ -86,11 +86,12 @@ public class MyTaskViewOnlyFragment extends Fragment {
                              Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.my_fragment_task_viewmode, container, false);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+      /*  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
             if (NavUtils.getParentActivityName(getActivity()) != null) {
                 getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
             }
         }
+        */
 
         mTaskUserField          =   (TextView)v.findViewById(R.id.task_user);
         mTaskLocationField      =   (TextView)v.findViewById(R.id.task_from_location);
@@ -132,7 +133,7 @@ public class MyTaskViewOnlyFragment extends Fragment {
             Log.d(LOG_TAG, "User profile id is: " + userprofileid.toString());
             Log.d(LOG_TAG, "TAsk id is: " + mTask.getId());
             new SendToServerAsyncTask().execute(mTask);
-            Intent i = new Intent(getActivity(), MyTaskListActivity.class);
+            Intent i = new Intent(getActivity(), WelcomePageActivity.class);
             i.putExtra("TAB","3");
             startActivity(i);
         } else Log.d(LOG_TAG, "RESult is CANCEL");

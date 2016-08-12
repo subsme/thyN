@@ -1,6 +1,8 @@
 package com.thyn.tasklist.my;
 
+import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -13,6 +15,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.CursorAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -33,6 +36,7 @@ import com.thyn.collection.MyPersonalTaskLab;
 import com.thyn.collection.Task;
 import com.thyn.common.MyServerSettings;
 import com.thyn.connection.GoogleAPIConnector;
+import com.thyn.db.thynTaskDBHelper;
 import com.thyn.form.TaskActivity;
 import com.thyn.form.view.my.MyTaskViewOnlyFragment;
 import com.thyn.form.TaskFragment;
@@ -46,12 +50,30 @@ import com.thyn.user.LoginActivity;
 public class MyTaskListFragment extends ListFragment{
     private static final String TAG = "MyTaskListFragment";
     private ArrayList<Task> mTasks;
+    public static final String SHOW_ENTIRE_SCREEN =
+            "com.thyn.tasklist.my.MyTaskListFragment.NumItems";
+
+    boolean showEntireScreen;
+
+    public static final MyTaskListFragment newInstance(boolean showEntireScreen){
+        MyTaskListFragment tlf = new MyTaskListFragment();
+        Bundle bundle = new Bundle();
+        bundle.putBoolean(SHOW_ENTIRE_SCREEN, showEntireScreen);
+        tlf.setArguments(bundle);
+        return tlf;
+    }
     @Override
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
         getActivity().setTitle(R.string.task_title);
-        Log.d(TAG," in onCreate");
+        Log.d(TAG, " in onCreate");
+
+        showEntireScreen = false;
+        Bundle arguments = getArguments();
+        if(arguments != null && arguments.containsKey(SHOW_ENTIRE_SCREEN)) {
+            showEntireScreen = arguments.getBoolean(SHOW_ENTIRE_SCREEN);
+        }
         new RetrieveFromServerAsyncTask().execute();
         //mTasks = TaskLab.get(getActivity()).getTasks();
 
@@ -100,13 +122,14 @@ public class MyTaskListFragment extends ListFragment{
    }
 
 
-    private class TaskAdapter extends ArrayAdapter<Task> {
+  /*  private class TaskAdapter extends ArrayAdapter<Task> {
         public TaskAdapter(ArrayList<Task> tasks){
             super(getActivity(), 0, tasks);
         }
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent){
+
             //if we weren't given a view, inflate one now.
             if(convertView == null){
                 convertView = getActivity().getLayoutInflater()
@@ -119,21 +142,71 @@ public class MyTaskListFragment extends ListFragment{
             descTextView.setText(t.getTaskDescription());
             TextView dateTextView = (TextView)convertView.findViewById(R.id.task_list_item_createDateTextView);
             if(t.getCreateDate()!=null) dateTextView.setText(t.getDateReadableFormat());
-            TextView timeTextView = (TextView)convertView.findViewById(R.id.task_list_item_serviceDateTextView);
-            if(t.getCreateDate()!=null) timeTextView.setText(android.text.format.DateFormat.format("EEE, MMM d h:mm a", t.getServiceDate()));
+//            TextView timeTextView = (TextView)convertView.findViewById(R.id.task_list_item_serviceDateTextView);
+//            if(t.getCreateDate()!=null) timeTextView.setText(android.text.format.DateFormat.format("EEE, MMM d h:mm a", t.getServiceDate()));
             TextView userTextView = (TextView)convertView.findViewById(R.id.task_list_item_User);
             userTextView.setText(t.getUserProfileName());
             TextView locationTextView = (TextView)convertView.findViewById(R.id.task_list_item_locationTextView);
             locationTextView.setText(t.getBeginLocation());
             return convertView;
         }
-    }
+    }*/
+       /*
+    See page 552 Big Nerd Ranch
+     */
+  private static class TaskCursorAdapter extends CursorAdapter {
+      private thynTaskDBHelper.TaskCursor mTaskCursor;
+
+      public TaskCursorAdapter(Context context, thynTaskDBHelper.TaskCursor cursor){
+          super(context, cursor, 0);
+          mTaskCursor = cursor;
+      }
+
+      @Override
+      public View newView(Context context, Cursor cursor, ViewGroup parent) {
+          // Use a layout inflater to get a row view
+          LayoutInflater inflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+          return inflater.inflate(R.layout.list_item_task, parent, false);
+      }
+
+      @Override
+      public void bindView(View view, Context context, Cursor cursor) {
+          // Get the Task for the current row
+          Task task = mTaskCursor.getTask();
+
+          // Set up the text view values
+          TextView descTextView = (TextView)view.findViewById(R.id.task_list_item_titleTextView);
+          descTextView.setText(task.getTaskDescription());
+
+          TextView dateTextView = (TextView)view.findViewById(R.id.task_list_item_createDateTextView);
+          if(task.getCreateDate()!=null) dateTextView.setText(task.getDateReadableFormat());
+          TextView userTextView = (TextView)view.findViewById(R.id.task_list_item_User);
+          userTextView.setText(task.getUserProfileName());
+          TextView locationTextView = (TextView)view.findViewById(R.id.task_list_item_locationTextView);
+          locationTextView.setText(task.getBeginLocation());
+
+      }
+
+  }
+    // End inner class TaskCursorAdapter
+
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View v = inflater.inflate(R.layout.fragment_tasklist, container, false);
+        View v= null;
+        if(!showEntireScreen) {
+            v = inflater.inflate(R.layout.fragment_tasklist1, container, false);
+            //TextView t = (TextView)v.findViewById(R.id.empty_text);
+            //t.setText(getResources().getString(R.string.no_tasks_get_help));
+        }
+        else v = inflater.inflate(R.layout.fragment_tasklist_nobutton, container, false);
+
         return v;
     }
+
+
+
     private static MyTaskApi myApiService = null;
 
     private class RetrieveFromServerAsyncTask extends AsyncTask<Void, Void, List> {

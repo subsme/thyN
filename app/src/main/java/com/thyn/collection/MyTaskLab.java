@@ -10,9 +10,10 @@ public class MyTaskLab extends TaskLab{
 
 
     private static MyTaskLab sTaskLab;
+    private static String tableName = "task";
 
     private MyTaskLab(Context mAppContext){
-        super(mAppContext);
+        super(mAppContext, tableName);
     }
 
     public static MyTaskLab get(Context c){

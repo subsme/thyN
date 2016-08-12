@@ -30,7 +30,7 @@ import butterknife.ButterKnife;
 import butterknife.InjectView;
 
 import com.thyn.common.MyServerSettings;
-import com.thyn.tab.MyTaskListActivity;
+import com.thyn.tab.WelcomePageActivity;
 import com.thyn.connection.GoogleAPIConnector;
 
 import com.thyn.R;
@@ -132,10 +132,10 @@ public class LoginActivity extends AppCompatActivity {
                 new Runnable() {
                     public void run() {
                         Log.i(TAG, "Result is: " + rslt);
-                        Log.i(TAG, "Result status code: " + rslt.getStatusCode());
                         // On complete call either onLoginSuccess or onLoginFailed
                         // if( rslt != null && rslt.getStatusCode().equalsIgnoreCase("OK")) {
                         if (rslt != null) {
+                            Log.i(TAG, "Result status code: " + rslt.getStatusCode());
                             if (rslt.getStatusCode() != null && Long.parseLong(rslt.getStatusCode()) > 0) {
                                 onLoginSuccess();
 

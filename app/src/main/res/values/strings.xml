@@ -7,7 +7,7 @@
     <string name="date_picker_title">Date</string>
     <string name="task_title">Tasks</string>
     <string name="task_accept">Accept</string>
-    <string name="new_crime">New Crime</string>
+    <string name="filter">Filter</string>
     <string name="title_activity_signup">SignupActivity</string>
     <string name="title_activity_login">LoginActivity</string>
 
@@ -16,7 +16,8 @@
     <string name="dummy_section_text">Section %1d is just a dummy section.</string>
 
     <string name="accept_task_dialog_title">Please confirm your offer to help.</string>
-    <string name="no_task">There are no tasks</string>
+    <string name="no_task_give_help">Take a look at some open requests to help your Neighbrs!</string>
+    <string name="no_tasks_get_help">Reach out to your Neighbrs to borrow tools, organize an event or even ask for a ride to the store!</string>
     <string name="task_complete">Mark Complete</string>
     <string name="gcm_send_message">Token retrieved and sent to server! You can now use gcmsender to
         send downstream messages to this app.</string>
@@ -24,4 +25,26 @@
     <string name="token_error_message">An error occurred while either fetching the InstanceID token,
         sending the fetched token to the server or subscribing to the PubSub topic. Please try
         running the sample again.</string>
+    <string name="next">NEXT</string>
+    <string name="skip">SKIP</string>
+    <string name="start">GOT IT</string>
+
+    <string name="slide_0_title">WELCOME TO</string>
+    <string name="slide_0_desc">Giving and getting help has never been easier!</string>
+    <string name="slide_0_signin_text">Already have an account? Sign in</string>
+    <string name="slide_1_title">GIVE HELP, GET HELP</string>
+    <string name="slide_1_desc">Use thyNeighbr to borrow tools, organize an event, or even ask for a ride to the store.</string>
+    <string name="slide_2_title">GIVE HELP ON YOUR TIME</string>
+    <string name="slide_2_desc">Busy? Don\'t worry, you can help out on your own time. Choose the requests that fit with your life.</string>
+    <string name="slide_3_title">ONLY YOUR NEIGHBRS</string>
+    <string name="slide_3_desc">We verify all addresses and make you visible only to your real neighbrs.</string>
+    <string name="slide_4_title">BUILD COMMUNITY</string>
+    <string name="slide_4_desc">Best of all, you\'ll get to know your community and build trusted relationships.</string>
+
+    <string name="facebook_app_id">1771008673113982</string>
+    <string name="title_activity_dashboard">DashboardActivity</string>
+    <string-array name="dashboard_tabs">
+        <item>REQUESTS</item>
+        <item>MY ERRANDS</item>
+    </string-array>
 </resources>

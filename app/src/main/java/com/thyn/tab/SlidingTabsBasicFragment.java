@@ -18,17 +18,21 @@ import com.thyn.tab.view.SlidingTabLayout;
 import com.thyn.tasklist.my.MyTaskListFragment;
 import com.thyn.tasklist.my.completed.MyCompletedTaskListFragment;
 import com.thyn.R;
+
+import org.w3c.dom.Text;
+import android.widget.ImageView;
 public class SlidingTabsBasicFragment extends Fragment {
 
 private static String LOG_TAG= "SlidingTabsBasicFragment";
 
 
-    private SlidingTabLayout mSlidingTabLayout;
+    //private SlidingTabLayout mSlidingTabLayout;
 
     /*
     * A {@link Viewpager} which will be used with SlidingTabLayout
      */
-    private ViewPager mViewPager;
+   // private ViewPager mViewPager;
+
     /**
      * Inflates the {@link View} which will be displayed by this {@link Fragment}, from the app's
      * resources.
@@ -36,7 +40,8 @@ private static String LOG_TAG= "SlidingTabsBasicFragment";
    /* @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.mytask_fragmentsample, container, false);
+        View v = inflater.inflate(R.layout.fragment_tasklist, container, false);
+        return v;
     }*/
     /**
      * This is called after the {@link #onCreateView(LayoutInflater, ViewGroup, Bundle)} has finished.
@@ -57,6 +62,7 @@ private static String LOG_TAG= "SlidingTabsBasicFragment";
         // it's PagerAdapter set.
         mSlidingTabLayout = (SlidingTabLayout) view.findViewById(R.id.sliding_tabs);
         mSlidingTabLayout.setViewPager(mViewPager);*/
+
     //}
 
     /**
@@ -79,7 +85,7 @@ private static String LOG_TAG= "SlidingTabsBasicFragment";
          */
         @Override
         public int getCount() {
-            return 3;
+            return 2;
         }
 
         /**
@@ -103,9 +109,9 @@ private static String LOG_TAG= "SlidingTabsBasicFragment";
             CharSequence cs = null;
 
             switch(position){
-                case 0: cs = "Requests" ;break;
-                case 1: cs = "Upcoming";break;
-                default: cs = "Completed";
+                case 0: cs = "GIVE HELP" ;break;
+                default: cs = "GET HELP";break;
+
             }
             //return "Item " + (position + 1);
             return cs;
@@ -115,24 +121,18 @@ private static String LOG_TAG= "SlidingTabsBasicFragment";
         public Fragment getItem(int i) {
             Log.d(LOG_TAG, "In getItem(i)" + i);
             Log.d(LOG_TAG, "Position clicked is: " + i);
+
             switch (i) {
                 case 0:
                     // The first section of the app is the most interesting -- it offers
                     // a launchpad into the other demonstrations in this example application.
-                    return new TaskListFragment();
-                case 1:
-                    return new MyTaskListFragment();
-                case 2:
-                    return new MyCompletedTaskListFragment();
-
-                default:
                     //return new TaskListFragment();
-                    // The other sections of the app are dummy placeholders.
-                    Fragment fragment = new DummySectionFragment();
-                    Bundle args = new Bundle();
-                    args.putInt(DummySectionFragment.ARG_SECTION_NUMBER, i + 1);
-                    fragment.setArguments(args);
-                    return fragment;
+                    TaskListFragment tlf = TaskListFragment.newInstance(false);
+                    return tlf;
+                default:
+                    MyTaskListFragment m = MyTaskListFragment.newInstance(false);
+                    return m;
+
             }
         }
 
@@ -169,21 +169,5 @@ private static String LOG_TAG= "SlidingTabsBasicFragment";
         }*/
 
     }
-    /**
-     * A dummy fragment representing a section of the app, but that simply displays dummy text.
-     */
-    public static class DummySectionFragment extends Fragment {
 
-        public static final String ARG_SECTION_NUMBER = "section_number";
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                                 Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_section_dummy, container, false);
-            Bundle args = getArguments();
-            ((TextView) rootView.findViewById(android.R.id.text1)).setText(
-                    getString(R.string.dummy_section_text, args.getInt(ARG_SECTION_NUMBER)));
-            return rootView;
-        }
-    }
 }

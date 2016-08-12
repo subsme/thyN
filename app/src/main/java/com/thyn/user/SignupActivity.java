@@ -33,7 +33,7 @@ import com.thyn.R;
 import com.thyn.broadcast.MainActivity;
 import com.thyn.common.MyServerSettings;
 import com.thyn.connection.GoogleAPIConnector;
-import com.thyn.tab.MyTaskListActivity;
+import com.thyn.tab.WelcomePageActivity;
 import android.os.HandlerThread;
 public class SignupActivity extends AppCompatActivity {
     private static final String TAG = "SignupActivity";

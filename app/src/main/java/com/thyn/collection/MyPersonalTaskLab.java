@@ -1,6 +1,9 @@
 package com.thyn.collection;
 
 import android.content.Context;
+import android.util.Log;
+
+import com.thyn.db.thynTaskDBHelper;
 
 
 /**
@@ -9,10 +12,11 @@ import android.content.Context;
 public class MyPersonalTaskLab extends TaskLab{
 
     private static MyPersonalTaskLab sTaskLab;
+    private static String tableName = "mytask";
 
 
     private MyPersonalTaskLab(Context mAppContext){
-        super(mAppContext);
+        super(mAppContext, tableName);
     }
 
     public static MyPersonalTaskLab get(Context c){
@@ -21,4 +25,5 @@ public class MyPersonalTaskLab extends TaskLab{
         }
         return sTaskLab;
     }
+
 }

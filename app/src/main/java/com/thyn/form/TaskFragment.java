@@ -78,17 +78,27 @@ public class TaskFragment extends Fragment {
     private static final String DIALOG_DATE = "date";
     private static final int REQUEST_DATE = 0;
     private static final int REQUEST_TIME = 2;
+
+    private MyTaskLab myTaskLab = null;
+
     @Override
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
-        Long taskID = (Long)getArguments().getSerializable(EXTRA_TASK_ID);
-        operation = (String)getArguments().getSerializable(OPERATION);
-        Log.d(TAG, "The operation is: " + operation);
-        mTask = MyTaskLab.get(getActivity()).getTask(taskID);
+        myTaskLab = MyTaskLab.get(getActivity());
+        Bundle args = getArguments();
+        if(args != null) {
+            long taskID = args.getLong(EXTRA_TASK_ID, -1);
+            if (taskID != -1) {
+                mTask = myTaskLab.getTask(taskID);
+            }
+        }
+        //operation = (String)getArguments().getSerializable(OPERATION);
+        //Log.d(TAG, "The operation is: " + operation);
+        //mTask = MyTaskLab.get(getActivity()).getTask(taskID);
 //         Log.d(TAG,"Retrieving task id: " + mTask.getId());
-        setHasOptionsMenu(true);
-
+        //setHasOptionsMenu(true);
     }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item){
         switch(item.getItemId()){

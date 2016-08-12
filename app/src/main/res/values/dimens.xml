@@ -3,4 +3,17 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
+    <dimen name="dots_height">30dp</dimen>
+    <dimen name="dots_margin_bottom">20dp</dimen>
+    <dimen name="position_above_dots_view">60dp</dimen>
+    <dimen name="img_width_height">300dp</dimen>
+    <dimen name="img_normal_width_height">120dp</dimen>
+    <dimen name="slide_title">16dp</dimen>
+    <dimen name="title_bottom_padding">40dp</dimen>
+    <dimen name="slide_desc">16dp</dimen>
+    <dimen name="desc_padding">40dp</dimen>
+    <dimen name="desc_double_padding">80dp</dimen>
+    <dimen name="button_height">65dp</dimen>
+    <dimen name="small_margin">20dp</dimen>
+    <dimen name="caption_text_size">20dp</dimen>
 </resources>

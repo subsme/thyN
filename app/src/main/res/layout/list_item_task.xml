@@ -1,69 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
-    <TextView
-        android:id="@+id/task_list_item_Is_Accepted"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Not Accepted"
-        android:textColor="#C5CAE9"
-        android:layout_alignParentRight="true"
-        android:paddingLeft="4dp"
-        android:paddingRight="4dp" />
-    <TextView
-        android:id="@+id/task_list_item_User"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_toLeftOf="@id/task_list_item_Is_Accepted"
-        android:textColor="#000000"
-        android:textSize="20dp"
-        android:paddingLeft="4dp"
-        android:paddingRight="4dp" />
-    <TextView
-        android:id="@+id/task_list_item_titleTextView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Task Description"
-        android:textColor="#000000"
-        android:layout_below="@id/task_list_item_User"
-        android:paddingLeft="4dp"
-        android:paddingRight="4dp" />
-    <TextView
-        android:id="@+id/task_list_item_locationTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:textColor="#263238"
-        android:layout_below="@id/task_list_item_titleTextView"
-        android:paddingLeft="4dp"
-        android:paddingRight="4dp"
-        android:paddingTop="4dp"/>
+    android:layout_height="wrap_content"
+    android:descendantFocusability="blocksDescendants"> <!-- Subu (spent about 2 hours on this)super important to make the click events work! see https://forums.xamarin.com/discussion/871/how-do-i-get-itemclick-of-a-listview-to-get-called-not-sure-what-have-wrong -->
     <TextView
         android:id="@+id/task_list_item_createDateTextView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="#263238"
         android:paddingLeft="4dp"
+        android:textSize="10dp"
+        android:text="1D AGO"
+        android:paddingTop="4dp"
+        android:paddingBottom="10dp"
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="10dp"
+        android:layout_toLeftOf="@+id/task_list_item_titleTextView"
+        android:layout_toStartOf="@+id/task_list_item_titleTextView"
+        android:textColor="@color/textShaded2" />
+    <com.thyn.graphics.MLRoundedImageView
+        android:id="@+id/task_list_user_image"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
         android:paddingRight="4dp"
-        android:layout_below="@id/task_list_item_locationTextView"
-        android:paddingTop="4dp" />
+        android:layout_marginBottom="10dp"
+        android:src="@drawable/login_google"
+        android:layout_below="@+id/task_list_item_createDateTextView"
+        android:layout_marginLeft="10dp"
+        />
     <TextView
-        android:id="@+id/task_list_item_serviceDateTextView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingLeft="4dp"
-        android:paddingRight="4dp"
-        android:textColor="#263238"
-        android:layout_below="@id/task_list_item_createDateTextView"
-        android:paddingTop="4dp" />
-    <CheckBox
+        android:id="@+id/task_list_item_titleTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/task_list_item_solvedCheckBox"
+        android:text="Looking to borrow shears"
+        android:textSize="20dp"
+        android:layout_marginLeft="20dp"
+
+        android:textIsSelectable="true"
+        android:layout_toRightOf="@id/task_list_user_image"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:textColor="#4d4d4d" />
+    <TextView
+        android:id="@+id/task_list_item_User"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Roman Guy"
+        android:paddingLeft="20dp"
+        android:paddingRight="4dp"
+        android:paddingTop ="5dp"
+        android:textColor="@color/textShaded"
+        android:layout_below="@+id/task_list_item_createDateTextView"
+        android:layout_toRightOf="@id/task_list_user_image" />
+    <TextView
+        android:id="@+id/task_list_item_locationTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sunnyvale"
+        android:layout_below="@id/task_list_item_User"
+        android:layout_toRightOf="@id/task_list_user_image"
+        android:textColor="@color/textShaded"
+        android:paddingLeft="20dp"
+        android:paddingRight="4dp"
+        android:paddingTop="4dp"/>
+    <TextView
+        android:id="@+id/task_distance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0.2 MI"
+        android:textSize="10dp"
         android:layout_alignParentRight="true"
-        android:gravity="center"
-        android:enabled="false"
-        android:focusable="false"
-        android:padding="4dp" />
+        android:layout_alignBottom="@id/task_list_item_locationTextView"
+        android:textColor="@color/textShaded"
+        android:paddingLeft="20dp"
+        android:paddingRight="4dp"
+        android:paddingTop="4dp"/>
 </RelativeLayout>
