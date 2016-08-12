@@ -99,13 +99,15 @@ public class MyTaskEndpoint {
         Query<MyTask> query = null;
         if(helper){
             logger.info("i am in if");
-            if(!isSolved) query = ofy().load().type(MyTask.class).filter("helperUserProfileKey",profileID);
-            else query = ofy().load().type(MyTask.class).filter("helperUserProfileKey",profileID).filter("isSolved",true);
+            if(!isSolved) query = ofy().load().type(MyTask.class).filter("helperUserProfileKey", profileID).order("-mCreateDate");
+            else query = ofy().load().type(MyTask.class).filter("helperUserProfileKey",profileID).filter("isSolved", true).order("-mCreateDate");
         }
         else {
             logger.info("no i am in else");
-            if(!isSolved) query = ofy().load().type(MyTask.class).filter("helperUserProfileKey ==",null);
-            else query = ofy().load().type(MyTask.class).filter("isSolved",true);
+            if(!isSolved) //query = ofy().load().type(MyTask.class).filter("helperUserProfileKey ==",null);
+                query = ofy().load().type(MyTask.class).filter("isSolved", false).order("-mCreateDate");
+            else query = ofy().load().type(MyTask.class).filter("isSolved", true).order("-mCreateDate");
+            //.order("-mCreateDate");
         }
         logger.info("The query is : " + query);
 
@@ -207,6 +209,8 @@ public class MyTaskEndpoint {
 
         if(mTask.getHelperUserProfileKey() == null) {
             mTask.setHelperUserProfileKey(profileID);
+            Profile helperProf = DatastoreHelpers.tryLoadEntityFromDatastore(Profile.class, profileID);
+            mTask.setHelperProfileName(helperProf.getFirstName() + " " + helperProf.getLastName());
             logger.info("Saving Task with new helper user profile key");
             //ofy().save().entity(mTask).now();
             DatastoreHelpers.trySaveEntityOnDatastore(mTask);

@@ -15,6 +15,7 @@ public class MyTask extends EntityObject{
     private String mBeginLocation;
     private String mEndLocation;
     private String mServiceDate;
+    @Index
     private String mCreateDate;
     private String mUpdateDate;
     private String mTaskDescription;
@@ -26,6 +27,17 @@ public class MyTask extends EntityObject{
     private String userProfileName;
     @Index
     private Long helperUserProfileKey;
+
+    private String helperProfileName;
+
+    public String getHelperProfileName() {
+        return helperProfileName;
+    }
+
+    public void setHelperProfileName(String helperProfileName) {
+        this.helperProfileName = helperProfileName;
+    }
+
 
     public String getUserProfileName() {
         return userProfileName;
