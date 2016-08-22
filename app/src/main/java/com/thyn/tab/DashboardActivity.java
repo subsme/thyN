@@ -14,6 +14,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.Toolbar;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
@@ -21,13 +22,24 @@ import com.thyn.R;
 import com.oguzdev.circularfloatingactionmenu.library.FloatingActionButton;
 
 public class DashboardActivity extends AppCompatActivity {
+    private static final String TAG = "DashboardActivity";
     private ViewPager mViewPager;
     private SlidingTabLayout mSlidingTabLayout;
+    public static final String SELECT_SECOND_TAB =
+            "com.android.android.thyn.tab.dashborad";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        int tab = 0;
+        Bundle args = getIntent().getExtras();
+        if(args != null) {
+            Log.d(TAG, "Second tab selected");
+            boolean id = args.getBoolean(SELECT_SECOND_TAB, false);
+            if (id) {
+                tab = 1;
+            }
+        }
 
         setContentView(R.layout.activity_dashboard);
         Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
@@ -41,6 +53,7 @@ public class DashboardActivity extends AppCompatActivity {
             SlidingTabsBasicFragment fragment = new SlidingTabsBasicFragment();
             DashboardPagerAdapter dashboardPagerAdapter = new DashboardPagerAdapter(getSupportFragmentManager());
             mViewPager.setAdapter(dashboardPagerAdapter);
+            mViewPager.setCurrentItem(tab);
             mSlidingTabLayout.setDistributeEvenly(true);
 
             mSlidingTabLayout.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.bg_screen5));
@@ -55,7 +68,7 @@ public class DashboardActivity extends AppCompatActivity {
                 .setBackgroundDrawable(R.drawable.selector_button_green)
                 .build();
 
-         
+
 
 
     }

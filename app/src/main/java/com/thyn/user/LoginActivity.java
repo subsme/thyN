@@ -79,7 +79,7 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         /* initialize the environment and remove any cache */
-        MyServerSettings.initializeEnvironment(getBaseContext());
+        MyServerSettings.initializeEnvironment(getBaseContext(), this);
 
     }
     public void storeUserProfile(){

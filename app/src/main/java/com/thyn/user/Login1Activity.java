@@ -75,7 +75,7 @@ public class Login1Activity extends AppCompatActivity {
         });
 
         /* initialize the environment and remove any cache */
-        MyServerSettings.initializeEnvironment(getBaseContext());
+        MyServerSettings.initializeEnvironment(getBaseContext(), this);
 
         loginLooperThread = new LoginLooperThread<ProgressDialog>(new Handler());
         loginLooperThread.setListener(new LoginLooperThread.Listener<ProgressDialog>() {

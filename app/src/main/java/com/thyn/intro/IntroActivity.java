@@ -24,6 +24,8 @@ import android.text.TextPaint;
 import android.text.Spanned;
 import android.text.method.LinkMovementMethod;
 import android.widget.ImageView;
+
+import com.thyn.common.MyServerSettings;
 import com.thyn.tab.WelcomePageActivity;
 /**
  * Created by shalu on 7/12/16.
@@ -44,6 +46,9 @@ public class IntroActivity extends AppCompatActivity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        //Removing all the local caches and starting the poss service
+        MyServerSettings.initializeEnvironment(getBaseContext(), this);
+        MyServerSettings.initializeUserProfile(getBaseContext(), new Long("5715999101812736"), "Subu4 Sundaram");
         // Checking for first time launch - before calling setContentView()
         prefManager = new LaunchPrefManager(this);
         if (!prefManager.isFirstTimeLaunch()) {

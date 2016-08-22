@@ -57,17 +57,15 @@ public class TaskListFragment extends ListFragment{
     private SwipeRefreshLayout mSwipeRefreshLayout;
     public static final String EXTRA_NUM_ITEMS =
             "com.thyn.tasklist.my.TaskListFragment.NumItems";
-    public static final String RETRIEVE_FROM_CACHE =
-            "com.thyn.tasklist.my.TaskListFragment.RetrieveFromCache";
-    private  int numItems;
+
     private MyTaskLab manager;
     private thynTaskDBHelper.TaskCursor mCursor;
+    private static Long userprofileid = null;
     public static final TaskListFragment newInstance(boolean showEntireScreen){
         int numberofItems = (showEntireScreen == true) ? 0:2;
         TaskListFragment tlf = new TaskListFragment();
         Bundle bundle = new Bundle();
         bundle.putInt(EXTRA_NUM_ITEMS, numberofItems);
-        if(numberofItems != 2) bundle.putBoolean(RETRIEVE_FROM_CACHE, true);
         tlf.setArguments(bundle);
         return tlf;
     }
@@ -75,13 +73,11 @@ public class TaskListFragment extends ListFragment{
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+        userprofileid = MyServerSettings.getUserProfileId(getActivity());
         getActivity().setTitle(R.string.task_title);
 
-        manager = MyTaskLab.get(getActivity());
+        if(manager == null) manager = MyTaskLab.get(getActivity());
 
-        if(!getArguments().containsKey(RETRIEVE_FROM_CACHE)) {
-            manager.purgeTasks();
-        }
     }
 
     @Override
@@ -89,23 +85,29 @@ public class TaskListFragment extends ListFragment{
         Log.d(TAG, "onResume() called...");
         super.onResume();
 
-        manager = MyTaskLab.get(getActivity());
+        if(manager == null) manager = MyTaskLab.get(getActivity());
 
-        Bundle arguments = getArguments();
-        loadData(arguments);
+        loadData();
         //((TaskCursorAdapter)getListAdapter()).notifyDataSetChanged();
     }
 
    // Subu - Please call loadData() from onResume. If created from onCreate(), it will be fired twice.
-    private void loadData(Bundle arguments){
-        //manager.removeAllTasks();
-        if(!manager.isInCache()) {
+    private void loadData(){
+        /* Subu 08/19
+        The if block will never be called because of change of strategy.
+        PollService always fills up the local cache before we call TaskListFragment from SlidingTabsBasicFragment.
+        It will always go to the else block.
+        Which also means that the inner AsyncThread is never called unless we refresh.
+        The refresh logic is yet to be implemented.
+         */
+        if(!MyServerSettings.getLocalTaskCache(getActivity())) {
             Log.d(TAG, "no cache exists...");
-            callAsyncThread(arguments);
+            //callAsyncThread(getArguments());
         } else {
             Log.d(TAG, "yes. there is cache...");
-
-            mCursor = manager.queryTasks();
+            int numRows = getArguments().getInt(EXTRA_NUM_ITEMS);
+            if(numRows == 2) mCursor = manager.queryTasks(numRows);
+            else mCursor = manager.queryTasks();
             if(mCursor.moveToFirst()) Log.d(TAG, "Cursor count is: " + mCursor.getCount());
             TaskCursorAdapter adapter = new TaskCursorAdapter(getActivity(), mCursor);
             adapter.notifyDataSetChanged();
@@ -116,7 +118,7 @@ public class TaskListFragment extends ListFragment{
     private void callAsyncThread(Bundle arguments){
 
         if(arguments != null && arguments.containsKey(EXTRA_NUM_ITEMS)) {
-            numItems = arguments.getInt(EXTRA_NUM_ITEMS, 0);
+            int numItems = arguments.getInt(EXTRA_NUM_ITEMS, 0);
             System.out.println("onResume: numItems to print is: " + numItems);
             new RetrieveFromServerAsyncTask(numItems).execute();
         }
@@ -188,6 +190,12 @@ public class TaskListFragment extends ListFragment{
    }*/
 
     private void refreshContent(){
+        //remove the local database and then refresh content.
+        /*Subu: Aug 19/2016
+        TODO - need to correct this logic because we included a PollService.
+         */
+        manager.purgeTasks();
+        Log.d(TAG, "In refreshContent()");
         new RetrieveFromServerAsyncTask().execute();
         new android.os.Handler().postDelayed(new Runnable() {
             @Override
@@ -278,7 +286,7 @@ public class TaskListFragment extends ListFragment{
                              Bundle savedInstanceState) {
 
         View v= null;
-        numItems = getArguments().getInt(EXTRA_NUM_ITEMS, 0);
+        int numItems = getArguments().getInt(EXTRA_NUM_ITEMS, 0);
         Log.d(TAG, "In onCreateView, numitems is " + numItems);
         if(numItems == 2) {
             v = inflater.inflate(R.layout.fragment_tasklist, container, false);
@@ -303,7 +311,7 @@ public class TaskListFragment extends ListFragment{
         });
         return v;
     }
-    private static MyTaskApi myApiService = null;
+
 
     private class RetrieveFromServerAsyncTask extends AsyncTask<Void, Void, List> {
         int numItems;
@@ -322,8 +330,7 @@ public class TaskListFragment extends ListFragment{
             List l = null;
 
             try {
-                Long userprofileid = MyServerSettings.getUserProfileId(getActivity());
-                //Log.d(TAG, "Sending user profile id:"+userprofileid);
+                Log.d(TAG, "Sending user profile id:"+userprofileid);
                 l = GoogleAPIConnector.connect_TaskAPI().listTasks(false, userprofileid, false).execute().getItems();
             } catch (IOException e) {
                 e.getMessage();
@@ -342,14 +349,14 @@ public class TaskListFragment extends ListFragment{
             //manager.removeAllTasks();
             Log.d(TAG, "The data count sent from the server is: " + result.size());
 
-            if(!manager.isInCache()){
+            if(!manager.doesLocalCacheExist()){
                 while (i.hasNext()) {
                     MyTask myTask = (MyTask) i.next();
-                    if (myTask.getId() != null) Log.d(TAG, myTask.getId().toString());
+                    //if (myTask.getId() != null) Log.d(TAG, myTask.getId().toString());
                     Log.d(TAG, " Inserting Task. Description: " + myTask.getTaskDescription());
                     manager.convertRemotetoLocalTask(myTask);
-
                 }
+                manager.initializeLocalCache();
             }
          /*   if (numItems == 2) {
                 while (i.hasNext() && numItems > 0) {

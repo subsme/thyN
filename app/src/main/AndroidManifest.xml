@@ -3,6 +3,7 @@
     package="com.thyn">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
@@ -140,6 +141,7 @@
         <service
             android:name=".broadcast.GcmRegistrationIntentService"
             android:exported="false"></service>
+        <service android:name=".connection.PollService" />
 
         <activity
             android:name=".tab.DashboardActivity"

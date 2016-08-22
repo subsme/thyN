@@ -9,10 +9,10 @@ import android.content.Context;
 public class MyCompletedTaskLab extends TaskLab{
 
     private static MyCompletedTaskLab sTaskLab;
-
+    private static String tableName = "bumbaroo";
 
     private MyCompletedTaskLab(Context mAppContext){
-        super(mAppContext);
+        super(mAppContext,tableName);
     }
 
     public static MyCompletedTaskLab get(Context c){

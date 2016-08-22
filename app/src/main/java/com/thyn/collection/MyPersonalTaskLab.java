@@ -12,8 +12,8 @@ import com.thyn.db.thynTaskDBHelper;
 public class MyPersonalTaskLab extends TaskLab{
 
     private static MyPersonalTaskLab sTaskLab;
-    private static String tableName = "mytask";
-
+    private static String tableName = "task";
+    private static String TAG                                           = "MyPersonalTaskLab";
 
     private MyPersonalTaskLab(Context mAppContext){
         super(mAppContext, tableName);
@@ -21,8 +21,10 @@ public class MyPersonalTaskLab extends TaskLab{
 
     public static MyPersonalTaskLab get(Context c){
         if(sTaskLab == null){
+            Log.d(TAG, "No MyPersonalTaskLab object exists. Creating new MyPersonalTaskLab instance");
             sTaskLab = new MyPersonalTaskLab(c.getApplicationContext());
         }
+        else Log.d(TAG, "MyPersonalTaskLab object already exists. Returning the already created MyPersonalTaskLab instance");
         return sTaskLab;
     }
 

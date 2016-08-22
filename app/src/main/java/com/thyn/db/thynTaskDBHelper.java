@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.CursorWrapper;
 import android.database.DatabaseUtils;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.location.Location;
@@ -25,7 +26,7 @@ public class thynTaskDBHelper  extends SQLiteOpenHelper {
     private static final String DB_NAME                                 = "thyn.sqlite";
     private static final int VERSION                                    = 1;
 
-    private static  String TABLE_TASK;
+    private  String TABLE_TASK;
 
     private static final String COLUMN_TASK_ID                          = "taskId";
     private static final String COLUMN_TASK_DESCRIPTION                 = "taskDescription";
@@ -41,7 +42,7 @@ public class thynTaskDBHelper  extends SQLiteOpenHelper {
     private static final String COLUMN_TASK_USER_WAIT_RESPONSE_TIME     = "user_wait_response_time";
     private static final String COLUMN_TASK_IS_SOLVED                   = "is_solved";
 
-    private static int count                                            = 0;
+    private int count                                            = 0;
 
     public thynTaskDBHelper(Context context, String TableName) {
         super(context, DB_NAME, null, VERSION);
@@ -50,24 +51,30 @@ public class thynTaskDBHelper  extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL(
-                "CREATE TABLE " + TABLE_TASK + " (" +
-                        " _id integer primary key" +
-                        ", taskId varchar(100)" +
-                        ", taskDescription varchar(300)" +
-                        ", begin_location varchar(100)" +
-                        ", end_location varchar(100)" +
-                        ", user_profile_key integer " +
-                        ", user_profile_name varchar(100)" +
-                        ", date_created text" +
-                        ", date_updated text" +
-                        ", helper_profile_key integer" +
-                        ", helper_profile_name varchar(100)" +
-                        ", date_serviced text" +
-                        ", user_wait_response_time" +
-                        ", is_solved integer" +
-                        " )"
-        );
+        Log.d(TAG, "Creating table: "+ TABLE_TASK);
+       try {
+           db.execSQL(
+                   "CREATE TABLE " + TABLE_TASK + " (" +
+                           " _id integer primary key" +
+                           ", taskId varchar(100)" +
+                           ", taskDescription varchar(300)" +
+                           ", begin_location varchar(100)" +
+                           ", end_location varchar(100)" +
+                           ", user_profile_key integer " +
+                           ", user_profile_name varchar(100)" +
+                           ", date_created text" +
+                           ", date_updated text" +
+                           ", helper_profile_key integer" +
+                           ", helper_profile_name varchar(100)" +
+                           ", date_serviced text" +
+                           ", user_wait_response_time" +
+                           ", is_solved integer" +
+                           " )"
+           );
+       }
+       catch(SQLException sqle){
+           sqle.printStackTrace();
+       }
     }
 
     @Override
@@ -77,7 +84,7 @@ public class thynTaskDBHelper  extends SQLiteOpenHelper {
 
     public long insertTask(Task task){
         count++;
-        Log.i(TAG, "Inserting in local database cache. Inserting row # " + count);
+        Log.d(TAG, "Inserting in local database(" + TABLE_TASK + ") cache. Inserting row # " + count);
         ContentValues cv = new ContentValues();
         cv.put(COLUMN_TASK_ID,task.getId());
         cv.put(COLUMN_TASK_DESCRIPTION, task.getTaskDescription());
@@ -128,6 +135,37 @@ public class thynTaskDBHelper  extends SQLiteOpenHelper {
         Cursor wrapped = getReadableDatabase().query(TABLE_TASK, null, null, null, null, null, COLUMN_TASK_DATE_CREATED + " asc","2");
 
         Log.d(TAG," CUrsor count (only 2 supposed to be returned here) is: " + wrapped.getCount());
+        return new TaskCursor(wrapped);
+    }
+
+    public TaskCursor queryMyTasks(Long uid){
+        //Equivalent to "select * from task order by date_created
+        Log.d(TAG, "Querying my tasks");
+        Cursor wrapped = getReadableDatabase().query(TABLE_TASK,
+                null,
+                COLUMN_TASK_USER_PROFILE_KEY + " =?",
+                new String[]{String.valueOf(uid)},
+                null,
+                null,
+                null);
+
+        Log.d(TAG,"CUrsor count is: " + wrapped.getCount());
+        return new TaskCursor(wrapped);
+    }
+
+    public TaskCursor queryMyTasks(Long uid, int numrows){
+        //Equivalent to "select * from task order by date_created
+        Log.d(TAG, "Querying my tasks");
+        Cursor wrapped = getReadableDatabase().query(TABLE_TASK,
+                null,
+                COLUMN_TASK_USER_PROFILE_KEY + " =?",
+                new String[]{String.valueOf(uid)},
+                null,
+                null,
+                null,
+                "2");
+
+        Log.d(TAG,"CUrsor count is: " + wrapped.getCount());
         return new TaskCursor(wrapped);
     }
 

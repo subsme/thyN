@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.thyn.android.backend.myTaskApi.model.MyTask;
+import com.thyn.common.MyServerSettings;
 import com.thyn.db.thynTaskDBHelper;
 
 
@@ -16,16 +17,16 @@ import java.util.ArrayList;
  */
 public class TaskLab {
     private static String TAG                                           = "TaskLab";
-    //private ArrayList<Task> mTasks;
+    private ArrayList<Task> mTasks;
     private Context mAppContext;
-    private thynTaskDBHelper dbHelper;
+    protected thynTaskDBHelper dbHelper;
 
 
     protected TaskLab(Context mAppContext, String TableName){
         Log.i(TAG, "Initializing TaskLab constructor and therefore dbHelper");
         this.mAppContext = mAppContext;
         this.dbHelper = new thynTaskDBHelper(mAppContext, TableName);
-      //  mTasks = new ArrayList<Task>();
+        mTasks = new ArrayList<Task>();
 
     }
     public void addTask(Task t){
@@ -38,7 +39,13 @@ public class TaskLab {
     public thynTaskDBHelper.TaskCursor queryTasks(int rows){
         return this.dbHelper.queryTasks(rows);
     }
-    /*public ArrayList<Task> getTasks(){
+    public thynTaskDBHelper.TaskCursor queryMyTasks(Long myId){
+        return this.dbHelper.queryMyTasks(myId);
+    }
+    public thynTaskDBHelper.TaskCursor queryMyTasks(Long myId, int rows){
+        return this.dbHelper.queryMyTasks(myId, rows);
+    }
+    public ArrayList<Task> getTasks(){
         return mTasks;
     }
     public Task getTask(Long id){
@@ -46,16 +53,23 @@ public class TaskLab {
             if(t.getId().equals(id)) return t;
         }
         return null;
-    }*/
-    /*public boolean removeTask(Task t){
+    }
+    public boolean removeTask(Task t){
         return mTasks.remove(t);
     }
     public void removeAllTasks(){
         mTasks.clear();
-    }*/
+    }
     public void purgeTasks(){
         Log.d(TAG, "purgeTable");
+        MyServerSettings.initializeLocalTaskCache(mAppContext,false);
         this.dbHelper.purgeTable();
+    }
+    public boolean doesLocalCacheExist(){
+        return MyServerSettings.getLocalTaskCache(mAppContext);
+    }
+    public void initializeLocalCache(){
+        MyServerSettings.initializeLocalTaskCache(mAppContext);
     }
 
    public  void convertRemotetoLocalTask(MyTask t){
@@ -87,14 +101,15 @@ public class TaskLab {
        addTask(a);
     }
 
-    public boolean isInCache(){
+    /*public boolean isInCache(){
         long n = dbHelper.countRecords();
         if(n > 0) {
             Log.d(TAG, "No. of cache elements are : " + n);
             return true;
         }
         return false;
-    }
+
+    }*/
 
     public Task getTask(long id){
         Task task = null;

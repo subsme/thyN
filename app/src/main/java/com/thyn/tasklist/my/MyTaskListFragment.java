@@ -7,6 +7,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ListFragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -16,6 +17,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.CursorAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -33,6 +35,7 @@ import java.util.List;
 
 
 import com.thyn.collection.MyPersonalTaskLab;
+import com.thyn.collection.MyTaskLab;
 import com.thyn.collection.Task;
 import com.thyn.common.MyServerSettings;
 import com.thyn.connection.GoogleAPIConnector;
@@ -42,6 +45,7 @@ import com.thyn.form.view.my.MyTaskViewOnlyFragment;
 import com.thyn.form.TaskFragment;
 import com.thyn.form.view.my.MyTaskPagerViewOnlyActivity;
 import com.thyn.R;
+import com.thyn.tab.DashboardActivity;
 import com.thyn.user.LoginActivity;
 
 /**
@@ -50,15 +54,20 @@ import com.thyn.user.LoginActivity;
 public class MyTaskListFragment extends ListFragment{
     private static final String TAG = "MyTaskListFragment";
     private ArrayList<Task> mTasks;
-    public static final String SHOW_ENTIRE_SCREEN =
+    private SwipeRefreshLayout mSwipeRefreshLayout;
+    public static final String EXTRA_NUM_ITEMS =
             "com.thyn.tasklist.my.MyTaskListFragment.NumItems";
 
     boolean showEntireScreen;
+    private MyPersonalTaskLab pmanager;
+    private thynTaskDBHelper.TaskCursor mCursor;
+    private static Long userprofileid = null;
 
     public static final MyTaskListFragment newInstance(boolean showEntireScreen){
+        int numberofItems = (showEntireScreen == true) ? 0:2;
         MyTaskListFragment tlf = new MyTaskListFragment();
         Bundle bundle = new Bundle();
-        bundle.putBoolean(SHOW_ENTIRE_SCREEN, showEntireScreen);
+        bundle.putInt(EXTRA_NUM_ITEMS, numberofItems);
         tlf.setArguments(bundle);
         return tlf;
     }
@@ -66,29 +75,39 @@ public class MyTaskListFragment extends ListFragment{
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+        userprofileid = MyServerSettings.getUserProfileId(getActivity());
         getActivity().setTitle(R.string.task_title);
         Log.d(TAG, " in onCreate");
-
-        showEntireScreen = false;
-        Bundle arguments = getArguments();
-        if(arguments != null && arguments.containsKey(SHOW_ENTIRE_SCREEN)) {
-            showEntireScreen = arguments.getBoolean(SHOW_ENTIRE_SCREEN);
-        }
-        new RetrieveFromServerAsyncTask().execute();
-        //mTasks = TaskLab.get(getActivity()).getTasks();
-
-        /*ArrayAdapter<Task> adapter =
-                new ArrayAdapter<Task>(getActivity(), android.R.layout.simple_list_item_1, mTasks);*///page 188 big nerd rahcnh
-        //TaskAdapter adapter = new TaskAdapter(mTasks);
-        //setListAdapter(adapter);
     }
 
     @Override
     public void onResume(){
         super.onResume();
-        new RetrieveFromServerAsyncTask().execute();
-        //((TaskAdapter)getListAdapter()).notifyDataSetChanged();
+        if(pmanager == null) pmanager = MyPersonalTaskLab.get(getActivity());
+
+        Bundle arguments = getArguments();
+        loadData();
     }
+    // Subu - Please call loadData() from onResume. If created from onCreate(), it will be fired twice.
+    private void loadData(){
+        //manager.removeAllTasks();
+        if(!MyServerSettings.getLocalTaskCache(getActivity())){
+            Log.d(TAG, "no cache exists...");
+            //callAsyncThread(arguments);
+        } else {
+            Log.d(TAG, "yes. there is cache...");
+            int numRows = getArguments().getInt(EXTRA_NUM_ITEMS);
+            if(numRows == 2) mCursor = pmanager.queryMyTasks(userprofileid,numRows);
+            else mCursor = pmanager.queryMyTasks(userprofileid);
+            if(mCursor.moveToFirst()) Log.d(TAG, "Cursor count is: " + mCursor.getCount());
+            MyTaskCursorAdapter adapter = new MyTaskCursorAdapter(getActivity(), mCursor);
+            adapter.notifyDataSetChanged();
+            setListAdapter(adapter);
+        }
+    }
+    /*private void callAsyncThread(Bundle arguments){
+        new RetrieveFromServerAsyncTask().execute();
+    }*/
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater){
         super.onCreateOptionsMenu(menu, inflater);
@@ -113,16 +132,30 @@ public class MyTaskListFragment extends ListFragment{
 
    @Override
    public void onListItemClick(ListView l, View v, int position, long id){
-       Task t = ((TaskAdapter)getListAdapter()).getItem(position);
-       Log.d(TAG, t.getTaskDescription()+ " was clicked"); //page 191 big nerdranch
+       //Task t = ((TaskAdapter)getListAdapter()).getItem(position);
+       Log.d(TAG, id+ " was clicked"); //page 191 big nerdranch
        //Start TaskPagerActivity
        Intent i = new Intent(getActivity(), MyTaskPagerViewOnlyActivity.class);
-       i.putExtra(MyTaskViewOnlyFragment.EXTRA_TASK_ID, t.getId());
+       i.putExtra(MyTaskViewOnlyFragment.EXTRA_TASK_ID, id);
        startActivity(i);
    }
-
-
-  /*  private class TaskAdapter extends ArrayAdapter<Task> {
+    private void refreshContent(){
+        //remove the local database and then refresh content.
+        /*Subu: Aug 19/2016
+        TODO - need to correct this logic because we included a PollService.
+         */
+        pmanager.purgeTasks();
+        Log.d(TAG, "In refreshContent()");
+        new RetrieveFromServerAsyncTask().execute();
+        new android.os.Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mSwipeRefreshLayout.setRefreshing(false);
+            }
+        }, 000);
+    }
+/*
+    private class TaskAdapter extends ArrayAdapter<Task> {
         public TaskAdapter(ArrayList<Task> tasks){
             super(getActivity(), 0, tasks);
         }
@@ -154,10 +187,10 @@ public class MyTaskListFragment extends ListFragment{
        /*
     See page 552 Big Nerd Ranch
      */
-  private static class TaskCursorAdapter extends CursorAdapter {
+  private static class MyTaskCursorAdapter extends CursorAdapter {
       private thynTaskDBHelper.TaskCursor mTaskCursor;
 
-      public TaskCursorAdapter(Context context, thynTaskDBHelper.TaskCursor cursor){
+      public MyTaskCursorAdapter(Context context, thynTaskDBHelper.TaskCursor cursor){
           super(context, cursor, 0);
           mTaskCursor = cursor;
       }
@@ -195,12 +228,32 @@ public class MyTaskListFragment extends ListFragment{
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View v= null;
-        if(!showEntireScreen) {
+        int numItems = getArguments().getInt(EXTRA_NUM_ITEMS, 0);
+        Log.d(TAG, "In onCreateView, numitems is " + numItems);
+
+        if(numItems == 2) {
             v = inflater.inflate(R.layout.fragment_tasklist1, container, false);
-            //TextView t = (TextView)v.findViewById(R.id.empty_text);
-            //t.setText(getResources().getString(R.string.no_tasks_get_help));
+            ImageView img_view = (ImageView) v.findViewById(R.id.expand);
+            img_view.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(getActivity().getApplicationContext(), DashboardActivity.class);
+                    intent.putExtra(DashboardActivity.SELECT_SECOND_TAB, true);
+                    startActivity(intent);
+                }
+            });
         }
-        else v = inflater.inflate(R.layout.fragment_tasklist_nobutton, container, false);
+        else{
+            v = inflater.inflate(R.layout.fragment_tasklist_nobutton, container, false);
+            mSwipeRefreshLayout = (SwipeRefreshLayout) v.findViewById(R.id.activity_main_swipe_refresh_layout);
+            mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+                @Override
+                public void onRefresh() {
+                    Log.d(TAG, "Refreshing content");
+                    refreshContent();
+                }
+            });
+        }
 
         return v;
     }
@@ -217,9 +270,9 @@ public class MyTaskListFragment extends ListFragment{
             List l = null;
 
             try {
-                Long userprofileid = MyServerSettings.getUserProfileId(getActivity());
+                userprofileid = MyServerSettings.getUserProfileId(getActivity());
                 Log.d(TAG, "Sending user profile id:"+userprofileid);
-                l = GoogleAPIConnector.connect_TaskAPI().listTasks(true, userprofileid, false).execute().getItems();
+                l = GoogleAPIConnector.connect_TaskAPI().listTasks(false, userprofileid, false).execute().getItems();
             } catch (IOException e) {
                  e.getMessage();
             }
@@ -231,16 +284,26 @@ public class MyTaskListFragment extends ListFragment{
             if(result == null) return;
 
             Iterator i = result.iterator();
-            /* initialize the array list to 0 items. remove that existed before */
-            MyPersonalTaskLab.get(getActivity()).removeAllTasks();
-            while(i.hasNext()) {
-                MyTask myTask = (MyTask)i.next();
-                if(myTask.getId() != null) Log.d(TAG, myTask.getId().toString());
-                MyPersonalTaskLab.get(getActivity()).convertRemotetoLocalTask(myTask);
+
+            //MyPersonalTaskLab.get(getActivity()).removeAllTasks();
+            Log.d(TAG, "The data count sent from the server is: " + result.size());
+            if(!pmanager.doesLocalCacheExist()) {
+                while (i.hasNext()) {
+                    MyTask myTask = (MyTask) i.next();
+                    //if (myTask.getId() != null) Log.d(TAG, myTask.getId().toString());
+                    Log.d(TAG, " Inserting MyTask. Description: " + myTask.getTaskDescription());
+                    pmanager.convertRemotetoLocalTask(myTask);
+                }
+                pmanager.initializeLocalCache();
             }
-            TaskAdapter adapter = new TaskAdapter(MyPersonalTaskLab.get(getActivity()).getTasks());
+            //TaskAdapter adapter = new TaskAdapter(MyPersonalTaskLab.get(getActivity()).getTasks());
+            //setListAdapter(adapter);
+            mCursor = pmanager.queryMyTasks(userprofileid);
+            MyTaskCursorAdapter adapter = new MyTaskCursorAdapter(getActivity(), mCursor);
+            adapter.notifyDataSetChanged();
             setListAdapter(adapter);
 
         }
     }
+
 }

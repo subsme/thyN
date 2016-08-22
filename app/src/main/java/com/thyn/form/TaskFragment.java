@@ -106,7 +106,7 @@ public class TaskFragment extends Fragment {
                 if(NavUtils.getParentActivityName(getActivity()) != null){
                     NavUtils.navigateUpFromSameTask(getActivity());
                     Log.d(TAG, "Menu item clicked");
-                    MyTaskLab.get(getActivity()).removeTask(mTask);
+                   // MyTaskLab.get(getActivity()).removeTask(mTask);
                 }
                 return true;
             default:
