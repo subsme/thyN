@@ -2,7 +2,7 @@
 This is the codebase for thyNeighbr. An android app that brings neighborhood together. This is a platform that enables people to post and exchange messages with others who have subscribed to the platform.
 
 ## Section 1: Android
-The important features in the android side of things are-  
+The important features are-  
 com.thyn.broadcast - Client side code that connects to Google Cloud Messaging platform.  
 com.thyn.collection - Model speaking to the local cache.  
 Android assets
