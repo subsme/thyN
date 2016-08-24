@@ -7,5 +7,4 @@ The important features are-
 2.com.thyn.collection - Model speaking to the local cache.  
 3.Android assets
 ## Section 2: Backend API - Google App Engine
-The backend API is deployed in Google Cloud Endpoints which connects to the Google App Engine Datastore. We are also using the Google Cloud Messaging feature with which users can subscribe to messages once registered with the platform.
-
+The backend API is deployed in Google Cloud Endpoints which deployed in Google App Engine. We are also using the Google Cloud Messaging  for messages.
