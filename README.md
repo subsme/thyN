@@ -3,9 +3,9 @@ This is the codebase for thyNeighbr. An android app that brings neighborhood tog
 
 ## Section 1: Android
 The important features are-  
-com.thyn.broadcast - Client side code that connects to Google Cloud Messaging platform.  
-com.thyn.collection - Model speaking to the local cache.  
-Android assets
+1.com.thyn.broadcast - Client side code that connects to Google Cloud Messaging platform.  
+2.com.thyn.collection - Model speaking to the local cache.  
+3.Android assets
 ## Section 2: Backend API - Google App Engine
 The backend API is deployed in Google Cloud Endpoints which connects to the Google App Engine Datastore. We are also using the Google Cloud Messaging feature with which users can subscribe to messages once registered with the platform.
 
