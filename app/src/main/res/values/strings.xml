@@ -40,6 +40,8 @@
     <string name="slide_3_desc">We verify all addresses and make you visible only to your real neighbrs.</string>
     <string name="slide_4_title">BUILD COMMUNITY</string>
     <string name="slide_4_desc">Best of all, you\'ll get to know your community and build trusted relationships.</string>
+    <string name="thumbs_up_title">YOUR REQUEST IS LIVE</string>
+    <string name="thumbs_up_desc">Awesome! You\'ll be notified when a neighbr accepts your request.</string>
 
     <string name="facebook_app_id">1771008673113982</string>
     <string name="title_activity_dashboard">DashboardActivity</string>
@@ -47,4 +49,21 @@
         <item>REQUESTS</item>
         <item>MY ERRANDS</item>
     </string-array>
+    <string name="hint_detailed_description">Optionally add a detailed description, if you need to clarify</string>
+    <string name="quick_tip"><![CDATA[<b>Quick Tip:</b> Keep it as short and sweet<br/> as possible]]></string>
+
+    <!-- RangeSeeekBar strings -->
+    <string name="demo_min_label">Min</string>
+    <string name="demo_max_label">Max</string>
+    <string name="signed_in_fmt">GenieSaysWhat</string>
+    <string name="server_client_id">953474522001-dhipfr71bq11vk1biclhmkoirl4dhs76.apps.googleusercontent.com</string>
+    <string name="title_activity_auto_address">AutoAddressActivity</string>
+
+    <!-- Validation errors -->
+    <string name="err_msg_title">Please enter description for the task.</string>
+    <string name="err_msg_description">Please enter a detailed description for the task.</string>
+    <string name="err_msg_date">Please select a valid date or range of dates.</string>
+    <string name="err_msg_time">Please enter a valid time range.</string>
+    <string name="err_msg_location">Please select a valid location.</string>
+
 </resources>

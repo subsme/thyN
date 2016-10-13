@@ -45,15 +45,19 @@ public class TaskLab {
     public thynTaskDBHelper.TaskCursor queryMyTasks(Long myId, int rows){
         return this.dbHelper.queryMyTasks(myId, rows);
     }
+    public thynTaskDBHelper.TaskCursor queryTasksIWillHelp(Long myId){
+        return this.dbHelper.queryTasksIWillHelp(myId);
+    }
+
     public ArrayList<Task> getTasks(){
         return mTasks;
     }
-    public Task getTask(Long id){
+    /*public Task getTask(Long id){
         for(Task t:mTasks){
             if(t.getId().equals(id)) return t;
         }
         return null;
-    }
+    }*/
     public boolean removeTask(Task t){
         return mTasks.remove(t);
     }
@@ -74,6 +78,8 @@ public class TaskLab {
 
    public  void convertRemotetoLocalTask(MyTask t){
         Task a = new Task();
+        Log.d(TAG, "Copying MyTask into Task...");
+        Log.d(TAG, "Title: " + t.getTaskTitle() + ",Description: " + t.getTaskDescription() + ",Image URL: " + t.getImageURL());
 
         a.setId(t.getId());
         a.setEndLocation(t.getEndLocation());
@@ -81,12 +87,25 @@ public class TaskLab {
         a.setTaskDescription(t.getTaskDescription());
         a.setUserProfileName(t.getUserProfileName());
         a.setUserProfileKey(t.getUserProfileKey());
+        a.setHelperProfileKey(t.getHelperUserProfileKey());
         a.setHelperProfileName(t.getHelperProfileName());
+        a.setTaskTitle(t.getTaskTitle());
+        a.setImageURL(t.getImageURL());
+        a.setLAT(t.getLat());
+        a.setLONG(t.getLong());
+        a.setCity(t.getCity());
+        a.setTaskTimeRange(t.getServiceTimeRange());
+
 
         SimpleDateFormat sdFormat = new SimpleDateFormat("E MMM dd HH:mm:ss z y");
         try {
-            a.setCreateDate(sdFormat.parse(t.getCreateDate()));
-            a.setServiceDate(sdFormat.parse(t.getServiceDate()));
+            if(t.getCreateDate() != null) a.setCreateDate(sdFormat.parse(t.getCreateDate()));
+
+            if(t.getServiceDate() != null){
+                a.setServiceDate(sdFormat.parse(t.getServiceDate()));
+                a.setTaskFromDate(sdFormat.parse(t.getServiceDate()));
+            }
+
         }
         catch(ParseException e){
             e.printStackTrace();
@@ -113,6 +132,7 @@ public class TaskLab {
 
     public Task getTask(long id){
         Task task = null;
+        Log.d(TAG, "I am in getTask(" + id + ")");
         thynTaskDBHelper.TaskCursor cursor = dbHelper.queryTask(id);
         cursor.moveToFirst();
         //if you got a row, get a task

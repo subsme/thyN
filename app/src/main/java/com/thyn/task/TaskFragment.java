@@ -1,9 +1,8 @@
-package com.thyn.form;
+package com.thyn.task;
 
 
 import android.content.Intent;
 import android.os.AsyncTask;
-import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
@@ -19,7 +18,6 @@ import android.widget.EditText;
 import java.io.IOException;
 import java.util.Date;
 
-import android.os.Build;
 import android.annotation.TargetApi;
 
 import android.view.MenuItem;
@@ -29,31 +27,21 @@ import android.app.Activity;
 
 import java.util.Calendar;
 
-import com.thyn.DatePickerFragment;
-
 import com.thyn.collection.Task;
 import com.thyn.collection.MyTaskLab;
-import com.thyn.TimePickerFragment;
 import com.thyn.common.MyServerSettings;
 import com.thyn.connection.GoogleAPIConnector;
 import com.thyn.field.AddressActivity;
 import com.thyn.field.AddressFragment;
-import com.thyn.user.LoginActivity;
 
 import android.text.Editable;
 import android.text.TextWatcher;
 
-import com.google.api.client.extensions.android.http.AndroidHttp;
-import com.google.api.client.extensions.android.json.AndroidJsonFactory;
-import com.google.api.client.googleapis.services.AbstractGoogleClientRequest;
-import com.google.api.client.googleapis.services.GoogleClientRequestInitializer;
 import com.thyn.android.backend.myTaskApi.MyTaskApi;
 import com.thyn.android.backend.myTaskApi.model.MyTask;
 
 import java.text.SimpleDateFormat;
 import com.thyn.R;
-import java.text.DateFormat;
-import java.util.TimeZone;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -75,6 +63,8 @@ public class TaskFragment extends Fragment {
     private Button mTimeButton;
     private Button mTaskDone;
 
+    private EditText mTaskDescription2;
+
     private static final String DIALOG_DATE = "date";
     private static final int REQUEST_DATE = 0;
     private static final int REQUEST_TIME = 2;
@@ -90,12 +80,16 @@ public class TaskFragment extends Fragment {
             long taskID = args.getLong(EXTRA_TASK_ID, -1);
             if (taskID != -1) {
                 mTask = myTaskLab.getTask(taskID);
+                Log.d(TAG,"Retrieved task: " + mTask.getTaskDescription());
             }
+        }
+        if(mTask == null){
+            mTask = new Task();
         }
         //operation = (String)getArguments().getSerializable(OPERATION);
         //Log.d(TAG, "The operation is: " + operation);
         //mTask = MyTaskLab.get(getActivity()).getTask(taskID);
-//         Log.d(TAG,"Retrieving task id: " + mTask.getId());
+        //Log.d(TAG,"Retrieved task: " + mTask.getTaskDescription());
         //setHasOptionsMenu(true);
     }
 
@@ -129,13 +123,13 @@ public class TaskFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_task, container, false);
-        if(mTask!=null)
+        /*if(mTask!=null)
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB){
             if(NavUtils.getParentActivityName(getActivity())!=null) {
                 getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
             }
-        }
-
+        }*/
+        /*
         mTaskDescriptionField = (EditText)v.findViewById(R.id.task_description);
         if(mTask != null) mTaskDescriptionField.setText(mTask.getTaskDescription());
         mTaskDescriptionField.addTextChangedListener(new TextWatcher() {
@@ -153,7 +147,9 @@ public class TaskFragment extends Fragment {
             public void afterTextChanged(Editable editable) {
 
             }
-        });
+        });*/
+        mTaskDescription2 = (EditText)v.findViewById(R.id.t_description);
+        mTaskDescription2.setHint(getString(R.string.hint_detailed_description));
         mDateButton = (Button)v.findViewById(R.id.task_date);
         //mDateButton.setText(mCrime.getmDate().toString()); Encapsulating the code page 223 big nerd ranch
         if(mTask != null) updateDate();

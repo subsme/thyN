@@ -3,6 +3,7 @@ package com.thyn.backend.entities;
 import java.text.ParseException;
 
 
+
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Index;
 
@@ -13,16 +14,25 @@ import com.googlecode.objectify.annotation.Index;
 public class MyTask extends EntityObject{
 
     private String mBeginLocation;
+    private double mLAT;
+    private double mLONG;
+    private String mCity;
+
     private String mEndLocation;
     private String mServiceDate;
+    private String mServiceToDate;
+    private String mServiceTimeRange;
+
     @Index
     private String mCreateDate;
     private String mUpdateDate;
+    private String mTaskTitle;
     private String mTaskDescription;
     private int mWaitResponseTime;
     @Index
     private boolean isSolved;
-   @Index
+
+    @Index
    private Long userProfileKey;
     private String userProfileName;
     @Index
@@ -30,6 +40,27 @@ public class MyTask extends EntityObject{
 
     private String helperProfileName;
 
+    private String imageURL;
+
+    public String getImageURL() {
+        return imageURL;
+    }
+
+    public void setImageURL(String imageURL) {
+        this.imageURL = imageURL;
+    }
+
+    public void setServiceToDate(String mServiceToDate) {
+        this.mServiceToDate = mServiceToDate;
+    }
+
+    public String getTaskTitle() {
+        return mTaskTitle;
+    }
+
+    public void setTaskTitle(String mTaskTitle) {
+        this.mTaskTitle = mTaskTitle;
+    }
     public String getHelperProfileName() {
         return helperProfileName;
     }
@@ -118,8 +149,14 @@ public class MyTask extends EntityObject{
     @Override
     public String getName(){ return null;}
 
+
+    public String getServiceToDate() {
+        return mServiceToDate;
+    }
+
     public String getCreateDate() {
         return mCreateDate;
+
     }
 
     public void setCreateDate(String mCreateDate) {
@@ -131,5 +168,37 @@ public class MyTask extends EntityObject{
 
     public void setUpdateDate(String mUpdateDate) {
         this.mUpdateDate = mUpdateDate;
+    }
+
+    public String getServiceTimeRange() {
+        return mServiceTimeRange;
+    }
+
+    public void setServiceTimeRange(String mServiceTimeRange) {
+        this.mServiceTimeRange = mServiceTimeRange;
+    }
+
+    public double getLONG() {
+        return mLONG;
+    }
+
+    public void setLONG(double mLONG) {
+        this.mLONG = mLONG;
+    }
+
+    public double getLAT() {
+        return mLAT;
+    }
+
+    public void setLAT(double mLAT) {
+        this.mLAT = mLAT;
+    }
+
+    public String getCity() {
+        return mCity;
+    }
+
+    public void setCity(String mCity) {
+        this.mCity = mCity;
     }
 }

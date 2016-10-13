@@ -14,23 +14,56 @@ import java.text.SimpleDateFormat;
 
 public class Task {
     private Long mId;
+
+    private Long mTaskId;
     private String mBeginLocation;
+    private double mLAT;
+    private double mLONG;
+    private String mCity;
     private String mEndLocation;
     private Date mServiceDate;
     private Date mCreateDate;
-    private Calendar mTaskDate;
+    private Calendar mTaskDate; // we need to get rid of this member variable because we have mTaskFromDate and mTaskToDate. Dont know why i have a calendar variable instead of a date variable.
+    private Date mTaskFromDate;
+    private Date mTaskToDate;
+    private String mTaskTimeRange;
+
+    private String mTaskTitle;
     private String mTaskDescription;
     private int mWaitResponseTime;
     private boolean isSolved;
     private boolean isAccepted;
     private String userProfileName;
     private Long userProfileKey;
+    private Long mHelperProfileKey;
     private String helperProfileName;
+    private String imageURL;
 
     public static int DISPLAY_DATE=0;
+
+
+
     public static int DISPLAY_TIME=1;
     public static int DISPLAY_DATE_TIME=2;
 
+    public Task(String title, String description, Date from, Date to, String time, String beginLocation, double latitude, double longitude, String city){
+        this.mTaskTitle = title;
+        this.mTaskDescription = description;
+        this.mTaskFromDate = from;
+        this.mTaskToDate = to;
+        this.mTaskTimeRange = time;
+        this.mBeginLocation = beginLocation;
+        this.mLAT = latitude;
+        this.mLONG = longitude;
+        this.mCity = city;
+    }
+
+    public void setTaskToDate(Date mTaskToDate) {
+        this.mTaskToDate = mTaskToDate;
+    }
+    public Date getTaskToDate() {
+        return mTaskToDate;
+    }
 
     public String getHelperProfileName() {
         return helperProfileName;
@@ -40,12 +73,27 @@ public class Task {
         this.helperProfileName = helperProfileName;
     }
 
+    public void setHelperProfileKey(Long helperProfileKey) {
+        this.mHelperProfileKey = helperProfileKey;
+    }
 
+    public Long getHelperProfileKey() {
+        return mHelperProfileKey;
+    }
+
+    public String getImageURL() {
+        return imageURL;
+    }
+
+    public void setImageURL(String imageURL) {
+        this.imageURL = imageURL;
+    }
     public Task(){
         //Generate unique identifier
-        mId = UUID.randomUUID().getMostSignificantBits();
+        mTaskId = UUID.randomUUID().getMostSignificantBits();
     }
-    public void setId(Long id){this.mId = id;}
+
+    public void setTaskId(Long id){this.mTaskId = id;}
 
     public Date getCreateDate() {
         return mCreateDate;
@@ -55,11 +103,26 @@ public class Task {
         this.mCreateDate = mCreateDate;
     }
 
-    public Long getId() {
-        return mId;
+    public Long getTaskId() {
+        return mTaskId;
 
     }
 
+    public Long getId() {
+        return mId;
+    }
+
+    public void setId(Long mId) {
+        this.mId = mId;
+    }
+
+    public String getTaskTitle() {
+        return mTaskTitle;
+    }
+
+    public void setTaskTitle(String mTaskTitle) {
+        this.mTaskTitle = mTaskTitle;
+    }
     public boolean isSolved() {
         return isSolved;
     }
@@ -86,12 +149,12 @@ public class Task {
         return splitString[count-1] + splitString[count];
 
     }
-    public Calendar getTaskDate() {
-        return mTaskDate;
+    public Date getTaskFromDate() {
+        return mTaskFromDate;
     }
 
-    public void setTaskDate(Calendar mTaskDate) {
-        this.mTaskDate = mTaskDate;
+    public void setTaskFromDate(Date mTaskDate) {
+        this.mTaskFromDate = mTaskDate;
     }
     public void setBeginLocation(String mBeginLocation) {
         this.mBeginLocation = mBeginLocation;
@@ -109,6 +172,13 @@ public class Task {
         return mServiceDate;
     }
 
+    public String getCity() {
+        return mCity;
+    }
+
+    public void setCity(String mCity) {
+        this.mCity = mCity;
+    }
 
     public String getDateReadableFormat(){
         Date currentDate = new Date();
@@ -173,4 +243,27 @@ public class Task {
         this.userProfileKey = userProfileKey;
     }
 
+    public String getTaskTimeRange() {
+        return mTaskTimeRange;
+    }
+
+    public void setTaskTimeRange(String mTaskTimeRange) {
+        this.mTaskTimeRange = mTaskTimeRange;
+    }
+
+    public double getLAT() {
+        return mLAT;
+    }
+
+    public void setLAT(double mLAT) {
+        this.mLAT = mLAT;
+    }
+
+    public double getLONG() {
+        return mLONG;
+    }
+
+    public void setLONG(double mLONG) {
+        this.mLONG = mLONG;
+    }
 }

@@ -79,7 +79,7 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         /* initialize the environment and remove any cache */
-        MyServerSettings.initializeEnvironment(getBaseContext(), this);
+        MyServerSettings.initializeEnvironment(getBaseContext());
 
     }
     public void storeUserProfile(){
@@ -96,7 +96,7 @@ public class LoginActivity extends AppCompatActivity {
                 fname = fname + lname!=null?" " + lname+".":"";
                 Log.d(TAG, "Name extracted is: " + fname + " " + lname + ".");
 
-                MyServerSettings.initializeUserProfile(getApplicationContext(), prof.getId(), fname);
+                MyServerSettings.initializeUserProfile(getApplicationContext(), prof.getId(), fname, null, null);
 
             }
 
@@ -245,7 +245,7 @@ public class LoginActivity extends AppCompatActivity {
                            String fname = rslt.getMessage();
                             Log.d(TAG, "Name extracted is: " + fname );
                             /* Setting the user profile information retrieved from the server */
-                            MyServerSettings.initializeUserProfile(getApplicationContext(), Long.parseLong(rslt.getStatusCode()), fname);
+                            //MyServerSettings.initializeUserProfile(getApplicationContext(), rslt.getStatusCode(), fname, null, null);
                     }
 
 

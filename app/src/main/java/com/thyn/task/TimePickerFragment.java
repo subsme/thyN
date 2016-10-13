@@ -1,4 +1,4 @@
-package com.thyn;
+package com.thyn.task;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -11,6 +11,8 @@ import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.view.View;
 import android.widget.TimePicker;
+
+import com.thyn.R;
 
 import java.util.Calendar;
 import java.util.Date;

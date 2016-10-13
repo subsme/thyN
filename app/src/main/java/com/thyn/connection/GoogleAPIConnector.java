@@ -34,8 +34,10 @@ public class GoogleAPIConnector {
             if(myApiService == null) {
                 UserAPI.Builder builder = new UserAPI.Builder(AndroidHttp.newCompatibleTransport(),
                         new AndroidJsonFactory(), null);
-                if(!LOCAL_ANDROID_RUN)
-                    builder.setRootUrl(REMOTE_APP_ENGINE_SERVER_URL_FOR_ANDROID+ "/_ah/api/");
+                if(!LOCAL_ANDROID_RUN) {
+                    Log.d(TAG, "Connecting to " + REMOTE_APP_ENGINE_SERVER_URL_FOR_ANDROID);
+                    builder.setRootUrl(REMOTE_APP_ENGINE_SERVER_URL_FOR_ANDROID + "/_ah/api/");
+                }
 
                 builder = updateBuilder(builder);
                 myApiService = builder.build();
@@ -78,8 +80,10 @@ public class GoogleAPIConnector {
 
              // Need setRootUrl and setGoogleClientRequestInitializer only for local testing,
              // otherwise they can be skipped
-             if(!LOCAL_ANDROID_RUN)
-                 builder.setRootUrl(REMOTE_APP_ENGINE_SERVER_URL_FOR_ANDROID+ "/_ah/api/");
+             if(!LOCAL_ANDROID_RUN) {
+                 Log.d(TAG, "Connecting to " + REMOTE_APP_ENGINE_SERVER_URL_FOR_ANDROID);
+                 builder.setRootUrl(REMOTE_APP_ENGINE_SERVER_URL_FOR_ANDROID + "/_ah/api/");
+             }
 
              builder = updateBuilder(builder);
              myTaskAPIService = builder.build();
@@ -96,8 +100,10 @@ public class GoogleAPIConnector {
                     new AndroidJsonFactory(), null);
                     // Need setRootUrl and setGoogleClientRequestInitializer only for local testing,
                     // otherwise they can be skipped
-             if(!LOCAL_ANDROID_RUN)
-                builder.setRootUrl(REMOTE_APP_ENGINE_SERVER_URL_FOR_ANDROID+ "/_ah/api/");
+             if(!LOCAL_ANDROID_RUN) {
+                 Log.d(TAG, "Connecting to " + REMOTE_APP_ENGINE_SERVER_URL_FOR_ANDROID);
+                 builder.setRootUrl(REMOTE_APP_ENGINE_SERVER_URL_FOR_ANDROID + "/_ah/api/");
+             }
 
                 builder = updateBuilder(builder);
                 myDeviceRegistrationService = builder.build();
@@ -120,6 +126,7 @@ public class GoogleAPIConnector {
         builder.setApplicationName(appName);
 
         if (LOCAL_ANDROID_RUN) {
+            Log.d(TAG, "Connecting to " + LOCAL_APP_ENGINE_SERVER_URL_FOR_ANDROID);
             builder.setRootUrl(LOCAL_APP_ENGINE_SERVER_URL_FOR_ANDROID
                     + "/_ah/api/");
         }

@@ -1,5 +1,6 @@
 package com.thyn.tasklist.my;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -15,16 +16,12 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.CursorAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.google.api.client.extensions.android.http.AndroidHttp;
-import com.google.api.client.extensions.android.json.AndroidJsonFactory;
-import com.google.api.client.googleapis.services.AbstractGoogleClientRequest;
-import com.google.api.client.googleapis.services.GoogleClientRequestInitializer;
+import com.squareup.picasso.Picasso;
 import com.thyn.android.backend.myTaskApi.MyTaskApi;
 import com.thyn.android.backend.myTaskApi.model.MyTask;
 
@@ -35,18 +32,17 @@ import java.util.List;
 
 
 import com.thyn.collection.MyPersonalTaskLab;
-import com.thyn.collection.MyTaskLab;
 import com.thyn.collection.Task;
 import com.thyn.common.MyServerSettings;
 import com.thyn.connection.GoogleAPIConnector;
 import com.thyn.db.thynTaskDBHelper;
-import com.thyn.form.TaskActivity;
-import com.thyn.form.view.my.MyTaskViewOnlyFragment;
-import com.thyn.form.TaskFragment;
-import com.thyn.form.view.my.MyTaskPagerViewOnlyActivity;
+import com.thyn.graphics.MLRoundedImageView;
+import com.thyn.task.TaskActivity;
+import com.thyn.task.view.my.MyTaskViewOnlyFragment;
+import com.thyn.task.TaskFragment;
+import com.thyn.task.view.my.MyTaskPagerViewOnlyActivity;
 import com.thyn.R;
 import com.thyn.tab.DashboardActivity;
-import com.thyn.user.LoginActivity;
 
 /**
  * Created by shalu on 2/22/16.
@@ -59,9 +55,11 @@ public class MyTaskListFragment extends ListFragment{
             "com.thyn.tasklist.my.MyTaskListFragment.NumItems";
 
     boolean showEntireScreen;
+    private ProgressDialog dialog;
     private MyPersonalTaskLab pmanager;
     private thynTaskDBHelper.TaskCursor mCursor;
     private static Long userprofileid = null;
+    private int numRowsToShow;
 
     public static final MyTaskListFragment newInstance(boolean showEntireScreen){
         int numberofItems = (showEntireScreen == true) ? 0:2;
@@ -77,7 +75,10 @@ public class MyTaskListFragment extends ListFragment{
         setHasOptionsMenu(true);
         userprofileid = MyServerSettings.getUserProfileId(getActivity());
         getActivity().setTitle(R.string.task_title);
-        Log.d(TAG, " in onCreate");
+        Log.d(TAG, " in onCreate ");
+        Log.d(TAG, "LOCAL-CACHE is " + PreferenceManager
+                .getDefaultSharedPreferences(getActivity())
+                .getBoolean(MyServerSettings.LOCAL_TASK_CACHE, false));
     }
 
     @Override
@@ -90,10 +91,12 @@ public class MyTaskListFragment extends ListFragment{
     }
     // Subu - Please call loadData() from onResume. If created from onCreate(), it will be fired twice.
     private void loadData(){
-        //manager.removeAllTasks();
+        numRowsToShow = getArguments().getInt(EXTRA_NUM_ITEMS);
         if(!MyServerSettings.getLocalTaskCache(getActivity())){
             Log.d(TAG, "no cache exists...");
-            //callAsyncThread(arguments);
+
+            refreshContent();
+            Log.d(TAG, "LOCAL-CACHE is " + MyServerSettings.getLocalTaskCache(getContext()));
         } else {
             Log.d(TAG, "yes. there is cache...");
             int numRows = getArguments().getInt(EXTRA_NUM_ITEMS);
@@ -133,7 +136,7 @@ public class MyTaskListFragment extends ListFragment{
    @Override
    public void onListItemClick(ListView l, View v, int position, long id){
        //Task t = ((TaskAdapter)getListAdapter()).getItem(position);
-       Log.d(TAG, id+ " was clicked"); //page 191 big nerdranch
+       Log.d(TAG, id + " was clicked"); //page 191 big nerdranch
        //Start TaskPagerActivity
        Intent i = new Intent(getActivity(), MyTaskPagerViewOnlyActivity.class);
        i.putExtra(MyTaskViewOnlyFragment.EXTRA_TASK_ID, id);
@@ -147,12 +150,14 @@ public class MyTaskListFragment extends ListFragment{
         pmanager.purgeTasks();
         Log.d(TAG, "In refreshContent()");
         new RetrieveFromServerAsyncTask().execute();
-        new android.os.Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                mSwipeRefreshLayout.setRefreshing(false);
-            }
-        }, 000);
+    }
+
+    public void onPause() {
+        super.onPause();
+
+        if ((dialog != null) && dialog.isShowing())
+            dialog.dismiss();
+        dialog = null;
     }
 /*
     private class TaskAdapter extends ArrayAdapter<Task> {
@@ -206,6 +211,13 @@ public class MyTaskListFragment extends ListFragment{
       public void bindView(View view, Context context, Cursor cursor) {
           // Get the Task for the current row
           Task task = mTaskCursor.getTask();
+          MLRoundedImageView imageView = (com.thyn.graphics.MLRoundedImageView) view.findViewById(R.id.task_list_user_image);
+          if(task.getImageURL() != null) {
+              Picasso.with(context)
+                      //.load("https://scontent.xx.fbcdn.net/v/t1.0-1/p50x50/11156187_10205188530126207_4481467444246362898_n.jpg?oh=2dee76ec7e202649b84c7a71b4c86721&oe=58ADEBE1")
+                      .load(task.getImageURL())
+                      .into(imageView);
+          }
 
           // Set up the text view values
           TextView descTextView = (TextView)view.findViewById(R.id.task_list_item_titleTextView);
@@ -298,10 +310,21 @@ public class MyTaskListFragment extends ListFragment{
             }
             //TaskAdapter adapter = new TaskAdapter(MyPersonalTaskLab.get(getActivity()).getTasks());
             //setListAdapter(adapter);
-            mCursor = pmanager.queryMyTasks(userprofileid);
+            if(numRowsToShow == 2)
+                mCursor = pmanager.queryMyTasks(userprofileid,numRowsToShow);
+            else
+                mCursor = pmanager.queryMyTasks(userprofileid);
             MyTaskCursorAdapter adapter = new MyTaskCursorAdapter(getActivity(), mCursor);
             adapter.notifyDataSetChanged();
             setListAdapter(adapter);
+            dismissProgressDialog();
+
+        }
+        protected void dismissProgressDialog() {
+
+            if (dialog != null && dialog.isShowing()) {
+                dialog.dismiss();
+            }
 
         }
     }

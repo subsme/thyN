@@ -36,9 +36,10 @@ public class ReceiveFromServerAsyncTask extends AsyncTask<Void, Void, List> {
 
         try {
             Log.d(TAG, "Sending user profile id:" + userprofileid);
-            l = GoogleAPIConnector.connect_TaskAPI().listTasks(false, userprofileid, false).execute().getItems();
+            l = GoogleAPIConnector.connect_TaskAPI().listTasks(false, Long.valueOf(userprofileid), false).execute().getItems();
         } catch (IOException e) {
             e.getMessage();
+            Log.d(TAG,e.getMessage());
         }
 
         return l;
@@ -55,7 +56,7 @@ public class ReceiveFromServerAsyncTask extends AsyncTask<Void, Void, List> {
         if(!MyServerSettings.getLocalTaskCache(service)){
             while (i.hasNext()) {
                 MyTask myTask = (MyTask) i.next();
-                Log.d(TAG, " Inserting Task. Description: " + myTask.getTaskDescription());
+                Log.d(TAG, " Inserting Task. Description: " + myTask.getTaskTitle());
                 manager.convertRemotetoLocalTask(myTask);
             }
             MyServerSettings.initializeLocalTaskCache(service.getApplicationContext());

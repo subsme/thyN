@@ -20,7 +20,7 @@ public class DatastoreHelpers {
     {
         try
         {
-            T entity = ofy().load().key(getKey(classType, id)).get();
+            T entity = ofy().load().key(getKey(classType, id)).now();
             return entity;
         }catch(Exception e)
         {
@@ -79,7 +79,7 @@ public class DatastoreHelpers {
     {
         try
         {
-            T entity = ofy().load().type(classType).filter(operator, value).first().get();
+            T entity = ofy().load().type(classType).filter(operator, value).first().now();
             return entity;
         }catch(Exception e)
         {
@@ -91,7 +91,7 @@ public class DatastoreHelpers {
     {
         try
         {
-            T entity = ofy().load().type(classType).filter(operator, value).first().get();
+            T entity = ofy().load().type(classType).filter(operator, value).first().now();
             return entity;
         }catch(Exception e)
         {

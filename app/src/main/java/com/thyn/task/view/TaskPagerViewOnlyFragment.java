@@ -1,11 +1,10 @@
-package com.thyn.form.view;
+package com.thyn.task.view;
 
 
 import android.annotation.TargetApi;
+import android.content.Context;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.app.Activity;
@@ -18,12 +17,13 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import android.widget.Button;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 
 
+import com.squareup.picasso.Picasso;
 import com.thyn.collection.Task;
 import com.thyn.collection.MyTaskLab;
 import com.thyn.common.MyServerSettings;
@@ -31,7 +31,10 @@ import com.thyn.connection.GoogleAPIConnector;
 
 
 import com.thyn.R;
+import com.thyn.graphics.MLRoundedImageView;
 import com.thyn.tab.WelcomePageActivity;
+import com.thyn.task.ThumbsUpActivity;
+import com.thyn.task.ThumbsUpFragment;
 
 import android.widget.LinearLayout;
 /**
@@ -49,7 +52,16 @@ public class TaskPagerViewOnlyFragment extends Fragment {
     private TextView mTaskLocationField;
     private TextView mTaskServiceDateField;
     private TextView mTaskCreateDateField;
+    private TextView mTaskListingDetails;
+
+    private TextView mTaskDetailedLocation;
+    private TextView mTaskWhenTimeField;
+    private TextView mTaskWhenStartDateField;
+    private TextView mTaskWhenEndDateField;
+
     private Button mButton;
+    private Button mTaskBackToDashboard;
+    private MLRoundedImageView mTask_user_profile_image;
 
     private static final String DIALOG_DATE = "date";
     private static final int REQUEST_DATE = 0;
@@ -98,18 +110,44 @@ public class TaskPagerViewOnlyFragment extends Fragment {
                 getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
             }
         }*/
+        Context c = getActivity().getApplicationContext();
+        mTask_user_profile_image     =   (MLRoundedImageView)v.findViewById(R.id.task_list_user_image);
+
 
         mTaskUserField          =   (TextView)v.findViewById(R.id.task_user);
         mTaskLocationField      =   (TextView)v.findViewById(R.id.task_from_location);
         mTaskDescriptionField   =   (TextView) v.findViewById(R.id.task_description);
         mTaskServiceDateField   =   (TextView) v.findViewById(R.id.task_createDate);
         mTaskCreateDateField    =   (TextView) v.findViewById(R.id.task_serviceDate);
+        mTaskListingDetails     =   (TextView) v.findViewById(R.id.task_details_value);
+
+        mTaskDetailedLocation   =   (TextView) v.findViewById(R.id.task_where_value);
+
+        mTaskWhenTimeField      =   (TextView) v.findViewById(R.id.task_when_value);
+
+        mTaskWhenStartDateField =   (TextView) v.findViewById(R.id.task_startdate);
+
+        mTaskBackToDashboard    =   (Button) v.findViewById(R.id.task_BackToDashboard);
+
+        mTaskDetailedLocation.setText(mTask.getBeginLocation());
+        mTaskWhenTimeField.setText(mTask.getTaskTimeRange());
+
+        if(mTask.getTaskFromDate() != null)
+            mTaskWhenStartDateField.setText(new SimpleDateFormat("EEE, MMM d").format(mTask.getTaskFromDate()));
+
+        Log.d(LOG_TAG, mTask.getImageURL());
+        Picasso.with(c)
+                // .load("https://scontent.xx.fbcdn.net/v/t1.0-1/p50x50/11156187_10205188530126207_4481467444246362898_n.jpg?oh=2dee76ec7e202649b84c7a71b4c86721&oe=58ADEBE1")
+                .load(mTask.getImageURL())
+                .into(mTask_user_profile_image);
 
         mTaskUserField.setText(mTask.getUserProfileName());
-        mTaskLocationField.setText(mTask.getBeginLocation());
-        mTaskDescriptionField.setText(mTask.getTaskDescription());
-        mTaskServiceDateField.setText(mTask.getDateReadableFormat(Task.DISPLAY_DATE_TIME, mTask.getServiceDate()));
+        mTaskLocationField.setText(mTask.getCity());
+        mTaskDescriptionField.setText(mTask.getTaskTitle());
+        mTaskListingDetails.setText(mTask.getTaskDescription());
+//        mTaskServiceDateField.setText(mTask.getDateReadableFormat(Task.DISPLAY_DATE_TIME, mTask.getServiceDate()));
         mTaskCreateDateField.setText(mTask.getDateReadableFormat());
+
         Log.d(LOG_TAG, "task description is: " + mTask.getTaskDescription());
         Log.d(LOG_TAG, "isAccepted is " +mTask.isAccepted());
         if(!mTask.isAccepted()) {//Only the tasks that aren't accepted will show a Accept button.
@@ -131,7 +169,19 @@ public class TaskPagerViewOnlyFragment extends Fragment {
             // button will be displayed
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-            Button btn = new Button(getActivity());
+            mButton = (Button) v.findViewById(R.id.accept_this_request);
+            mButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Log.d(LOG_TAG, "Accept button clicked. Task descr: " + mTask.getTaskDescription());
+                    FragmentManager fm = getActivity().getSupportFragmentManager();
+                    AcceptTaskDialogFragment dialog = AcceptTaskDialogFragment.newInstance(mTask.getUserProfileName());
+                    dialog.setTargetFragment(TaskPagerViewOnlyFragment.this, 0);
+                    dialog.show(fm, DIALOG_ACCEPT_TASK);
+                }
+            });
+
+           /* Button btn = new Button(getActivity());
             btn.setText("Accept");
             lm.addView(btn, params);
             btn.setOnClickListener(new View.OnClickListener() {
@@ -141,6 +191,12 @@ public class TaskPagerViewOnlyFragment extends Fragment {
                     AcceptTaskDialogFragment dialog = AcceptTaskDialogFragment.newInstance(mTask.getTaskDescription());
                     dialog.setTargetFragment(TaskPagerViewOnlyFragment.this, 0);
                     dialog.show(fm, DIALOG_ACCEPT_TASK);
+                }
+            });*/
+            mTaskBackToDashboard.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    getActivity().finish();
                 }
             });
         }
@@ -156,8 +212,10 @@ public class TaskPagerViewOnlyFragment extends Fragment {
             Log.d(LOG_TAG, "User profile id is: " + userprofileid.toString());
             Log.d(LOG_TAG, "TAsk id is: " + mTask.getId());
             new SendToServerAsyncTask().execute(mTask);
-            Intent i = new Intent(getActivity(), WelcomePageActivity.class);
-            i.putExtra("TAB","2");
+
+            Intent i = new Intent(getActivity(), ThumbsUpActivity.class);
+            i.putExtra(ThumbsUpFragment.EXTRA_THUMBS_TITLE, "THANK YOU!");
+            i.putExtra(ThumbsUpFragment.EXTRA_THUMBS_DESCRIPTION, "Awesome! Thanks for helping your neighbr " + mTask.getUserProfileName() + ".");
             startActivity(i);
         } else Log.d(LOG_TAG, "RESult is CANCEL");
     }
@@ -171,8 +229,9 @@ public class TaskPagerViewOnlyFragment extends Fragment {
             try {
                 Log.d(LOG_TAG, "Calling updateTaskHelper with TaskId: "+ mTask.getId());
                 Long userprofileid = MyServerSettings.getUserProfileId(getActivity());
-                Log.d(LOG_TAG, "Sending user profile id:"+userprofileid);
-                GoogleAPIConnector.connect_TaskAPI().updateTaskHelper(mTask.getId(),userprofileid).execute();
+                Log.d(LOG_TAG, "Sending user profile id:" + userprofileid);
+                GoogleAPIConnector.connect_TaskAPI().updateTaskHelper(userprofileid, new Long(mTask.getId())).execute();
+
 
 
             }

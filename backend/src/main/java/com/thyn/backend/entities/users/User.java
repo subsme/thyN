@@ -20,23 +20,42 @@ import java.util.Date;
  */
 @Entity
 public class User extends EntityObject{
-    @Index private String email;
+    @Index
+    private String email;
     private Date creationTime;
     private String displayName;
     private Long profileKey;
+    @Index
     private String fbUserId;
+    @Index
+    private String googUserId;
+    private String imageURL;
+    private String gender;
+
     private UserRole userRole;
+
     private UserStatus userStatus;
 
-    public static User createNewUserOnDatastore(UserRole userRole, String email, String name, String password) throws NoSuchAlgorithmException, InvalidKeySpecException{
-        return createNewUserOnDatastore(userRole, email, name, null, LoginType.thyN, password);
+    public String getImageURL() {
+        return imageURL;
     }
-    public static User createNewUserOnDatastore(UserRole userRole, String email, String name, String externalUserId, LoginType lType, String password) throws NoSuchAlgorithmException, InvalidKeySpecException{
-        User user = new User(userRole, email, name, password);
+
+    public static User createNewUserOnDatastore(UserRole userRole, String email, String name, String password) throws NoSuchAlgorithmException, InvalidKeySpecException{
+        return createNewUserOnDatastore(userRole, email, name, LoginType.thyN, null, null, null, password);
+    }
+    public static User createNewUserOnDatastore(UserRole userRole, String email, String name, LoginType lType, String externalUserId, String imageURL, String gender, String password) throws NoSuchAlgorithmException, InvalidKeySpecException{
+        User user = new User(userRole, email, name, password,externalUserId==null?false:true);
+
+        user.setGender(gender);
+        user.setImageURL(imageURL);
+
         switch(lType)
         {
             case Facebook:
                 user.setFbUserId(externalUserId);
+                break;
+            case Google:
+                user.setGoogUserId(externalUserId);
                 break;
             default:
                 break;
@@ -53,11 +72,11 @@ public class User extends EntityObject{
 
     private User(){}
 
-    private User(UserRole userRole, String email, String name, String password) throws NoSuchAlgorithmException, InvalidKeySpecException{
+    private User(UserRole userRole, String email, String name, String password, boolean isExternal) throws NoSuchAlgorithmException, InvalidKeySpecException{
         this.userRole = userRole;
         this.email = email;
         this.userStatus = UserStatus.ACTIVE;
-        //this.displayName = name;
+        this.displayName = name;
         this.creationTime = new Date();
         String firstName = name;
         String lastName = null;
@@ -69,7 +88,8 @@ public class User extends EntityObject{
         Profile prof = Profile.createNewProfileOnDatastore(firstName, lastName);
         this.profileKey = prof.getId();
 
-        prof.setPassword(password);
+        if(!isExternal)
+            prof.setPassword(password);
 
 
 
@@ -107,6 +127,19 @@ public class User extends EntityObject{
             return true;
         this.fbUserId = fbUserId;
         return DatastoreHelpers.trySaveEntityOnDatastore(this) != null;
+    }
+    public boolean setGoogUserId(String googUserId) {
+        if(this.googUserId != null && this.googUserId.equals(googUserId))
+            return true;
+        this.googUserId = googUserId;
+        return DatastoreHelpers.trySaveEntityOnDatastore(this) != null;
+    }
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public void setImageURL(String imageURL) {
+        this.imageURL = imageURL;
     }
     @Override
     public boolean dispose() {

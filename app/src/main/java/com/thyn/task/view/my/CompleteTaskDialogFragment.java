@@ -1,28 +1,30 @@
-package com.thyn.form.view;
+package com.thyn.task.view.my;
 
 import android.app.Activity;
-import android.content.DialogInterface;
-import android.support.v4.app.DialogFragment;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
 import android.view.View;
 import android.widget.TextView;
 import com.thyn.R;
 
+
+
 /**
  * Created by shalu on 3/14/16.
  */
-public class AcceptTaskDialogFragment extends DialogFragment{
+public class CompleteTaskDialogFragment extends DialogFragment{
     public static final String EXTRA_TEXT =
-            "com.android.android.thyn.form.view.taskdescription";
+            "com.android.android.thyn.form.view.my.taskdescription";
     private String mTaskDescription = null;
 
-    public static AcceptTaskDialogFragment newInstance(String str){
+    public static CompleteTaskDialogFragment newInstance(String str){
         Bundle args = new Bundle();
         args.putSerializable(EXTRA_TEXT, str);
 
-        AcceptTaskDialogFragment fragment = new AcceptTaskDialogFragment();
+        CompleteTaskDialogFragment fragment = new CompleteTaskDialogFragment();
         fragment.setArguments(args);
 
         return fragment;

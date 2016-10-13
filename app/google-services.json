@@ -1,18 +1,14 @@
 {
   "project_info": {
-    "project_id": "xz-logical-bird-e",
     "project_number": "953474522001",
-    "name": "My Cloud Project"
+    "project_id": "xz-logical-bird-e"
   },
   "client": [
     {
       "client_info": {
         "mobilesdk_app_id": "1:953474522001:android:9b744a132004f149",
-        "client_id": "android:com.thyn.backend",
-        "client_type": 1,
         "android_client_info": {
-          "package_name": "com.thyn.backend",
-          "certificate_hash": []
+          "package_name": "com.thyn.backend"
         }
       },
       "oauth_client": [
@@ -21,21 +17,18 @@
           "client_type": 3
         }
       ],
-      "api_key": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBZWlYxZpofSVxaGmky63UQdJhqTs5Ra5E"
+        }
+      ],
       "services": {
         "analytics_service": {
           "status": 1
         },
-        "cloud_messaging_service": {
-          "status": 2,
-          "apns_config": []
-        },
         "appinvite_service": {
           "status": 1,
           "other_platform_oauth_client": []
-        },
-        "google_signin_service": {
-          "status": 1
         },
         "ads_service": {
           "status": 1
@@ -45,34 +38,36 @@
     {
       "client_info": {
         "mobilesdk_app_id": "1:953474522001:android:b9ea4bf1f6a41d29",
-        "client_id": "android:com.thyn",
-        "client_type": 1,
         "android_client_info": {
-          "package_name": "com.thyn",
-          "certificate_hash": []
+          "package_name": "com.thyn"
         }
       },
       "oauth_client": [
+        {
+          "client_id": "953474522001-20a6l23ogbsnbpuqnru51j6sv748p240.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.thyn",
+            "certificate_hash": "B80D378335489EC66B954C2B61DAA319DEE6A050"
+          }
+        },
         {
           "client_id": "953474522001-dhipfr71bq11vk1biclhmkoirl4dhs76.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
-      "api_key": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBZWlYxZpofSVxaGmky63UQdJhqTs5Ra5E"
+        }
+      ],
       "services": {
         "analytics_service": {
           "status": 1
         },
-        "cloud_messaging_service": {
-          "status": 2,
-          "apns_config": []
-        },
         "appinvite_service": {
           "status": 1,
           "other_platform_oauth_client": []
-        },
-        "google_signin_service": {
-          "status": 1
         },
         "ads_service": {
           "status": 1
@@ -80,6 +75,5 @@
       }
     }
   ],
-  "client_info": [],
-  "ARTIFACT_VERSION": "1"
+  "configuration_version": "1"
 }

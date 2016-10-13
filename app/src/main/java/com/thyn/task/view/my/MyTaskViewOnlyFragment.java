@@ -1,13 +1,11 @@
-package com.thyn.form.view.my;
+package com.thyn.task.view.my;
 
 
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.NavUtils;
@@ -26,7 +24,6 @@ import com.thyn.collection.Task;
 import com.thyn.collection.MyPersonalTaskLab;
 import com.thyn.common.MyServerSettings;
 import com.thyn.connection.GoogleAPIConnector;
-import com.thyn.user.LoginActivity;
 import com.thyn.tab.WelcomePageActivity;
 import com.thyn.R;
 /**

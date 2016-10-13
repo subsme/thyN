@@ -66,7 +66,7 @@ public class Signup1Activity extends AppCompatActivity {
             public void onResponseFromServer(ProgressDialog progressDialog, APIGeneralResult rslt) {
                 Log.i(TAG, "APIGeneralResult a is " + rslt.getMessage());
                 if (rslt != null && Long.parseLong(rslt.getStatusCode()) > 0) {
-                    MyServerSettings.initializeUserProfile(getApplicationContext(), Long.parseLong(rslt.getStatusCode()), rslt.getMessage());
+                    //MyServerSettings.initializeUserProfile(getApplicationContext(), rslt.getStatusCode(), rslt.getMessage(), null, null);
                     onSignupSuccess();
                 }
                 else onSignupFailed();

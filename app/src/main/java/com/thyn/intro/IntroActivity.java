@@ -47,8 +47,8 @@ public class IntroActivity extends AppCompatActivity{
         super.onCreate(savedInstanceState);
 
         //Removing all the local caches and starting the poss service
-        MyServerSettings.initializeEnvironment(getBaseContext(), this);
-        MyServerSettings.initializeUserProfile(getBaseContext(), new Long("5715999101812736"), "Subu4 Sundaram");
+        //MyServerSettings.initializeEnvironment(getBaseContext(), this);
+        //MyServerSettings.initializeUserProfile(getBaseContext(), "5715999101812736", "Subu4 Sundaram", null, null);
         // Checking for first time launch - before calling setContentView()
         prefManager = new LaunchPrefManager(this);
         if (!prefManager.isFirstTimeLaunch()) {

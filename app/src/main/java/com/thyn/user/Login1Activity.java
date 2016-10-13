@@ -75,7 +75,7 @@ public class Login1Activity extends AppCompatActivity {
         });
 
         /* initialize the environment and remove any cache */
-        MyServerSettings.initializeEnvironment(getBaseContext(), this);
+        MyServerSettings.initializeEnvironment(getBaseContext());
 
         loginLooperThread = new LoginLooperThread<ProgressDialog>(new Handler());
         loginLooperThread.setListener(new LoginLooperThread.Listener<ProgressDialog>() {
@@ -83,7 +83,7 @@ public class Login1Activity extends AppCompatActivity {
                 Log.i(TAG, "APIGeneralResult a is " + rslt.getMessage());
                 //Log.i(TAG, "Boolean b is " + b);
                 if (rslt != null && Long.parseLong(rslt.getStatusCode()) > 0) {
-                    MyServerSettings.initializeUserProfile(getApplicationContext(), Long.parseLong(rslt.getStatusCode()), rslt.getMessage());
+                    //MyServerSettings.initializeUserProfile(getApplicationContext(), rslt.getStatusCode(), rslt.getMessage(),null,null);
                     onLoginSuccess();
                     Intent i = new Intent(getBaseContext(), MainActivity.class);
                     startActivity(i);

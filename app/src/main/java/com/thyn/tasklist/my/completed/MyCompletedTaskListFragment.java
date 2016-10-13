@@ -3,7 +3,6 @@ package com.thyn.tasklist.my.completed;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -14,10 +13,6 @@ import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.TextView;
 
-import com.google.api.client.extensions.android.http.AndroidHttp;
-import com.google.api.client.extensions.android.json.AndroidJsonFactory;
-import com.google.api.client.googleapis.services.AbstractGoogleClientRequest;
-import com.google.api.client.googleapis.services.GoogleClientRequestInitializer;
 import com.thyn.android.backend.myTaskApi.MyTaskApi;
 import com.thyn.android.backend.myTaskApi.model.MyTask;
 
@@ -30,15 +25,14 @@ import java.util.List;
 import com.thyn.collection.Task;
 import com.thyn.common.MyServerSettings;
 import com.thyn.connection.GoogleAPIConnector;
-import com.thyn.form.TaskActivity;
-import com.thyn.form.TaskFragment;
+import com.thyn.task.TaskActivity;
+import com.thyn.task.TaskFragment;
 import com.thyn.collection.MyCompletedTaskLab;
 
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v4.app.Fragment;
 import com.thyn.R;
-import com.thyn.user.LoginActivity;
 
 /**
  * Created by shalu on 2/22/16.

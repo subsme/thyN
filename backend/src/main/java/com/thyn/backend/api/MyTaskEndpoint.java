@@ -14,19 +14,21 @@ import com.google.appengine.api.datastore.QueryResultIterator;
 import com.google.appengine.repackaged.com.google.api.services.datastore.client.DatastoreHelper;
 import com.googlecode.objectify.cmd.Query;
 import com.thyn.backend.entities.MyTask;
+import com.thyn.backend.entities.log.Log_Action;
 import com.thyn.backend.entities.users.Device;
 import com.thyn.backend.entities.users.User;
 import com.thyn.backend.gcm.GcmSender;
 import com.thyn.backend.utilities.security.SecurityUtilities;
 import com.thyn.backend.utilities.security.ThyNSession;
 
+import java.util.StringTokenizer;
 import java.util.logging.Logger;
 import java.util.Date;
 
 import javax.inject.Named;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.Cookie;
-import javax.validation.constraints.Null;
+//import javax.validation.constraints.Null;
 
 import static com.thyn.backend.datastore.OfyService.ofy;
 import com.thyn.backend.datastore.DatastoreHelpers;
@@ -98,12 +100,12 @@ public class MyTaskEndpoint {
                 logger.info("In listTasks. The profile id is : " + profileID);
         Query<MyTask> query = null;
         if(helper){
-            logger.info("i am in if");
+            logger.info("HELPER is SET");
             if(!isSolved) query = ofy().load().type(MyTask.class).filter("helperUserProfileKey", profileID).order("-mCreateDate");
             else query = ofy().load().type(MyTask.class).filter("helperUserProfileKey",profileID).filter("isSolved", true).order("-mCreateDate");
         }
         else {
-            logger.info("no i am in else");
+            logger.info("HELPER is not SET");
             if(!isSolved) //query = ofy().load().type(MyTask.class).filter("helperUserProfileKey ==",null);
                 query = ofy().load().type(MyTask.class).filter("isSolved", false).order("-mCreateDate");
             else query = ofy().load().type(MyTask.class).filter("isSolved", true).order("-mCreateDate");
@@ -166,6 +168,37 @@ public class MyTaskEndpoint {
         //myTask.setTaskDescription("Mutating the task description: " + myTask.getTaskDescription());
 
     }
+    @ApiMethod(name = "insertMyTaskWithSocialID", httpMethod = HttpMethod.POST, path="mytask/insertmytaskwithsocialid")
+    public APIGeneralResult insertMyTaskWithSocialID(MyTask myTask, @Named("socialType") int socialType, @Named("socialID") String socialID, HttpServletRequest req) throws ConflictException, APIErrorException{
+        //Long profileId = findProfileId(socialID);
+        logger.info("Client inserting a task. Calling insertMyTaskWithSocialID method");
+        logger.info("The social id is : " + socialID + ", The social type is: " + socialType);
+        logger.info("----------------Task Information sent from client-----------------");
+        logger.info("Title: " + myTask.getTaskTitle()
+                +   ", Description: " + myTask.getTaskDescription()
+                +   ", Location: " + myTask.getBeginLocation()
+                +   ", From Date: " + myTask.getServiceDate()
+                +   ", To Date: " + myTask.getServiceToDate()
+                +   ", Time Range: " + myTask.getServiceTimeRange());
+
+        User user = null;
+        if(socialType == 0) {//Facebook login
+                user = DatastoreHelpers.tryLoadEntityFromDatastore(User.class, "fbUserId ==", socialID);
+        }
+        else{//Google Login
+            user = DatastoreHelpers.tryLoadEntityFromDatastore(User.class, "googUserId ==", socialID);
+        }
+        logger.info("User profile id retrieved from the database is: " + user.getProfileId());
+        myTask.setUserProfileKey(user.getProfileId());
+        myTask.setUserProfileName(user.getName());
+        myTask.setImageURL(user.getImageURL());
+        myTask.setCreateDate(new Date().toString());
+
+        logger.info("Saving task information in database...");
+        ofy().save().entity(myTask).now();
+        return new APIGeneralResult("OK", "New Task Created Successfully");
+    }
+
     /**
      * This inserts a new <code>MyTask</code> object.
      *
@@ -194,7 +227,7 @@ public class MyTaskEndpoint {
         DatastoreHelpers.trySaveEntityOnDatastore(task);
     }
 
-    @ApiMethod(name = "updateTaskHelper", httpMethod = HttpMethod.POST)
+    @ApiMethod(name = "updateTaskHelper", httpMethod = HttpMethod.POST, path="mytask/updatetaskhelper")
     public void updateTaskHelper(@Named("taskId") Long taskId, @Named("profileID") Long profileID, HttpServletRequest req) throws APIErrorException
     {
         logger.info("Calling updateTaskHelper method. task id is: " + taskId);
@@ -215,12 +248,13 @@ public class MyTaskEndpoint {
             //ofy().save().entity(mTask).now();
             DatastoreHelpers.trySaveEntityOnDatastore(mTask);
 
+            log("HELPER-ASSIGNED", profileID, mTask.getUserProfileKey(), taskId, 0);
             /* Retrieve the profile */
             Profile prof = DatastoreHelpers.tryLoadEntityFromDatastore(Profile.class,profileID);
 
             //Device device = DatastoreHelpers.tryLoadEntityFromDatastore(Device.class, "profile_key ==", profileID.toString());
             // the above line didnt work because profile_key is Long but the profileID that I was passing is String. So made sure profileID is passed as Long.
-            Device device = ofy().load().type(Device.class).filter("profile_key ==", mTask.getUserProfileKey()).first().get();
+            Device device = ofy().load().type(Device.class).filter("profile_key ==", mTask.getUserProfileKey()).first().now();
             if(device == null) throw new APIErrorException(500, "UADU03 - Internal Server Error. Can't find the device based on profile id " +  profileID);
             GcmSender.sendMessageToDeviceGroup(device.getNotification_key(),"Yay! " + prof.getFirstName() + " " + prof.getLastName() + " is interested in helping you.");
         }
@@ -229,6 +263,23 @@ public class MyTaskEndpoint {
           //  com.thyn.backend.utilities.Logger.logWarning("Exception while assigning Task to HELPER (" + sessionUser.getId() + ").");
             throw new APIErrorException(500, "UADU02 - Internal Server Error.");
         }
+    }
+
+    @ApiMethod(name = "cancelTaskHelper", httpMethod = HttpMethod.POST, path="mytask/canceltaskhelper")
+    public void cancelTaskHelper(@Named("taskId") Long taskId, @Named("profileID") Long profileID, HttpServletRequest req) throws APIErrorException
+    {
+        logger.info("Calling cancelTaskHelper method. task id is: " + taskId);
+        logger.info("The profile id is : " + profileID);
+
+        MyTask mTask = DatastoreHelpers.tryLoadEntityFromDatastore(MyTask.class, taskId);
+        mTask.setHelperUserProfileKey(null);
+        mTask.setHelperProfileName(null);
+        DatastoreHelpers.trySaveEntityOnDatastore(mTask);
+
+        log("HELPER-CANCELLED", profileID, mTask.getUserProfileKey(), taskId, 0);
+
+
+
     }
 
     @ApiMethod(name = "markComplete", httpMethod = HttpMethod.POST)
@@ -248,12 +299,13 @@ public class MyTaskEndpoint {
         logger.info("Saving Task after the task is complete");
         ofy().save().entity(mTask).now();
 
+        log("COMPLETED", profileID, mTask.getUserProfileKey(), taskId, 10);
         /* Retrieve the profile */
         Profile prof = DatastoreHelpers.tryLoadEntityFromDatastore(Profile.class,profileID);
 
         //Device device = DatastoreHelpers.tryLoadEntityFromDatastore(Device.class, "profile_key ==", profileID.toString());
         // the above line didnt work because profile_key is Long but the profileID that I was passing is String. So made sure profileID is passed as Long.
-        Device device = ofy().load().type(Device.class).filter("profile_key ==", profileID).first().get();
+        Device device = ofy().load().type(Device.class).filter("profile_key ==", profileID).first().now();
         if(device == null) throw new APIErrorException(500, "UADU03 - Internal Server Error. Can't find the device based on profile id " +  profileID);
         GcmSender.sendMessageToDeviceGroup(device.getNotification_key(), "Yay! " + prof.getFirstName() + " " + prof.getLastName() + " has marked the task Complete.");
 
@@ -263,5 +315,24 @@ public class MyTaskEndpoint {
         return ofy().load().type(classType).id(key).get();
 //or return ofy().load().type(Quote.class).filter("id",id).first.now();
     }*/
+    private String getCity(String address){
+        String[] parts = address.split(",");
+        String city = null;
+        if(parts != null && parts.length>0){
+            int len = parts.length;
+            if(len == 2){// Great. here 707 Henrietta Avenue Sunnyvale is in part[0] and CA is in part[1]
+                String streetaddresswithcity = parts[0];
+            }
+
+        }
+        return null;
+    }
+
+    private void log(String action, Long profileID, Long neighbrWhoIsHelpedID, Long taskId, int points){
+        Log_Action log = Log_Action.createNewUserOnDatastore(action, new Date(),profileID, neighbrWhoIsHelpedID, taskId, points);
+        DatastoreHelpers.trySaveEntityOnDatastore(log);
+    }
+
+
 
 }

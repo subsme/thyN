@@ -190,7 +190,7 @@ public class SignupActivity extends AppCompatActivity {
                     Log.d(TAG, "Retrieved profile object.");
                     String fname = rslt.getMessage();
                     Log.d(TAG, "Name extracted is: " + fname );
-                    MyServerSettings.initializeUserProfile(getApplicationContext(), Long.parseLong(rslt.getStatusCode()), fname);
+                    //MyServerSettings.initializeUserProfile(getApplicationContext(), rslt.getStatusCode(), fname, null, null);
                 }
             } catch (IOException e) {
                 e.getMessage();

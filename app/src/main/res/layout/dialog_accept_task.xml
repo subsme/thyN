@@ -3,5 +3,8 @@
     android:id="@+id/dialog_accept_task"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:textSize="20sp" />
+    android:layout_marginLeft="40dp"
+    android:text="Thanks for helping"
+    android:textSize="20sp"
+    android:paddingLeft="40dp" />
 

@@ -38,15 +38,14 @@
             -->
         </activity>
         <activity
-            android:name=".form.view.TaskPagerViewOnlyActivity"
+            android:name=".task.view.TaskPagerViewOnlyActivity"
             android:label="@string/app_name"
-            android:screenOrientation="portrait">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.thyn.tab.WelcomePageActivity" />
-        </activity>
+            android:screenOrientation="portrait"></activity>
         <activity
-            android:name=".form.view.my.MyTaskPagerViewOnlyActivity"
+            android:name=".task.view.iwillhelp.TaskIWillHelpPagerViewOnlyActivity"
+            android:screenOrientation="portrait"></activity>
+        <activity
+            android:name=".task.view.my.MyTaskPagerViewOnlyActivity"
             android:label="@string/app_name"
             android:screenOrientation="portrait">
             <meta-data
@@ -56,9 +55,9 @@
         <activity
             android:name=".tasklist.my.completed.MyCompletedTaskListActivity"
             android:label="@string/app_name"
-            android:screenOrientation="portrait"></activity>
+            android:screenOrientation="portrait" />
         <activity
-            android:name=".form.TaskActivity"
+            android:name=".task.TaskActivity"
             android:label="@string/app_name"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="stateHidden">
@@ -67,28 +66,35 @@
                 android:value="com.thyn.tasklist.TaskListActivity" />
         </activity>
         <activity
+            android:name=".task.RandomTaskActivity"
+            android:screenOrientation="portrait">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.thyn.tab.DashboardActivity" />
+        </activity>
+        <activity
             android:name=".field.AddressActivity"
             android:label="@string/app_name"
             android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.thyn.form.TaskActivity" />
+                android:value="com.thyn.task.TaskActivity" />
         </activity>
         <activity
             android:name=".user.SignupActivity"
             android:label="@string/title_activity_signup"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.Bluey"></activity>
+            android:theme="@style/AppTheme.Bluey" />
         <activity
             android:name=".user.LoginActivity"
             android:label="@string/title_activity_login"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.Bluey"></activity>
+            android:theme="@style/AppTheme.Bluey" />
         <activity
             android:name=".intro.IntroLogin"
             android:label="@string/title_activity_login"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".intro.IntroActivity"
             android:screenOrientation="portrait"
@@ -103,7 +109,11 @@
             android:name=".broadcast.MainActivity"
             android:label="@string/app_name"
             android:screenOrientation="portrait"
-            android:theme="@style/TransparentCompat"></activity>
+            android:theme="@style/TransparentCompat" />
+        <activity
+            android:name="com.facebook.FacebookActivity"
+            android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
+            android:label="@string/app_name" />
         <!-- [START gcm_receiver] -->
         <receiver
             android:name="com.google.android.gms.gcm.GcmReceiver"
@@ -140,12 +150,24 @@
         <!-- [END instanceId_listener] -->
         <service
             android:name=".broadcast.GcmRegistrationIntentService"
-            android:exported="false"></service>
+            android:exported="false" />
         <service android:name=".connection.PollService" />
 
         <activity
             android:name=".tab.DashboardActivity"
             android:label="@string/title_activity_dashboard"
+            android:screenOrientation="portrait" />
+        <!--  Subu to delete this activity before going to production -->
+        <activity
+            android:name=".deleteMeInProd.AndroidDatabaseManager"
+            android:theme="@style/Theme.AppCompat.Light" />
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyC8I-acOlnjs33e7x7xXQF08AnEqizJmcw" />
+
+        <activity
+            android:name=".task.ThumbsUpActivity"
             android:screenOrientation="portrait"></activity>
     </application>
 

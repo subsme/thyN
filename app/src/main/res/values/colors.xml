@@ -50,9 +50,12 @@
         <item>@color/dot_dark_screen5</item>
     </array>
 
-    <color name="tab_highlighter">#FFCD36</color>
+    <color name="tab_highlighter">#FFCE41</color>
     <color name="colorHighlight">#a6ddf0</color>
     <color name="textShaded">#BCBCBC</color>
     <color name="textShaded2">#64afe1</color>
     <color name="greyseparator">#ECECEC</color>
+
+    <color name="htextcolor">#B76643</color>
+
 </resources>

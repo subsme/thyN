@@ -8,10 +8,16 @@ import com.google.api.server.spi.config.ApiMethod.HttpMethod;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 
+import com.google.appengine.api.datastore.QueryResultIterator;
 import com.google.appengine.repackaged.com.google.api.services.datastore.client.Datastore;
 
 
+import com.googlecode.objectify.cmd.Query;
+import com.thyn.backend.entities.MyTask;
+import com.thyn.backend.entities.log.Log_Action;
 import com.thyn.backend.gcm.GcmSender;
+import com.thyn.backend.utilities.security.ExternalAuthentication;
+import com.thyn.backend.utilities.security.ExternalLogonPackage;
 import com.thyn.backend.utilities.security.ThyNLogonPackage;
 import com.thyn.backend.utilities.InputValidation;
 import com.thyn.backend.utilities.Logger;
@@ -39,9 +45,15 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.thyn.backend.entities.users.Device;
+
+import org.json.JSONObject;
 
 import static com.thyn.backend.datastore.OfyService.ofy;
-import com.thyn.backend.entities.users.Device;
+
 /**
  * Created by subu sundaram on 3/4/16.
  */
@@ -54,6 +66,7 @@ import com.thyn.backend.entities.users.Device;
         auth = @ApiAuth(allowCookieAuth = AnnotationBoolean.TRUE))
 
 public class UserAPI {
+    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(UserAPI.class.getName());
     static enum RegistrationStatusCode
     {
         OK,
@@ -117,6 +130,81 @@ public class UserAPI {
         return new APIGeneralResult(prof.getId().toString(), prof.getFirstName() + " " + prof.getLastName());
     }
 
+    @ApiMethod(name = "LogonWithGoogle", httpMethod = HttpMethod.POST)
+    public APIGeneralResult LogonWithGoogleUser(ExternalLogonPackage googLogonPackage, HttpServletRequest req) throws APIErrorException {
+        Logger.logInfo("Calling LogonWithGoogle");
+
+        String googUserToken = googLogonPackage.getAccessToken();
+        if (!InputValidation.validateTextBoxInput(googUserToken))
+            throw new APIErrorException(400, "UALG01 - Invalid input for Google Login.");
+
+        User user = null;
+        Profile prof = null;
+        try
+        {
+            user = ExternalAuthentication.getInfoFromGoogleForLogin(googUserToken);
+
+        }catch(Exception e)
+        {
+            Logger.logError("UALM03 - Exception while logging user in through thyN logon. Email: " + googLogonPackage.getUserId() + ". ", e);
+            throw new APIErrorException(500, "UALM03 - Internal Server Error.");
+        }
+
+        if (user == null)
+            return new APIGeneralResult(null, "UALM04 - Invalid credentials.");
+
+        Logger.logInfo("user profile id is:" + user.getProfileId().toString());
+        if(user.getProfileId() != null)
+            findDistinctNeigbrsHelped(user.getProfileId());
+
+        return new APIGeneralResult(user.getProfileId().toString(), "User Authenticated Successfully");
+    }
+
+    private void findDistinctNeigbrsHelped(Long profileKey){
+        Query<Log_Action> query = null;
+        query = ofy().load().type(Log_Action.class)
+                .filter("userKey ==", profileKey)
+                .filter("action", "COMPLETED")
+                .order("-actionTime");
+        List<Log_Action> records = new ArrayList<Log_Action>();
+        QueryResultIterator<Log_Action> iterator = query.iterator();
+        int num = 0;
+        while (iterator.hasNext()) {
+            Log_Action log_action = iterator.next();
+            records.add(log_action);
+            logger.info("adding Log_Action: User" + log_action.getUserKey()
+                    + ", Neighbr helped " + log_action.getNeighbrWhoIsHelpedKey()
+                    + ", Task helped " + log_action.getTaskKey());
+        }
+    }
+
+    @ApiMethod(name = "LogonWithFacebook", httpMethod = HttpMethod.POST)
+    public APIGeneralResult LogonWithFacebookUser(ExternalLogonPackage fbLogonPackage, HttpServletRequest req) throws APIErrorException {
+        Logger.logInfo("Calling LogonWithFacebok");
+
+        String fbUserToken = fbLogonPackage.getAccessToken();
+        if (!InputValidation.validateTextBoxInput(fbUserToken))
+            throw new APIErrorException(400, "UALG01 - Invalid input for Google Login.");
+
+        User user = null;
+        Profile prof = null;
+        try
+        {
+            user = ExternalAuthentication.getInfoFromFacebookForLogin(fbUserToken);
+
+        }catch(Exception e)
+        {
+            Logger.logError("UALM03 - Exception while logging user in through thyN logon. Email: " + fbLogonPackage.getUserId() + ". ", e);
+            throw new APIErrorException(500, "UALM03 - Internal Server Error.");
+        }
+
+        if (user == null)
+            return new APIGeneralResult(null, "UALM04 - Invalid credentials.");
+
+        Logger.logInfo("user profile id is:" + user.getProfileId().toString());
+        return new APIGeneralResult(user.getProfileId().toString(), "User Authenticated Successfully");
+    }
+
     private User validateThyNLogin(String email, String password) throws Exception
     {
         User user = DatastoreHelpers.tryGetUserByEmailAddress(email);
@@ -129,6 +217,11 @@ public class UserAPI {
                 return user;
         }
         return null;
+    }
+
+    private User doesExternalUserExistInDB(String email) throws Exception{
+        User user = DatastoreHelpers.tryGetUserByEmailAddress(email);
+        return user;
     }
 
     @ApiMethod(name = "registerNewThyNUser", httpMethod = HttpMethod.POST)
@@ -206,6 +299,18 @@ public class UserAPI {
         }
 
     }
+    @ApiMethod(name = "getUser", httpMethod = HttpMethod.GET, path = "UserInfo")
+    public User getUser(@Named("userId") long userId) throws APIErrorException{
+        User user =  DatastoreHelpers.tryLoadEntityFromDatastore(User.class, userId);
+
+        if(user == null)
+        {
+            throw new APIErrorException(400, "UAGP01 - Invalid user id.");
+        }
+
+        return user;
+    }
+
     @ApiMethod(name = "getCurrentUserProfile", httpMethod = HttpMethod.GET, path = "UserProfile")
     public Profile getCurrentUserProfile(HttpServletRequest req) throws APIErrorException{
         ThyNSession currentSession = SecurityUtilities.enforceAuthenticationForCurrentAPICall(req);

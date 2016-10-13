@@ -6,6 +6,7 @@ import com.googlecode.objectify.ObjectifyService;
 
 import com.thyn.backend.entities.MyTask;
 
+import com.thyn.backend.entities.log.Log_Action;
 import com.thyn.backend.utilities.Logger;
 import com.thyn.backend.entities.users.User;
 import com.thyn.backend.entities.users.Profile;
@@ -20,6 +21,7 @@ public class OfyService {
         factory().register(User.class);
         factory().register(Profile.class);
         factory().register(Device.class);
+        factory().register(Log_Action.class);
         Logger.logInfo("Performed Classes registrations");
     }
 

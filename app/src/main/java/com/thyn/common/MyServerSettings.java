@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.Context;
 import com.thyn.broadcast.GCMPreferences;
+import com.thyn.connection.GoogleAPIConnector;
 import com.thyn.connection.PollService;
 
 import android.preference.PreferenceManager;
@@ -15,6 +16,7 @@ import android.support.v4.app.FragmentActivity;
  * Created by shalu on 4/5/16.
  */
 public class MyServerSettings {
+    public static int LocalDevServer = -1;
     public static int DevServer = 0;
     public static int ProdServer = 1;
 
@@ -22,22 +24,30 @@ public class MyServerSettings {
 
     public static final String PREF_USERPROFILE_ID = "userProfileID";
     public static final String PREF_USERPROFILE_NAME = "userProfileName";
+    public static final String PREF_USERIMAGE_URL = "userimageURL";
+    public static final String PREF_USER_TOKEN = "userToken";
+    public static final String PREF_USER_SOCIAL_ID = "userSocialID";
+    public static final String PREF_USER_SOCIAL_TYPE = "userSocialType";
 
-    private static String LOCAL_TASK_CACHE = "taskCache";
+    public static String LOCAL_TASK_CACHE = "taskCache";
     private static String LOCAL_MYTASK_CACHE = "myTaskCache";
 
-    public static void initializeEnvironment(Context c, Activity a){
-        setEnvironment(MyServerSettings.DevServer);
-        clearDefaultCache(c);
+    public static void initializeEnvironment(Context c){
+        //setEnvironment(MyServerSettings.LocalDevServer);
+
         initializeIsTokenSent(c);
 
-        Intent i = new Intent(a, PollService.class);
-        a.startService(i);
+        Intent i = new Intent(c, PollService.class);
+        c.startService(i);
     }
 
     public static void setEnvironment(int server){
         if(server == DevServer){
-           currentServer = DevServer;
+            currentServer = DevServer;
+        }
+        else if(server == LocalDevServer){
+            currentServer = LocalDevServer;
+            GoogleAPIConnector.setLocalAndroidRun(true);
         }
         else currentServer = ProdServer;
     }
@@ -51,11 +61,31 @@ public class MyServerSettings {
         settings.edit().clear().commit();
         settings.edit().putBoolean(GCMPreferences.SENT_TOKEN_TO_SERVER, false).apply();
     }
-    public static void initializeUserProfile(Context context, Long id, String firstname){
+    public static void initializeUserProfile(Context context, Long id, String firstname, String token, String image_url){
+        clearDefaultCache(context);
         PreferenceManager.getDefaultSharedPreferences(context)
                 .edit()
                 .putLong(MyServerSettings.PREF_USERPROFILE_ID, id)
                 .putString(MyServerSettings.PREF_USERPROFILE_NAME, firstname)
+                .putString(MyServerSettings.PREF_USER_TOKEN, token)
+                .putString(MyServerSettings.PREF_USERIMAGE_URL, image_url)
+                .commit();
+    }
+    public static void initializeUserProfileID(Context context, Long id){
+        PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putLong(MyServerSettings.PREF_USERPROFILE_ID, id)
+                .commit();
+    }
+    public static void initializeUserProfile(Context context, int socialType, String socialid, String firstname, String token, String image_url){
+        clearDefaultCache(context);
+        PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putInt(MyServerSettings.PREF_USER_SOCIAL_TYPE, socialType)
+                .putString(MyServerSettings.PREF_USER_SOCIAL_ID, socialid)
+                .putString(MyServerSettings.PREF_USERPROFILE_NAME, firstname)
+                .putString(MyServerSettings.PREF_USER_TOKEN, token)
+                .putString(MyServerSettings.PREF_USERIMAGE_URL, image_url)
                 .commit();
     }
     public static void clearDefaultCache(Context context){
@@ -68,7 +98,23 @@ public class MyServerSettings {
                 .getDefaultSharedPreferences(c)
                 .getLong(MyServerSettings.PREF_USERPROFILE_ID, -1);
     }
+    public static String getUserSocialId(Context c){
+        return PreferenceManager
+                .getDefaultSharedPreferences(c)
+                .getString(MyServerSettings.PREF_USER_SOCIAL_ID, null);
+    }
+    public static int getUserSocialType(Context c){
+        return PreferenceManager
+                .getDefaultSharedPreferences(c)
+                .getInt(MyServerSettings.PREF_USER_SOCIAL_TYPE, -1);
+    }
 
+    public static String getUserProfileImageURL(Context c){
+
+        return PreferenceManager
+                .getDefaultSharedPreferences(c)
+                .getString(MyServerSettings.PREF_USERIMAGE_URL, null);
+    }
     public static void initializeLocalTaskCache(Context context){
         PreferenceManager.getDefaultSharedPreferences(context)
                 .edit()

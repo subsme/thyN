@@ -1,5 +1,6 @@
 package com.thyn.tasklist;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.database.Cursor;
 import android.os.AsyncTask;
@@ -7,7 +8,6 @@ import android.preference.PreferenceManager;
 import android.support.v4.app.ListFragment;
 import android.os.Bundle;
 import android.view.LayoutInflater;
-import android.widget.ArrayAdapter;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -20,11 +20,9 @@ import android.widget.CursorAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 
-import com.thyn.android.backend.myTaskApi.MyTaskApi;
+import com.squareup.picasso.Picasso;
 import com.thyn.android.backend.myTaskApi.model.MyTask;
 
 
@@ -36,13 +34,14 @@ import com.thyn.collection.Task;
 import com.thyn.common.MyServerSettings;
 import com.thyn.connection.GoogleAPIConnector;
 import com.thyn.db.thynTaskDBHelper;
-import com.thyn.form.TaskActivity;
-import com.thyn.form.TaskFragment;
+import com.thyn.graphics.MLRoundedImageView;
+import com.thyn.task.TaskActivity;
+import com.thyn.task.TaskFragment;
 import com.thyn.collection.MyTaskLab;
-import com.thyn.form.view.TaskPagerViewOnlyActivity;
-import com.thyn.form.view.TaskPagerViewOnlyFragment;
 import com.thyn.R;
 import com.thyn.tab.DashboardActivity;
+import com.thyn.task.view.TaskPagerViewOnlyActivity;
+import com.thyn.task.view.TaskPagerViewOnlyFragment;
 
 
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -58,10 +57,23 @@ public class TaskListFragment extends ListFragment{
     public static final String EXTRA_NUM_ITEMS =
             "com.thyn.tasklist.my.TaskListFragment.NumItems";
 
+    private ProgressDialog dialog;
+
     private MyTaskLab manager;
     private thynTaskDBHelper.TaskCursor mCursor;
     private static Long userprofileid = null;
+    private int numRowsToShow;
+    private static boolean toRefresh;
     public static final TaskListFragment newInstance(boolean showEntireScreen){
+        int numberofItems = (showEntireScreen == true) ? 0:2;
+        TaskListFragment tlf = new TaskListFragment();
+        Bundle bundle = new Bundle();
+        bundle.putInt(EXTRA_NUM_ITEMS, numberofItems);
+        tlf.setArguments(bundle);
+        return tlf;
+    }
+    public static final TaskListFragment newInstance(boolean showEntireScreen, boolean refresh){
+        toRefresh = refresh;
         int numberofItems = (showEntireScreen == true) ? 0:2;
         TaskListFragment tlf = new TaskListFragment();
         Bundle bundle = new Bundle();
@@ -77,7 +89,6 @@ public class TaskListFragment extends ListFragment{
         getActivity().setTitle(R.string.task_title);
 
         if(manager == null) manager = MyTaskLab.get(getActivity());
-
     }
 
     @Override
@@ -88,11 +99,21 @@ public class TaskListFragment extends ListFragment{
         if(manager == null) manager = MyTaskLab.get(getActivity());
 
         loadData();
+        /*Subu Sundaram - Oct 07, 2016 - commenting this for now.
+        refreshContent();
+        new android.os.Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                loadData();
+            }
+        }, 000);*/
+
         //((TaskCursorAdapter)getListAdapter()).notifyDataSetChanged();
     }
 
    // Subu - Please call loadData() from onResume. If created from onCreate(), it will be fired twice.
     private void loadData(){
+
         /* Subu 08/19
         The if block will never be called because of change of strategy.
         PollService always fills up the local cache before we call TaskListFragment from SlidingTabsBasicFragment.
@@ -100,21 +121,27 @@ public class TaskListFragment extends ListFragment{
         Which also means that the inner AsyncThread is never called unless we refresh.
         The refresh logic is yet to be implemented.
          */
-        if(!MyServerSettings.getLocalTaskCache(getActivity())) {
-            Log.d(TAG, "no cache exists...");
+        numRowsToShow = getArguments().getInt(EXTRA_NUM_ITEMS);
+        /*Subu 10/11 if not in cache or toRefresh flag is true, then refresh. Added toRefresh variable.*/
+        if(!MyServerSettings.getLocalTaskCache(getActivity()) || toRefresh) {
+            Log.d(TAG, "No cache exists. Getting the latest tasks from server...Will Take some time...");
             //callAsyncThread(getArguments());
-        } else {
-            Log.d(TAG, "yes. there is cache...");
-            int numRows = getArguments().getInt(EXTRA_NUM_ITEMS);
-            if(numRows == 2) mCursor = manager.queryTasks(numRows);
+            refreshContent(numRowsToShow);
+            Log.d(TAG, "LOCAL-CACHE is " + MyServerSettings.getLocalTaskCache(getContext()));
+        }
+        else {
+            Log.d(TAG, "yes. there is cache now. Retrieving from cache...");
+            if (numRowsToShow == 2) mCursor = manager.queryTasks(numRowsToShow);
             else mCursor = manager.queryTasks();
-            if(mCursor.moveToFirst()) Log.d(TAG, "Cursor count is: " + mCursor.getCount());
+            if (mCursor.moveToFirst()) Log.d(TAG, "Cursor count is: " + mCursor.getCount());
+            else Log.d(TAG, "Cursor already in first. Its count is: " + mCursor.getCount());
             TaskCursorAdapter adapter = new TaskCursorAdapter(getActivity(), mCursor);
             adapter.notifyDataSetChanged();
             setListAdapter(adapter);
-
         }
+
     }
+
     private void callAsyncThread(Bundle arguments){
 
         if(arguments != null && arguments.containsKey(EXTRA_NUM_ITEMS)) {
@@ -130,7 +157,7 @@ public class TaskListFragment extends ListFragment{
 
     @Override
     public void onDestroy(){
-        mCursor.close();
+        if(mCursor != null) mCursor.close();
         super.onDestroy();
     }
  /*   @Override
@@ -147,10 +174,10 @@ public class TaskListFragment extends ListFragment{
                 //MyTaskLab.get(getActivity()).addTask(t);
                 manager.addTask(t);
 
-                Intent i = new Intent(getActivity(), TaskActivity.class);
+                /*Intent i = new Intent(getActivity(), TaskActivity.class);
                 //Log.d(TAG,"Adding task id: "+t.getId());
                 i.putExtra(TaskFragment.EXTRA_TASK_ID, t.getId());
-                startActivityForResult(i,0);
+                startActivityForResult(i,0);*/
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -160,8 +187,13 @@ public class TaskListFragment extends ListFragment{
     @Override
     public void onListItemClick(ListView l, View v, int position, long id){
         // The id argument will be Task ID; CursorAdapter gives this to us for FREE
-        Intent i = new Intent(getActivity(), TaskActivity.class);
+        Log.d(TAG, "The id given by the cursor adapter is: " + id);
+        //Task t = ((TaskCursorAdapter)getListAdapter()).getItem(position);
+       /* Intent i = new Intent(getActivity(), TaskActivity.class);
         i.putExtra(TaskFragment.EXTRA_TASK_ID, id);
+        startActivity(i);*/
+        Intent i = new Intent(getActivity(), TaskPagerViewOnlyActivity.class);
+        i.putExtra(TaskPagerViewOnlyFragment.EXTRA_TASK_ID, id);
         startActivity(i);
     }
 
@@ -189,20 +221,16 @@ public class TaskListFragment extends ListFragment{
        }
    }*/
 
-    private void refreshContent(){
+
+    private void refreshContent(int numRows){
         //remove the local database and then refresh content.
         /*Subu: Aug 19/2016
         TODO - need to correct this logic because we included a PollService.
          */
         manager.purgeTasks();
         Log.d(TAG, "In refreshContent()");
-        new RetrieveFromServerAsyncTask().execute();
-        new android.os.Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                mSwipeRefreshLayout.setRefreshing(false);
-            }
-        },000);
+        new RetrieveFromServerAsyncTask(numRows).execute();
+
     }
 
   /*  private class TaskListAdapter extends ArrayAdapter<Task> {
@@ -260,20 +288,29 @@ public class TaskListFragment extends ListFragment{
         }
 
         @Override
-        public void bindView(View view, Context context, Cursor cursor) {
+        public void bindView(View view, Context c, Cursor cursor) {
             // Get the Task for the current row
             Task task = mTaskCursor.getTask();
 
             // Set up the text view values
-            TextView descTextView = (TextView)view.findViewById(R.id.task_list_item_titleTextView);
-            descTextView.setText(task.getTaskDescription());
+            TextView titleTextView = (TextView)view.findViewById(R.id.task_list_item_titleTextView);
+            titleTextView.setText(task.getTaskTitle());
 
+
+                    MLRoundedImageView imageView = (com.thyn.graphics.MLRoundedImageView) view.findViewById(R.id.task_list_user_image);
+            if(task.getImageURL() != null) {
+                Picasso.with(c)
+                        //.load("https://scontent.xx.fbcdn.net/v/t1.0-1/p50x50/11156187_10205188530126207_4481467444246362898_n.jpg?oh=2dee76ec7e202649b84c7a71b4c86721&oe=58ADEBE1")
+                        .load(task.getImageURL())
+                        .into(imageView);
+            }
             TextView dateTextView = (TextView)view.findViewById(R.id.task_list_item_createDateTextView);
             if(task.getCreateDate()!=null) dateTextView.setText(task.getDateReadableFormat());
             TextView userTextView = (TextView)view.findViewById(R.id.task_list_item_User);
             userTextView.setText(task.getUserProfileName());
             TextView locationTextView = (TextView)view.findViewById(R.id.task_list_item_locationTextView);
-            locationTextView.setText(task.getBeginLocation());
+            //locationTextView.setText(task.getBeginLocation());
+            locationTextView.setText(task.getCity());
 
         }
 
@@ -286,7 +323,7 @@ public class TaskListFragment extends ListFragment{
                              Bundle savedInstanceState) {
 
         View v= null;
-        int numItems = getArguments().getInt(EXTRA_NUM_ITEMS, 0);
+        final int numItems = getArguments().getInt(EXTRA_NUM_ITEMS, 0);
         Log.d(TAG, "In onCreateView, numitems is " + numItems);
         if(numItems == 2) {
             v = inflater.inflate(R.layout.fragment_tasklist, container, false);
@@ -306,12 +343,29 @@ public class TaskListFragment extends ListFragment{
             @Override
             public void onRefresh() {
                 Log.d(TAG, "Refreshing content");
-                refreshContent();
+                refreshContent(numItems);
+                new android.os.Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        mSwipeRefreshLayout.setRefreshing(false);
+                    }
+                }, 000);
             }
         });
         return v;
     }
+    @Override
+    /*Subu Oct 07. Copied from RandomTaskFragment.
+     Had to dismiss the dialog i create in AsyncTask here because the activity could get destroyed before the asynctask
+    see this issue here - http://stackoverflow.com/questions/2224676/android-view-not-attached-to-window-manager
+     */
+    public void onPause() {
+        super.onPause();
 
+        if ((dialog != null) && dialog.isShowing())
+            dialog.dismiss();
+        dialog = null;
+    }
 
     private class RetrieveFromServerAsyncTask extends AsyncTask<Void, Void, List> {
         int numItems;
@@ -338,6 +392,14 @@ public class TaskListFragment extends ListFragment{
 
             return l;
         }
+        /** progress dialog to show user that the backup is processing. */
+        /** application context. */
+        @Override
+        protected void onPreExecute() {
+            dialog = new ProgressDialog(getActivity());
+            dialog.setMessage("Please wait");
+            dialog.show();
+        }
 
         @Override
         protected void onPostExecute(List result) {
@@ -348,15 +410,18 @@ public class TaskListFragment extends ListFragment{
             //MyTaskLab.get(getActivity()).removeAllTasks();
             //manager.removeAllTasks();
             Log.d(TAG, "The data count sent from the server is: " + result.size());
-
+            Log.d(TAG, "LOCAL-CACHE is " + MyServerSettings.getLocalTaskCache(getContext()));
             if(!manager.doesLocalCacheExist()){
+                Log.d(TAG, "LOCAL-CACHE variable not set");
                 while (i.hasNext()) {
                     MyTask myTask = (MyTask) i.next();
                     //if (myTask.getId() != null) Log.d(TAG, myTask.getId().toString());
                     Log.d(TAG, " Inserting Task. Description: " + myTask.getTaskDescription());
                     manager.convertRemotetoLocalTask(myTask);
                 }
+                Log.d(TAG, "setting the LOCAL-CACHE variable...");
                 manager.initializeLocalCache();
+                Log.d(TAG, "LOCAL-CACHE is " + MyServerSettings.getLocalTaskCache(getContext()));
             }
          /*   if (numItems == 2) {
                 while (i.hasNext() && numItems > 0) {
@@ -384,11 +449,22 @@ public class TaskListFragment extends ListFragment{
              // TaskListAdapter adapter = new TaskListAdapter(manager.getTasks());
              // adapter.notifyDataSetChanged();
              // setListAdapter(adapter);
+            Log.i(TAG, "BOOMnum items is: " + numItems);
            if(numItems == 2) mCursor = manager.queryTasks(numItems);
             else mCursor = manager.queryTasks();
             TaskCursorAdapter adapter = new TaskCursorAdapter(getActivity(), mCursor);
             adapter.notifyDataSetChanged();
             setListAdapter(adapter);
+
+            dismissProgressDialog();
+        }
+
+        protected void dismissProgressDialog() {
+
+            if (dialog != null && dialog.isShowing()) {
+                dialog.dismiss();
+            }
+
         }
     }
 }
