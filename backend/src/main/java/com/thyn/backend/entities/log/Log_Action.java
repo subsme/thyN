@@ -2,15 +2,10 @@ package com.thyn.backend.entities.log;
 
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Index;
-import com.thyn.backend.WPT.UserRole;
-import com.thyn.backend.WPT.UserStatus;
+
 import com.thyn.backend.datastore.DatastoreHelpers;
 import com.thyn.backend.entities.EntityObject;
-import com.thyn.backend.entities.users.Profile;
-import com.thyn.backend.utilities.security.LoginType;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 import java.util.Date;
 
 /**
@@ -20,6 +15,7 @@ import java.util.Date;
 public class Log_Action extends EntityObject {
     @Index
     private String action;
+    @Index
     private Date actionTime;
     @Index
     private Long userKey;
@@ -77,6 +73,14 @@ public class Log_Action extends EntityObject {
 
     public void setTaskKey(Long taskKey) {
         this.taskKey = taskKey;
+    }
+
+    public int getPoints() {
+        return points;
+    }
+
+    public void setPoints(int points) {
+        this.points = points;
     }
 
     public Long getNeighbrWhoIsHelpedKey() {

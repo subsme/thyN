@@ -115,7 +115,6 @@ public class MyTaskEndpoint {
 
         if (count != null) query.limit(count);
 
-
         List<MyTask> records = new ArrayList<MyTask>();
         QueryResultIterator<MyTask> iterator = query.iterator();
         int num = 0;

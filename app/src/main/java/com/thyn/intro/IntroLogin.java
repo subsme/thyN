@@ -27,9 +27,11 @@ import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.thyn.R;
 import com.thyn.android.backend.userAPI.model.APIGeneralResult;
+import com.thyn.android.backend.userAPI.model.APIUserInformation;
 import com.thyn.android.backend.userAPI.model.ExternalLogonPackage;
 import com.thyn.common.MyServerSettings;
 import com.thyn.connection.GoogleAPIConnector;
+import com.thyn.connection.ReceiveStatsFromServerAsyncTask;
 import com.thyn.deleteMeInProd.AndroidDatabaseManager;
 import com.thyn.tab.WelcomePageActivity;
 import android.content.Intent;
@@ -41,6 +43,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Created by shalu on 7/13/16.
@@ -150,7 +153,6 @@ public class IntroLogin extends AppCompatActivity implements
                                             , object.optString("name")
                                             , fbToken
                                             , imageurl);
-                                    MyServerSettings.initializeEnvironment(getApplicationContext());
                                 }
                                 catch (JSONException je){
                                     Log.e(TAG,je.getMessage());
@@ -168,8 +170,7 @@ public class IntroLogin extends AppCompatActivity implements
 
                 new SendToServerAsyncTask().execute(fbToken, "Facebook");
 
-                Intent intent = new Intent(getApplicationContext(), WelcomePageActivity.class);
-                startActivity(intent);
+
             }
 
             @Override
@@ -226,7 +227,7 @@ public class IntroLogin extends AppCompatActivity implements
                     , acct.getDisplayName()
                     , acct.getIdToken()
                     , acct.getPhotoUrl().toString());
-            MyServerSettings.initializeEnvironment(getBaseContext());
+
             //updateUI(true);
             new SendToServerAsyncTask().execute(acct.getIdToken(),  "Google");
 
@@ -268,7 +269,7 @@ public class IntroLogin extends AppCompatActivity implements
 
             ExternalLogonPackage logPack = new ExternalLogonPackage();
             logPack.setAccessToken(token);
-            APIGeneralResult rslt = null;
+            APIUserInformation rslt = null;
 
                    try {
                        if(loginType.equalsIgnoreCase("Google")) {
@@ -277,19 +278,31 @@ public class IntroLogin extends AppCompatActivity implements
                        else if(loginType.equalsIgnoreCase("Facebook")){
                            rslt = GoogleAPIConnector.connect_UserAPI().logonWithFacebook(logPack).execute();
                        }
-                       if (rslt != null && rslt.getStatusCode() != null) {
 
-                           String message = rslt.getMessage();
-                           Log.d(TAG, "The message from the server is: " + message);
-                           Log.d(TAG, "The status code/user profile id is: " + rslt.getStatusCode());
-                           MyServerSettings.initializeUserProfileID(getApplicationContext(), Long.parseLong(rslt.getStatusCode()));
+                       if (rslt != null && rslt.getResult().getStatusCode() != null) {
+
+                           String message = rslt.getResult().getMessage();
+                           Log.d(TAG, "78The message from the server is: " + message);
+                           Log.d(TAG, "The user profile id is: " + rslt.getProfileID());
+                           MyServerSettings.initializeUserProfileID(getApplicationContext(), rslt.getProfileID());
                            Log.d(TAG, "Profile ID set: " + MyServerSettings.getUserProfileId(getApplicationContext()));
+                           Log.d(TAG, "Neighbors helped" + rslt.getNumNeighbrsHelped());
+                           Log.d(TAG, "points gathered " + rslt.getThyNPoints());
+                           MyServerSettings.initializeNumNeighbrsIHelped(getApplicationContext(), rslt.getNumNeighbrsHelped());
+                           MyServerSettings.initializePoints(getApplicationContext(), rslt.getThyNPoints());
                        }
                    }
                    catch(Exception e){
                        e.printStackTrace();
                    }
             return null;
+        }
+        @Override
+        protected void onPostExecute(Void result) {
+            MyServerSettings.initializeEnvironment(getBaseContext());
+            Intent intent = new Intent(getApplicationContext(), WelcomePageActivity.class);
+            startActivity(intent);
+
         }
     }
 

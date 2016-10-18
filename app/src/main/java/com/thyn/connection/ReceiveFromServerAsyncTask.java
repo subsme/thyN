@@ -52,6 +52,7 @@ public class ReceiveFromServerAsyncTask extends AsyncTask<Void, Void, List> {
         Iterator i = result.iterator();
 
         Log.d(TAG, "The data count sent from the server is: " + result.size());
+        MyServerSettings.initializeTotalRequestsWithinRange(service.getApplicationContext(),result.size());
 
         if(!MyServerSettings.getLocalTaskCache(service)){
             while (i.hasNext()) {

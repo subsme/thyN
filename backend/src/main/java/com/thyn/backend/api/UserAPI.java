@@ -47,6 +47,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Vector;
 
 import com.thyn.backend.entities.users.Device;
 
@@ -131,7 +132,7 @@ public class UserAPI {
     }
 
     @ApiMethod(name = "LogonWithGoogle", httpMethod = HttpMethod.POST)
-    public APIGeneralResult LogonWithGoogleUser(ExternalLogonPackage googLogonPackage, HttpServletRequest req) throws APIErrorException {
+    public APIUserInformation LogonWithGoogleUser(ExternalLogonPackage googLogonPackage, HttpServletRequest req) throws APIErrorException {
         Logger.logInfo("Calling LogonWithGoogle");
 
         String googUserToken = googLogonPackage.getAccessToken();
@@ -151,35 +152,17 @@ public class UserAPI {
         }
 
         if (user == null)
-            return new APIGeneralResult(null, "UALM04 - Invalid credentials.");
-
+            //return new APIGeneralResult(null, "UALM04 - Invalid credentials.");
+            return new APIUserInformation(new APIGeneralResult("NOt OK", "UALM04 - Invalid credentials."));
         Logger.logInfo("user profile id is:" + user.getProfileId().toString());
-        if(user.getProfileId() != null)
-            findDistinctNeigbrsHelped(user.getProfileId());
+        APIUserInformation userStats = getUserStatisticsForHomePage(req, user.getProfileId(), 20);
 
-        return new APIGeneralResult(user.getProfileId().toString(), "User Authenticated Successfully");
+        return userStats;
     }
 
-    private void findDistinctNeigbrsHelped(Long profileKey){
-        Query<Log_Action> query = null;
-        query = ofy().load().type(Log_Action.class)
-                .filter("userKey ==", profileKey)
-                .filter("action", "COMPLETED")
-                .order("-actionTime");
-        List<Log_Action> records = new ArrayList<Log_Action>();
-        QueryResultIterator<Log_Action> iterator = query.iterator();
-        int num = 0;
-        while (iterator.hasNext()) {
-            Log_Action log_action = iterator.next();
-            records.add(log_action);
-            logger.info("adding Log_Action: User" + log_action.getUserKey()
-                    + ", Neighbr helped " + log_action.getNeighbrWhoIsHelpedKey()
-                    + ", Task helped " + log_action.getTaskKey());
-        }
-    }
 
     @ApiMethod(name = "LogonWithFacebook", httpMethod = HttpMethod.POST)
-    public APIGeneralResult LogonWithFacebookUser(ExternalLogonPackage fbLogonPackage, HttpServletRequest req) throws APIErrorException {
+    public APIUserInformation LogonWithFacebookUser(ExternalLogonPackage fbLogonPackage, HttpServletRequest req) throws APIErrorException {
         Logger.logInfo("Calling LogonWithFacebok");
 
         String fbUserToken = fbLogonPackage.getAccessToken();
@@ -199,10 +182,12 @@ public class UserAPI {
         }
 
         if (user == null)
-            return new APIGeneralResult(null, "UALM04 - Invalid credentials.");
+            return new APIUserInformation(new APIGeneralResult("Not OK", "UALM02 Error "));
 
         Logger.logInfo("user profile id is:" + user.getProfileId().toString());
-        return new APIGeneralResult(user.getProfileId().toString(), "User Authenticated Successfully");
+        APIUserInformation userStats = getUserStatisticsForHomePage(req, user.getProfileId(), 20);
+
+        return userStats;
     }
 
     private User validateThyNLogin(String email, String password) throws Exception
@@ -323,6 +308,97 @@ public class UserAPI {
         }
 
         return prof;
+    }
+    @ApiMethod(name = "getUserStats", httpMethod = HttpMethod.GET, path="userStats")
+    public APIUserInformation getUserStatisticsForHomePage(HttpServletRequest req, @Named("profileID") Long profileID, @Named("range") Integer range) throws APIErrorException {
+        Vector<Integer> u = this.findDistinctNeigbrsHelped(profileID);
+/*
+        Query<Log_Action> query = null;
+
+        query = ofy().load().type(Log_Action.class)
+                .filter("userKey ==", profileID)
+                .filter("action =", "COMPLETED")
+                .order("-actionTime");
+        QueryResultIterator<Log_Action> iterator = query.iterator();
+        int num = 0;
+        int count = 0;
+        int totPoints = 0;
+        while (iterator.hasNext()) {
+            count ++;
+            Log_Action log_action = iterator.next();
+            totPoints += log_action.getPoints();
+            logger.info("adding Log_Action: User" + log_action.getUserKey()
+                    + ", Neighbr helped " + log_action.getNeighbrWhoIsHelpedKey()
+                    + ", Task helped " + log_action.getTaskKey());
+        }
+*/
+        //int requests = findNumberOfRequestsInRange(profileID, range);
+        //int myhelps = findNumberofPeopleIWillBeHelping(profileID);
+
+        APIGeneralResult rslt = new APIGeneralResult("OK", "Success");
+
+        logger.info("profileID: " + profileID + ", count: " + u.get(0)
+                + " ,totPoints: " + u.get(1)
+                );
+
+        APIUserInformation stats = new APIUserInformation(rslt,
+                profileID,
+                "Monkey Khan",
+                u.get(0),
+                u.get(1)
+                );
+
+        return stats;
+    }
+    private Vector<Integer> findDistinctNeigbrsHelped(Long profileKey){
+        Query<Log_Action> query = null;
+
+        query = ofy().load().type(Log_Action.class)
+                .filter("userKey", profileKey)
+                .filter("action =", "COMPLETED")
+                .order("-actionTime");
+        //List<Log_Action> records = new ArrayList<Log_Action>();
+        QueryResultIterator<Log_Action> iterator = query.iterator();
+        int num = 0;
+        if(iterator == null) return null;
+        int count = 0;
+        int points = 0;
+        while (iterator.hasNext()) {
+            count ++;
+
+            Log_Action log_action = iterator.next();
+            points +=log_action.getPoints();
+
+            //records.add(log_action);
+            logger.info("adding Log_Action: User" + log_action.getUserKey()
+                    + ", Neighbr helped " + log_action.getNeighbrWhoIsHelpedKey()
+                    + ", Task helped " + log_action.getTaskKey());
+        }
+        Vector<Integer> v = new Vector<Integer>();
+        v.add(count);
+        v.add(points);
+        return v;
+    }
+
+    private int findNumberOfRequestsInRange(Long profileKey, int range){
+        Query<MyTask> query = ofy().load().type(MyTask.class).filter("isSolved", false).order("-mCreateDate");
+        QueryResultIterator<MyTask> iterator = query.iterator();
+        int num = 0;
+        while (iterator.hasNext()) {
+            num ++;
+        }
+        return num;
+    }
+    private int findNumberofPeopleIWillBeHelping(Long profileKey){
+        Query<MyTask> query = ofy().load().type(MyTask.class)
+                .filter("helperUserProfileKey", profileKey)
+                .order("-mCreateDate");
+        QueryResultIterator<MyTask> iterator = query.iterator();
+        int num = 0;
+        while (iterator.hasNext()) {
+            num ++;
+        }
+        return num;
     }
 
     @ApiMethod(name = "setGCMRegistrationToken", httpMethod = HttpMethod.POST)

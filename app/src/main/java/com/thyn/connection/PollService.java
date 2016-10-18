@@ -33,7 +33,11 @@ public class PollService extends IntentService{
         connectToServer();
     }
     private void connectToServer(){
+        Log.i(TAG, "Starting ReceiveFromServerAsyncTask...");
         new ReceiveFromServerAsyncTask(this).execute();
+
+       // Log.i(TAG, "Starting ReceiveStatsFromServerAsyncTask...");
+       // new ReceiveStatsFromServerAsyncTask(this).execute();
     }
 
     public static void setServiceAlarm(Context context, boolean isOn){

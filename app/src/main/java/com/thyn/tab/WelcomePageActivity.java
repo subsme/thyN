@@ -38,21 +38,23 @@ public class WelcomePageActivity extends FragmentActivity {
         setContentView(R.layout.mytask_slidingtab);
         Context c = getApplicationContext();
         if (savedInstanceState == null) {
-            MLRoundedImageView user_profile_image = (MLRoundedImageView)findViewById(R.id.user_profile_image);
+            MLRoundedImageView user_profile_image = (MLRoundedImageView) findViewById(R.id.user_profile_image);
             Log.d(TAG, MyServerSettings.getUserProfileImageURL(c));
             Picasso.with(c)
-                   // .load("https://scontent.xx.fbcdn.net/v/t1.0-1/p50x50/11156187_10205188530126207_4481467444246362898_n.jpg?oh=2dee76ec7e202649b84c7a71b4c86721&oe=58ADEBE1")
+                    // .load("https://scontent.xx.fbcdn.net/v/t1.0-1/p50x50/11156187_10205188530126207_4481467444246362898_n.jpg?oh=2dee76ec7e202649b84c7a71b4c86721&oe=58ADEBE1")
                     .load(MyServerSettings.getUserProfileImageURL(c))
                     .into(user_profile_image);
-            GridView gridView = (GridView)findViewById(R.id.gridview);
+            GridView gridView = (GridView) findViewById(R.id.gridview);
             SquareImageGridAdapter sg = new SquareImageGridAdapter(this);
-            sg.setGrid1("56", "Open requests within 20 miles");
-            sg.setGrid2("0", "Requests in your queue");
-            sg.setGrid3("0", "Neighbrs you have helped");
-            sg.setGrid4("0", "thyNeighbr points");
+            sg.setGrid1(MyServerSettings.getNumNeighbrsIHelped(c) + "", "Neighbrs I have helped");
+            sg.setGrid2(MyServerSettings.getPoints(c) + "", "thyNeighbr points");
+            // sg.setGrid1("50", "Open requests(20 miles)");
+            // sg.setGrid2("0", "Requests in your queue");
+            // sg.setGrid3(MyServerSettings.getNumNeighbrsIHelped(c)+"", "Neighbrs helped");
+            // sg.setGrid4(MyServerSettings.getPoints(c)+"", "thyNeighbr points");
             gridView.setAdapter(sg);
-            mViewPager = (ViewPager)findViewById(R.id.viewpager);
-            mSlidingTabLayout = (SlidingTabLayout)findViewById(R.id.sliding_tabs);
+            mViewPager = (ViewPager) findViewById(R.id.viewpager);
+            mSlidingTabLayout = (SlidingTabLayout) findViewById(R.id.sliding_tabs);
             SlidingTabsBasicFragment fragment = new SlidingTabsBasicFragment();
             mSamplePagerAdapter = fragment.new SamplePagerAdapter(getSupportFragmentManager());
             //FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
@@ -70,17 +72,10 @@ public class WelcomePageActivity extends FragmentActivity {
 
 
             //transaction.replace(R.id.sample_content_fragment, fragment);
-           // transaction.commit();
+            // transaction.commit();
             /*Log.d(LOG_TAG, "TAb position is: " + TAB_POSITION);
             mViewPager.setCurrentItem(TAB_POSITION);*/
-
-
-
         }
-
-
-
-
     }
 
 

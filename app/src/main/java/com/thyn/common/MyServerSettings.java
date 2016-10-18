@@ -32,6 +32,10 @@ public class MyServerSettings {
     public static String LOCAL_TASK_CACHE = "taskCache";
     private static String LOCAL_MYTASK_CACHE = "myTaskCache";
 
+    private static String MY_POINTS = "myPoints";
+    private static String NEIGHBRS_HELPED = "neighbrsHelped";
+    private static String TOTAL_REQUESTS_WITHIN_RANGE = "totalRequestsWithinRange";
+
     public static void initializeEnvironment(Context c){
         //setEnvironment(MyServerSettings.LocalDevServer);
 
@@ -132,6 +136,40 @@ public class MyServerSettings {
         return PreferenceManager
                 .getDefaultSharedPreferences(c)
                 .getBoolean(MyServerSettings.LOCAL_TASK_CACHE, false);
+    }
+
+    public static void initializePoints(Context context, int points){
+        PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putInt(MyServerSettings.MY_POINTS, points)
+                .commit();
+    }
+    public static int getPoints(Context c){
+        return PreferenceManager
+                .getDefaultSharedPreferences(c)
+                .getInt(MyServerSettings.MY_POINTS, -1);
+    }
+    public static void initializeNumNeighbrsIHelped(Context context, int num){
+        PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putInt(MyServerSettings.NEIGHBRS_HELPED, num)
+                .commit();
+    }
+    public static int getNumNeighbrsIHelped(Context c){
+        return PreferenceManager
+                .getDefaultSharedPreferences(c)
+                .getInt(MyServerSettings.NEIGHBRS_HELPED, -1);
+    }
+    public static void initializeTotalRequestsWithinRange(Context context, int num){
+    PreferenceManager.getDefaultSharedPreferences(context)
+            .edit()
+    .putInt(MyServerSettings.TOTAL_REQUESTS_WITHIN_RANGE, num)
+    .commit();
+}
+    public static int getTotalRequestsWithinRange(Context c){
+        return PreferenceManager
+                .getDefaultSharedPreferences(c)
+                .getInt(MyServerSettings.TOTAL_REQUESTS_WITHIN_RANGE, -1);
     }
 
 }
