@@ -1,5 +1,6 @@
 package com.thyn.tab;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.FragmentActivity;
@@ -30,6 +31,7 @@ public class WelcomePageActivity extends FragmentActivity {
     private SlidingTabsBasicFragment.SamplePagerAdapter mSamplePagerAdapter;
     private SlidingTabLayout mSlidingTabLayout;
 
+
     private static String TAG="WelcomePageActivity";
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
@@ -38,6 +40,8 @@ public class WelcomePageActivity extends FragmentActivity {
         setContentView(R.layout.mytask_slidingtab);
         Context c = getApplicationContext();
         if (savedInstanceState == null) {
+            TextView welcomeText = (TextView) findViewById(R.id.title_text);
+            welcomeText.setText("Welcome, " + MyServerSettings.getUserFirstName(c) + "!");
             MLRoundedImageView user_profile_image = (MLRoundedImageView) findViewById(R.id.user_profile_image);
             Log.d(TAG, MyServerSettings.getUserProfileImageURL(c));
             Picasso.with(c)

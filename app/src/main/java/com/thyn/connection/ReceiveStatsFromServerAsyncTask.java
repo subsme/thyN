@@ -34,13 +34,13 @@ public class ReceiveStatsFromServerAsyncTask extends AsyncTask<Void, Void, APIUs
     protected APIUserInformation doInBackground(Void... params) {
         APIUserInformation userStats = null;
 
-        try {
+    /*    try {
             Log.d(TAG, "Sending user profile id:" + userprofileid);
             userStats = GoogleAPIConnector.connect_UserAPI().getUserStats(userprofileid,20).execute();
         } catch (IOException e) {
             e.getMessage();
             Log.d(TAG,e.getMessage());
-        }
+        }*/
 
         return userStats;
     }

@@ -81,6 +81,7 @@ public class RandomTaskFragment extends Fragment {
     private TextInputLayout locationLayoutName;
     private EditText mTaskLocation;
     private Button mTaskDone;
+    private CheckBox mUseMyAddress;
     private final String timeStr=null;
     private static final int REQUEST_DATE = 0;
     //private static final int ADDRESS_ACTIVITY_REQUEST_CODE=1;
@@ -250,14 +251,19 @@ public class RandomTaskFragment extends Fragment {
         mTaskLocation.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-               /* Log.d(TAG, "From was clicked");
-                Intent i = new Intent(getActivity(), AddressActivity.class);
-                i.putExtra("t","from");
-                startActivityForResult(i, ADDRESS_ACTIVITY_REQUEST_CODE);*/
                 callPlaceAutocompleteActivityIntent();
             }
         });
 
+        mUseMyAddress = (CheckBox)v.findViewById(R.id.t_my_address);
+        mUseMyAddress.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    mTaskLocation.setText(MyServerSettings.getUserAddress(getActivity()));
+                }
+            }
+        });
 
 
         mTaskDone = (Button)v.findViewById(R.id.task_done);

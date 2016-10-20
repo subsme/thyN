@@ -36,6 +36,13 @@ public class User extends EntityObject{
 
     private UserStatus userStatus;
 
+    private String phone;
+
+    private String Address;
+    private double mLAT;
+    private double mLONG;
+    private String mCity;
+
     public String getImageURL() {
         return imageURL;
     }
@@ -136,6 +143,46 @@ public class User extends EntityObject{
     }
     public void setGender(String gender) {
         this.gender = gender;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getAddress() {
+        return Address;
+    }
+
+    public void setAddress(String address) {
+        Address = address;
+    }
+
+    public double getLAT() {
+        return mLAT;
+    }
+
+    public void setLAT(double mLAT) {
+        this.mLAT = mLAT;
+    }
+
+    public double getLONG() {
+        return mLONG;
+    }
+
+    public void setLONG(double mLONG) {
+        this.mLONG = mLONG;
+    }
+
+    public String getCity() {
+        return mCity;
+    }
+
+    public void setCity(String mCity) {
+        this.mCity = mCity;
     }
 
     public void setImageURL(String imageURL) {

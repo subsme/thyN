@@ -28,6 +28,11 @@ public class MyServerSettings {
     public static final String PREF_USER_TOKEN = "userToken";
     public static final String PREF_USER_SOCIAL_ID = "userSocialID";
     public static final String PREF_USER_SOCIAL_TYPE = "userSocialType";
+    public static final String PREF_USER_ADDRESS = "userAddress";
+    public static final String PREF_USER_CITY = "userCity";
+    public static final String PREF_USER_LANG = "userLang";
+    public static final String PREF_USER_LAT = "userLat";
+    public static final String PREF_USER_PHONE = "userPhone";
 
     public static String LOCAL_TASK_CACHE = "taskCache";
     private static String LOCAL_MYTASK_CACHE = "myTaskCache";
@@ -144,6 +149,22 @@ public class MyServerSettings {
                 .putInt(MyServerSettings.MY_POINTS, points)
                 .commit();
     }
+    public static void initializeUserName(Context context, String name){
+        PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putString(MyServerSettings.PREF_USERPROFILE_NAME, name)
+                .commit();
+    }
+    public static String getUserName(Context c){
+        return PreferenceManager.getDefaultSharedPreferences(c).getString(MyServerSettings.PREF_USERPROFILE_NAME,null);
+    }
+    public static String getUserFirstName(Context c){
+        String str = PreferenceManager.getDefaultSharedPreferences(c).getString(MyServerSettings.PREF_USERPROFILE_NAME,null);
+        if(str != null && str.contains(" ")){
+            str = str.substring(0,str.indexOf(" "));
+        }
+        return str;
+    }
     public static int getPoints(Context c){
         return PreferenceManager
                 .getDefaultSharedPreferences(c)
@@ -170,6 +191,40 @@ public class MyServerSettings {
         return PreferenceManager
                 .getDefaultSharedPreferences(c)
                 .getInt(MyServerSettings.TOTAL_REQUESTS_WITHIN_RANGE, -1);
+    }
+    public static void initializeUserAddress(Context context, String address, String city, String lat, String lng){
+
+        PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putString(MyServerSettings.PREF_USER_ADDRESS, address)
+                .putString(MyServerSettings.PREF_USER_CITY, city)
+                .putString(MyServerSettings.PREF_USER_LAT, lat)
+                .putString(MyServerSettings.PREF_USER_LANG, lng)
+                .commit();
+    }
+    public static String getUserAddress(Context c){
+        return PreferenceManager.getDefaultSharedPreferences(c).getString(MyServerSettings.PREF_USER_ADDRESS, null);
+    }
+    public static void initializeUserPhone(Context context, String phone){
+        PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putString(MyServerSettings.PREF_USER_PHONE, phone)
+                .commit();
+    }
+    public static String getUserPhone(Context c){
+        return PreferenceManager.getDefaultSharedPreferences(c).getString(MyServerSettings.PREF_USER_PHONE,null);
+    }
+
+    public static String getUserCity(Context c){
+        return PreferenceManager.getDefaultSharedPreferences(c).getString(MyServerSettings.PREF_USER_CITY,null);
+    }
+
+    public static String getUserLNG(Context c){
+        return PreferenceManager.getDefaultSharedPreferences(c).getString(MyServerSettings.PREF_USER_LANG,null);
+    }
+
+    public static String getUserLAT(Context c){
+        return PreferenceManager.getDefaultSharedPreferences(c).getString(MyServerSettings.PREF_USER_LAT,null);
     }
 
 }

@@ -1,5 +1,7 @@
 package com.thyn.intro;
 
+import android.app.Activity;
+import android.app.ProgressDialog;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
@@ -58,6 +60,8 @@ public class IntroLogin extends AppCompatActivity implements
     private TextView mStatusTextView;
 
     private GoogleApiClient mGoogleApiClient;
+
+    private ProgressDialog dialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState){
@@ -168,7 +172,7 @@ public class IntroLogin extends AppCompatActivity implements
                 After sending the token to the server, we are starting a new activity - WelcomePageActivity.
                  */
 
-                new SendToServerAsyncTask().execute(fbToken, "Facebook");
+                new SendToServerAsyncTask(getParent()).execute(fbToken, "Facebook");
 
 
             }
@@ -185,6 +189,13 @@ public class IntroLogin extends AppCompatActivity implements
                 Log.d(TAG, "FB exception");
             }
         });
+    }
+    public void onPause() {
+        super.onPause();
+
+        if ((dialog != null) && dialog.isShowing())
+            dialog.dismiss();
+        dialog = null;
     }
 
     private void signIn() {
@@ -229,10 +240,15 @@ public class IntroLogin extends AppCompatActivity implements
                     , acct.getPhotoUrl().toString());
 
             //updateUI(true);
-            new SendToServerAsyncTask().execute(acct.getIdToken(),  "Google");
+            new SendToServerAsyncTask(this).execute(acct.getIdToken(), "Google");
+           /* new android.os.Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    Intent intent = new Intent(getApplicationContext(), WelcomePageActivity.class);
+                    startActivity(intent);
+                }
+            }, 10000);*/
 
-            Intent intent = new Intent(getApplicationContext(), WelcomePageActivity.class);
-            startActivity(intent);
         } else {
             Log.d(TAG, "sign in failure");
             // Signed out, show unauthenticated UI.
@@ -255,7 +271,12 @@ public class IntroLogin extends AppCompatActivity implements
         }
     }
     private class SendToServerAsyncTask extends AsyncTask<String, Void, Void> {
-
+        private Activity activity;
+        private boolean shouldWeShowBasicProfileScreen;
+        public SendToServerAsyncTask(Activity activity){
+            this.activity = activity;
+            shouldWeShowBasicProfileScreen = false;
+        }
 
         @Override
         protected Void doInBackground(String... params) {
@@ -285,11 +306,17 @@ public class IntroLogin extends AppCompatActivity implements
                            Log.d(TAG, "78The message from the server is: " + message);
                            Log.d(TAG, "The user profile id is: " + rslt.getProfileID());
                            MyServerSettings.initializeUserProfileID(getApplicationContext(), rslt.getProfileID());
+                           MyServerSettings.initializeUserName(getApplicationContext(), rslt.getName());
                            Log.d(TAG, "Profile ID set: " + MyServerSettings.getUserProfileId(getApplicationContext()));
                            Log.d(TAG, "Neighbors helped" + rslt.getNumNeighbrsHelped());
                            Log.d(TAG, "points gathered " + rslt.getThyNPoints());
                            MyServerSettings.initializeNumNeighbrsIHelped(getApplicationContext(), rslt.getNumNeighbrsHelped());
                            MyServerSettings.initializePoints(getApplicationContext(), rslt.getThyNPoints());
+                           MyServerSettings.initializeUserAddress(getApplicationContext(),rslt.getAddress(), rslt.getCity(), Double.toString(rslt.getLatitude()), Double.toString(rslt.getLongitude()));
+                           if(!rslt.getBasicprofileInfo()){
+                               Log.d(TAG, "We dont have profile information(phone, address) for the user");
+                               this.shouldWeShowBasicProfileScreen = true;
+                           }
                        }
                    }
                    catch(Exception e){
@@ -298,10 +325,31 @@ public class IntroLogin extends AppCompatActivity implements
             return null;
         }
         @Override
+        protected void onPreExecute() {
+            dialog = new ProgressDialog(activity);
+            dialog.setMessage("Please wait");
+            dialog.show();
+        }
+
+        @Override
         protected void onPostExecute(Void result) {
             MyServerSettings.initializeEnvironment(getBaseContext());
-            Intent intent = new Intent(getApplicationContext(), WelcomePageActivity.class);
+            Intent intent = null;
+            if(!this.shouldWeShowBasicProfileScreen) {
+                intent = new Intent(getApplicationContext(), WelcomePageActivity.class);
+            }
+            else {
+                intent = new Intent(getApplicationContext(), BasicProfileActivity.class);
+            }
             startActivity(intent);
+            dismissProgressDialog();
+        }
+
+        protected void dismissProgressDialog() {
+
+            if (dialog != null && dialog.isShowing()) {
+                dialog.dismiss();
+            }
 
         }
     }

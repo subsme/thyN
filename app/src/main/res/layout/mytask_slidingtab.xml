@@ -46,7 +46,7 @@
             android:layout_toLeftOf="@id/user_profile_image"
             android:paddingLeft="14dp"
             android:paddingRight="4dp"
-            android:text="Welcome, Angie!"
+            android:text="Welcome!"
             android:textSize="@dimen/caption_text_size"
             android:paddingTop="20dp"
             android:textColor="#ffffff" />

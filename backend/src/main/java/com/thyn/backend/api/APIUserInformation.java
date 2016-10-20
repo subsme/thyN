@@ -10,6 +10,51 @@ public class APIUserInformation {
     public String name;
     public int numNeighbrsHelped;
     public int thyNPoints;
+    public boolean basicprofileInfo;
+    public String address;
+    public Double latitude;
+    public Double longitude;
+    public String city;
+    public APIGeneralResult result;
+
+
+    public APIUserInformation(APIGeneralResult rslt){
+
+        this.result = rslt;
+        this.profileID = null;
+        this.numNeighbrsHelped = -1;
+        this.thyNPoints = -1;
+        this.name = null;
+        this.basicprofileInfo = false;
+        this.address = null;
+        this.latitude = -1.0;
+        this.longitude = -1.0;
+        this.city = null;
+    }
+
+    public APIUserInformation(APIGeneralResult rslt,
+                              Long profileID,
+                              String name,
+                              int numNeighbrsHelped,
+                              int thyNPoints,
+                              boolean basicprofileInfo,
+                              String address,
+                              Double latitude,
+                              Double longitude,
+                              String city
+    ){
+        this.result = rslt;
+        this.profileID = profileID;
+        this.numNeighbrsHelped = numNeighbrsHelped;
+        this.thyNPoints = thyNPoints;
+        this.basicprofileInfo = basicprofileInfo;
+        this.name = name;
+        this.address = address;
+        this.city = city;
+        this.latitude = latitude;
+        this.longitude = longitude;
+    }
+
 
     public Long getProfileID() {
         return profileID;
@@ -27,33 +72,50 @@ public class APIUserInformation {
         return thyNPoints;
     }
 
-    public APIGeneralResult result;
+
 
     public APIGeneralResult getResult() {
         return result;
     }
 
-    public APIUserInformation(APIGeneralResult rslt){
 
-        this.result = rslt;
-        this.profileID = null;
-        this.numNeighbrsHelped = -1;
-        this.thyNPoints = -1;
-
-        this.name = null;
+    public boolean isBasicprofileInfo() {
+        return basicprofileInfo;
     }
 
-    public APIUserInformation(APIGeneralResult rslt,
-                              Long profileID,
-                              String name,
-                              int numNeighbrsHelped,
-                              int thyNPoints
-                             ){
-        this.result = rslt;
-        this.profileID = profileID;
-        this.numNeighbrsHelped = numNeighbrsHelped;
-        this.thyNPoints = thyNPoints;
+    public void setBasicprofileInfo(boolean basicprofileInfo) {
+        this.basicprofileInfo = basicprofileInfo;
+    }
 
-        this.name = name;
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
     }
 }

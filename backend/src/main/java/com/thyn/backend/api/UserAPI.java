@@ -46,6 +46,7 @@ import java.net.URLDecoder;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Vector;
 
@@ -155,7 +156,7 @@ public class UserAPI {
             //return new APIGeneralResult(null, "UALM04 - Invalid credentials.");
             return new APIUserInformation(new APIGeneralResult("NOt OK", "UALM04 - Invalid credentials."));
         Logger.logInfo("user profile id is:" + user.getProfileId().toString());
-        APIUserInformation userStats = getUserStatisticsForHomePage(req, user.getProfileId(), 20);
+        APIUserInformation userStats = getUserStatisticsForHomePage(user, 20);
 
         return userStats;
     }
@@ -185,7 +186,9 @@ public class UserAPI {
             return new APIUserInformation(new APIGeneralResult("Not OK", "UALM02 Error "));
 
         Logger.logInfo("user profile id is:" + user.getProfileId().toString());
-        APIUserInformation userStats = getUserStatisticsForHomePage(req, user.getProfileId(), 20);
+
+        APIUserInformation userStats = getUserStatisticsForHomePage(user, 20);
+
 
         return userStats;
     }
@@ -215,7 +218,7 @@ public class UserAPI {
         String email = registerPackage2.getEmail();
         String password = registerPackage2.getPassword();
         String name = registerPackage2.getName();
-        UserRegistrationStatus statusRegistration = tryRegisterNewUser(email,name, password);
+        UserRegistrationStatus statusRegistration = tryRegisterNewUser(email, name, password);
         Logger.logInfo("In registerNewThynUser");
         switch(statusRegistration.getStatus())
         {
@@ -309,8 +312,78 @@ public class UserAPI {
 
         return prof;
     }
-    @ApiMethod(name = "getUserStats", httpMethod = HttpMethod.GET, path="userStats")
-    public APIUserInformation getUserStatisticsForHomePage(HttpServletRequest req, @Named("profileID") Long profileID, @Named("range") Integer range) throws APIErrorException {
+    @ApiMethod(name = "updateMyProfile", httpMethod = HttpMethod.POST, path="updateMyProfile")
+    public APIGeneralResult updateMyProfile(@Named("phone") String phone,
+                                            @Named("address") String address,
+                                            @Named("lat") String latitude,
+                                            @Named("long") String longitude,
+                                            @Named("city") String city,
+                                            @Named("socialID") String socialID,
+                                            @Named("socialType") int socialType,
+                                            HttpServletRequest req) throws ConflictException, APIErrorException{
+        logger.info("Phone received from the client is: " + phone);
+        logger.info("Address received from the client is: " + address
+                + ", lat: " + latitude
+                + ", long: " + longitude
+                + ", city: " + city);
+        User user = null;
+        if(socialType == 0) {//Facebook login
+            user = DatastoreHelpers.tryLoadEntityFromDatastore(User.class, "fbUserId ==", socialID);
+        }
+        else{//Google Login
+            user = DatastoreHelpers.tryLoadEntityFromDatastore(User.class, "googUserId ==", socialID);
+        }
+        user.setAddress(address);
+        user.setCity(city);
+        user.setLAT(Double.parseDouble(latitude));
+        user.setLONG(Double.parseDouble(longitude));
+        user.setPhone(phone);
+        ofy().save().entity(user).now();
+        return new APIGeneralResult("OK", "Extra profile information added.");
+    }
+
+        @ApiMethod(name = "insertMyTaskWithSocialID", httpMethod = HttpMethod.POST, path="mytask/insertmytaskwithsocialid")
+    public APIGeneralResult insertMyTaskWithSocialID(MyTask myTask, @Named("socialType") int socialType, @Named("socialID") String socialID, HttpServletRequest req) throws ConflictException, APIErrorException{
+        //Long profileId = findProfileId(socialID);
+        logger.info("Client inserting a task. Calling insertMyTaskWithSocialID method");
+        logger.info("The social id is : " + socialID + ", The social type is: " + socialType);
+        logger.info("----------------Task Information sent from client-----------------");
+        logger.info("Title: " + myTask.getTaskTitle()
+                +   ", Description: " + myTask.getTaskDescription()
+                +   ", Location: " + myTask.getBeginLocation()
+                +   ", From Date: " + myTask.getServiceDate()
+                +   ", To Date: " + myTask.getServiceToDate()
+                +   ", Time Range: " + myTask.getServiceTimeRange());
+
+        User user = null;
+        if(socialType == 0) {//Facebook login
+            user = DatastoreHelpers.tryLoadEntityFromDatastore(User.class, "fbUserId ==", socialID);
+        }
+        else{//Google Login
+            user = DatastoreHelpers.tryLoadEntityFromDatastore(User.class, "googUserId ==", socialID);
+        }
+        logger.info("User profile id retrieved from the database is: " + user.getProfileId());
+        myTask.setUserProfileKey(user.getProfileId());
+        myTask.setUserProfileName(user.getName());
+        myTask.setImageURL(user.getImageURL());
+        myTask.setCreateDate(new Date().toString());
+
+        logger.info("Saving task information in database...");
+        ofy().save().entity(myTask).now();
+        return new APIGeneralResult("OK", "New Task Created Successfully");
+    }
+
+
+    private APIUserInformation getUserStatisticsForHomePage(User user,Integer range){
+        Long profileID = user.getProfileId();
+        String name = user.getName();
+        String city = user.getCity();
+        String phone = user.getPhone();
+        String address = user.getAddress();
+        double latitude = user.getLAT();
+        double longitude = user.getLONG();
+
+
         Vector<Integer> u = this.findDistinctNeigbrsHelped(profileID);
 /*
         Query<Log_Action> query = null;
@@ -340,12 +413,18 @@ public class UserAPI {
         logger.info("profileID: " + profileID + ", count: " + u.get(0)
                 + " ,totPoints: " + u.get(1)
                 );
-
+        boolean b = false;
+        if(city != null && phone != null) b = true;
         APIUserInformation stats = new APIUserInformation(rslt,
                 profileID,
-                "Monkey Khan",
+                name,
                 u.get(0),
-                u.get(1)
+                u.get(1),
+                b,
+                address,
+                latitude,
+                longitude,
+                city
                 );
 
         return stats;

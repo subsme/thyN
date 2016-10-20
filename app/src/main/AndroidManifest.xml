@@ -40,10 +40,10 @@
         <activity
             android:name=".task.view.TaskPagerViewOnlyActivity"
             android:label="@string/app_name"
-            android:screenOrientation="portrait"></activity>
+            android:screenOrientation="portrait" />
         <activity
             android:name=".task.view.iwillhelp.TaskIWillHelpPagerViewOnlyActivity"
-            android:screenOrientation="portrait"></activity>
+            android:screenOrientation="portrait" />
         <activity
             android:name=".task.view.my.MyTaskPagerViewOnlyActivity"
             android:label="@string/app_name"
@@ -157,7 +157,7 @@
             android:name=".tab.DashboardActivity"
             android:label="@string/title_activity_dashboard"
             android:screenOrientation="portrait" />
-        <!--  Subu to delete this activity before going to production -->
+        <!-- Subu to delete this activity before going to production -->
         <activity
             android:name=".deleteMeInProd.AndroidDatabaseManager"
             android:theme="@style/Theme.AppCompat.Light" />
@@ -168,7 +168,9 @@
 
         <activity
             android:name=".task.ThumbsUpActivity"
-            android:screenOrientation="portrait"></activity>
+            android:screenOrientation="portrait" />
+        <activity android:name=".intro.BasicProfileActivity"></activity>
+
     </application>
 
 </manifest>

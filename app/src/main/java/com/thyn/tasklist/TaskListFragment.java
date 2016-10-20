@@ -57,7 +57,7 @@ public class TaskListFragment extends ListFragment{
     public static final String EXTRA_NUM_ITEMS =
             "com.thyn.tasklist.my.TaskListFragment.NumItems";
 
-    private ProgressDialog dialog;
+   // private ProgressDialog dialog;
 
     private MyTaskLab manager;
     private thynTaskDBHelper.TaskCursor mCursor;
@@ -352,6 +352,7 @@ public class TaskListFragment extends ListFragment{
                 }, 000);
             }
         });
+
         return v;
     }
     @Override
@@ -361,10 +362,13 @@ public class TaskListFragment extends ListFragment{
      */
     public void onPause() {
         super.onPause();
-
-        if ((dialog != null) && dialog.isShowing())
+/*
+commenting dialog creation for now. Not good for user interface. The progress dialog shows for two reasons when
+app fires off.
+ */
+       /* if ((dialog != null) && dialog.isShowing())
             dialog.dismiss();
-        dialog = null;
+        dialog = null;*/
     }
 
     private class RetrieveFromServerAsyncTask extends AsyncTask<Void, Void, List> {
@@ -394,12 +398,15 @@ public class TaskListFragment extends ListFragment{
         }
         /** progress dialog to show user that the backup is processing. */
         /** application context. */
-        @Override
+      /*  Oct 18, 2016 Removing progress dialog because there are two progress dialogs initially. Need to eliminate the second one.
+      Also looked at how facebook did things. Facebook doesnt have a progress dialog. Instead it has a spinner inside the list view.
+
+      @Override
         protected void onPreExecute() {
             dialog = new ProgressDialog(getActivity());
             dialog.setMessage("Please wait");
             dialog.show();
-        }
+        }*/
 
         @Override
         protected void onPostExecute(List result) {
@@ -456,15 +463,15 @@ public class TaskListFragment extends ListFragment{
             adapter.notifyDataSetChanged();
             setListAdapter(adapter);
 
-            dismissProgressDialog();
+            //dismissProgressDialog();
         }
 
-        protected void dismissProgressDialog() {
+     /*   protected void dismissProgressDialog() {
 
             if (dialog != null && dialog.isShowing()) {
                 dialog.dismiss();
             }
 
-        }
+        }*/
     }
 }
