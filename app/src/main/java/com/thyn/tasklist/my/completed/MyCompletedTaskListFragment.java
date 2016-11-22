@@ -1,5 +1,6 @@
 package com.thyn.tasklist.my.completed;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -47,14 +48,14 @@ public class MyCompletedTaskListFragment extends Fragment{
         setHasOptionsMenu(true);
         getActivity().setTitle(R.string.task_title);
 
-        new RetrieveFromServerAsyncTask().execute();
+        new RetrieveFromServerAsyncTask(getActivity()).execute();
 
     }
 
     @Override
     public void onResume(){
         super.onResume();
-        new RetrieveFromServerAsyncTask().execute();
+        new RetrieveFromServerAsyncTask(getActivity()).execute();
     }
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater){
@@ -140,7 +141,11 @@ public class MyCompletedTaskListFragment extends Fragment{
     private static MyTaskApi myApiService = null;
 
     private class RetrieveFromServerAsyncTask extends AsyncTask<Void, Void, List> {
-
+        private Context c = null;
+        public RetrieveFromServerAsyncTask(Context c) {
+            super();
+            this.c = c;
+        }
 
         @Override
         protected List doInBackground(Void... params) {
@@ -149,7 +154,9 @@ public class MyCompletedTaskListFragment extends Fragment{
             try {
                 Long userprofileid = MyServerSettings.getUserProfileId(getActivity());
                 Log.d(TAG, "Sending user profile id:" + userprofileid);
-                l = GoogleAPIConnector.connect_TaskAPI().listTasks(false, userprofileid, true).execute().getItems();
+                //l = GoogleAPIConnector.connect_TaskAPI().listTasks(false, userprofileid, true).execute().getItems();
+                l = GoogleAPIConnector.connect_TaskAPI().listTasks(0, false, MyServerSettings.getUserSocialId(c), MyServerSettings.getUserSocialType(c), true).execute().getItems();
+
             } catch (IOException e) {
                  e.getMessage();
             }

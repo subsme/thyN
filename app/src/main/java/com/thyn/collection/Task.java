@@ -15,7 +15,7 @@ import java.text.SimpleDateFormat;
 public class Task {
     private Long mId;
 
-    private Long mTaskId;
+    //private Long mTaskId;
     private String mBeginLocation;
     private double mLAT;
     private double mLONG;
@@ -23,6 +23,7 @@ public class Task {
     private String mEndLocation;
     private Date mServiceDate;
     private Date mCreateDate;
+    private Date mUpdateDate;
     private Calendar mTaskDate; // we need to get rid of this member variable because we have mTaskFromDate and mTaskToDate. Dont know why i have a calendar variable instead of a date variable.
     private Date mTaskFromDate;
     private Date mTaskToDate;
@@ -38,6 +39,7 @@ public class Task {
     private Long mHelperProfileKey;
     private String helperProfileName;
     private String imageURL;
+    private double distance;
 
     public static int DISPLAY_DATE=0;
 
@@ -90,10 +92,18 @@ public class Task {
     }
     public Task(){
         //Generate unique identifier
-        mTaskId = UUID.randomUUID().getMostSignificantBits();
+        //mTaskId = UUID.randomUUID().getMostSignificantBits();
     }
 
-    public void setTaskId(Long id){this.mTaskId = id;}
+   // public void setTaskId(Long id){this.mTaskId = id;}
+
+    public Date getUpdateDate() {
+        return mUpdateDate;
+    }
+
+    public void setUpdateDate(Date mUpdateDate) {
+        this.mUpdateDate = mUpdateDate;
+    }
 
     public Date getCreateDate() {
         return mCreateDate;
@@ -103,10 +113,10 @@ public class Task {
         this.mCreateDate = mCreateDate;
     }
 
-    public Long getTaskId() {
+  /*  public Long getTaskId() {
         return mTaskId;
 
-    }
+    }*/
 
     public Long getId() {
         return mId;
@@ -265,5 +275,13 @@ public class Task {
 
     public void setLONG(double mLONG) {
         this.mLONG = mLONG;
+    }
+
+    public double getDistance() {
+        return distance;
+    }
+
+    public void setDistance(double distance) {
+        this.distance = distance;
     }
 }

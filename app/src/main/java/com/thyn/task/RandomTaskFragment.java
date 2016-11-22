@@ -39,6 +39,7 @@ import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocomplete;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.api.client.util.DateTime;
 import com.thyn.R;
 import com.thyn.android.backend.myTaskApi.model.MyTask;
 import com.thyn.android.backend.userAPI.model.APIGeneralResult;
@@ -47,6 +48,7 @@ import com.thyn.common.MyServerSettings;
 import com.thyn.connection.GoogleAPIConnector;
 import com.thyn.field.AddressActivity;
 import com.thyn.field.AddressFragment;
+import com.thyn.navigate.NavigationActivity;
 
 import org.florescu.android.rangeseekbar.RangeSeekBar;
 import org.json.JSONObject;
@@ -187,33 +189,17 @@ public class RandomTaskFragment extends Fragment {
             }
         });
         timeLayoutName = (TextInputLayout) v.findViewById(R.id.time_input_layout);
-        mTaskTime = (EditText)v.findViewById(R.id.t_time);
-        mTaskTime.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                mTask.setTaskTimeRange(charSequence.toString());
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-
-            }
-        });
-
         // Setup the new range seek bar
-        long min_val = 0;
+        final long min_val = 0;
         final long max_val = 24*4;
+        final long lmin = 40;
+        final long lmax = 60;
         final RangeSeekBar<Long> rangeSeekBar = new RangeSeekBar<Long>(getActivity());
         // Set the range
 
         rangeSeekBar.setRangeValues(min_val, max_val);
-        rangeSeekBar.setSelectedMinValue(min_val);
-        rangeSeekBar.setSelectedMaxValue(max_val);
+        rangeSeekBar.setSelectedMinValue(lmin);
+        rangeSeekBar.setSelectedMaxValue(lmax);
         //final String timeStr = "";
         rangeSeekBar.setOnRangeSeekBarChangeListener(new RangeSeekBar.OnRangeSeekBarChangeListener<Long>() {
             @Override
@@ -226,6 +212,21 @@ public class RandomTaskFragment extends Fragment {
         // Add to layout
         LinearLayout layout = (LinearLayout) v.findViewById(R.id.seekbar_placeholder);
         layout.addView(rangeSeekBar);
+
+        mTaskTime = (EditText)v.findViewById(R.id.t_time);
+        mTaskTime.setOnClickListener(
+                    new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            rangeSeekBar.setSelectedMinValue(lmin);
+                            rangeSeekBar.setSelectedMaxValue(lmax);
+                            mTaskTime.setTextColor(Color.BLACK);
+                            String timeStr = rangeSeekBar.valueToString(lmin) + " - " + rangeSeekBar.valueToString(lmax);
+                            mTaskTime.setText(timeStr);
+                        }
+                    }
+            );
+
 
         final TimeFoo tfoo= new TimeFoo();
         mTimeFlexible = (CheckBox)v.findViewById(R.id.t_time_flex);
@@ -290,12 +291,22 @@ public class RandomTaskFragment extends Fragment {
                     new InsertAsyncTask().execute(mTask);
                 //}
 
-                Intent intent =
+                /*Intent intent =
                         new Intent(getActivity(), ThumbsUpActivity.class);
-                startActivity(intent);
+                startActivity(intent);*/
+                ThumbsUpFragment thumbsUpFragment = ThumbsUpFragment.newInstance(null,null);
+                FragmentManager manager = getActivity().getSupportFragmentManager();
+                manager.beginTransaction().replace(R.id.navigation_fragment_container,
+                        thumbsUpFragment,
+                        thumbsUpFragment.getTag()).commit();
             }
         });
-
+        /* Subu Hiding the floating action button
+        * that was created in NavigationActivity.
+         */
+        if (getActivity() instanceof NavigationActivity) {
+            ((NavigationActivity) getActivity()).hideFloatingActionButton();
+        }
 
         return v;
     }
@@ -382,14 +393,7 @@ public class RandomTaskFragment extends Fragment {
             setDateText();
 
             }
-        /*else if (requestCode == ADDRESS_ACTIVITY_REQUEST_CODE) {
-            if(resultCode == Activity.RESULT_OK){
-                String  from =data.getStringExtra(AddressFragment.EXTRA_ADDRESS_ID);
-                if (from != null) {
-                    mTask.setBeginLocation(from);
-                }
-            }
-         }*/
+
         else if (requestCode == PLACE_AUTOCOMPLETE_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
                 Place place = PlaceAutocomplete.getPlace(getActivity(), data);
@@ -517,9 +521,10 @@ public class RandomTaskFragment extends Fragment {
             //myTask.setEndLocation(task.getEndLocation());
             myTask.setIsSolved(task.isSolved());
             myTask.setWaitResponseTime(task.getmWaitResponseTime());
-            myTask.setServiceDate(dateToString(task.getTaskFromDate()));
+            myTask.setServiceDate(new DateTime(task.getTaskFromDate()));
             //myTask.setServiceFromDate(dateToString(task.getTaskFromDate()));
-            myTask.setServiceToDate(dateToString(task.getTaskToDate()));
+
+            if(task.getTaskToDate() != null) myTask.setServiceToDate(new DateTime(task.getTaskToDate()));
             myTask.setServiceTimeRange(task.getTaskTimeRange());
 //            myTask.setServiceDate(task.getServiceDate().toString());
             //DateFormat converter = new SimpleDateFormat("E MMM dd HH:mm:ss z y");

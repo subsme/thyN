@@ -5,20 +5,29 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.Context;
 import com.thyn.broadcast.GCMPreferences;
+import com.thyn.collection.Filter;
 import com.thyn.connection.GoogleAPIConnector;
 import com.thyn.connection.PollService;
 
+import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.content.SharedPreferences.Editor;
 import android.support.v4.app.FragmentActivity;
+import android.util.Log;
+
+import java.io.File;
+import java.io.IOException;
 
 /**
  * Created by shalu on 4/5/16.
  */
 public class MyServerSettings {
+    private static final String TAG = "MyServerSettings";
     public static int LocalDevServer = -1;
     public static int DevServer = 0;
     public static int ProdServer = 1;
+
+    public static boolean LOCAL_DEBUG = false;
 
     private static int currentServer = 0;
 
@@ -33,6 +42,7 @@ public class MyServerSettings {
     public static final String PREF_USER_LANG = "userLang";
     public static final String PREF_USER_LAT = "userLat";
     public static final String PREF_USER_PHONE = "userPhone";
+    public static final String PREF_LOCAL_FILE_LOCATION="local_File";
 
     public static String LOCAL_TASK_CACHE = "taskCache";
     private static String LOCAL_MYTASK_CACHE = "myTaskCache";
@@ -41,15 +51,23 @@ public class MyServerSettings {
     private static String NEIGHBRS_HELPED = "neighbrsHelped";
     private static String TOTAL_REQUESTS_WITHIN_RANGE = "totalRequestsWithinRange";
 
+    private static final String PREF_FILTER_OPTION ="com.thyn.tab.filter";
+    private static final String PREF_FILTER_RADIUS="com.thyn.tab.filter.radius";
+
     public static void initializeEnvironment(Context c){
         //setEnvironment(MyServerSettings.LocalDevServer);
-
         initializeIsTokenSent(c);
 
+    }
+    public static void writeLocalLogs(Context c){
+        LOCAL_DEBUG = true;
+        writeLogToFileSystem(c);
+    }
+
+    public static void startPolling(Context c){
         Intent i = new Intent(c, PollService.class);
         c.startService(i);
     }
-
     public static void setEnvironment(int server){
         if(server == DevServer){
             currentServer = DevServer;
@@ -225,6 +243,89 @@ public class MyServerSettings {
 
     public static String getUserLAT(Context c){
         return PreferenceManager.getDefaultSharedPreferences(c).getString(MyServerSettings.PREF_USER_LAT,null);
+    }
+    public static String getLocalFileLocation(Context c){
+        return PreferenceManager.getDefaultSharedPreferences(c).getString(MyServerSettings.PREF_LOCAL_FILE_LOCATION,null);
+    }
+
+    public static void writeLogToFileSystem(Context c){
+        if ( isExternalStorageWritable() ) {
+
+            File appDirectory = new File( Environment.getExternalStorageDirectory() + "/thyNeighbr" );
+            File logDirectory = new File( appDirectory + "/log" );
+            File logFile = new File( logDirectory, "thyNeighbr-logcat" + System.currentTimeMillis() + ".txt" );
+
+            // create app folder
+            if ( !appDirectory.exists() ) {
+                appDirectory.mkdir();
+            }
+
+            // create log folder
+            if ( !logDirectory.exists() ) {
+                logDirectory.mkdir();
+            }
+            // clear the previous logcat and then write the new one to the file
+            try {
+                Log.d(TAG, "Writing logs to " + logFile.toString());
+                PreferenceManager.getDefaultSharedPreferences(c)
+                        .edit()
+                        .putString(MyServerSettings.PREF_LOCAL_FILE_LOCATION, logFile.toString())
+                        .commit();
+                Process process = Runtime.getRuntime().exec("logcat -c");
+                process = Runtime.getRuntime().exec("logcat -f " + logFile);
+            } catch ( IOException e ) {
+                e.printStackTrace();
+            }
+
+        } else if ( isExternalStorageReadable() ) {
+            // only readable
+        } else {
+            // not accessible
+        }
+    }
+    /* Checks if external storage is available for read and write */
+    public static boolean isExternalStorageWritable() {
+        String state = Environment.getExternalStorageState();
+        if ( Environment.MEDIA_MOUNTED.equals(state) ) {
+            return true;
+        }
+        return false;
+    }
+
+    /* Checks if external storage is available to at least read */
+    public static boolean isExternalStorageReadable() {
+        String state = Environment.getExternalStorageState();
+        if ( Environment.MEDIA_MOUNTED.equals( state ) ||
+                Environment.MEDIA_MOUNTED_READ_ONLY.equals( state ) ) {
+            return true;
+        }
+        return false;
+    }
+    public static void initializeFilterSettings(Context context, Filter filter){
+        int filterSetting = 0;
+        if(filter.closestToMyHome){
+            filterSetting = 1;
+        }
+        else if(filter.expiringSoon){
+            filterSetting = 2;
+        }
+        else if(filter.mostRecent){
+            filterSetting = 3;
+        }
+        if(filter.distanceRadius <= 0) filter.distanceRadius = 20;
+        Log.d(TAG, "setting distance radius: " + filter.distanceRadius);
+        PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putInt(MyServerSettings.PREF_FILTER_OPTION, filterSetting)
+                .putInt(MyServerSettings.PREF_FILTER_RADIUS, filter.distanceRadius)
+                .commit();
+    }
+    public static int getFilterSetting(Context c){
+        return PreferenceManager.getDefaultSharedPreferences(c).getInt(MyServerSettings.PREF_FILTER_OPTION,-1);
+    }
+
+    public static int getFilterRadius(Context c){
+        return PreferenceManager.getDefaultSharedPreferences(c).getInt(MyServerSettings.PREF_FILTER_RADIUS,0);
     }
 
 }

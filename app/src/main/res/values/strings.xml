@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">thyN</string>
+    <string name="app_name">thyNeighbr</string>
     <string name="action_settings">Settings</string>
     <string name="description_label">What would you like help with?</string>
     <string name="task_from_hint">From</string>
@@ -16,6 +16,7 @@
     <string name="dummy_section_text">Section %1d is just a dummy section.</string>
 
     <string name="accept_task_dialog_title">Please confirm your offer to help.</string>
+    <string name="cancel_task_dialog_title">Are you sure you want to delete your task.</string>
     <string name="no_task_give_help">Take a look at some open requests to help your Neighbrs!</string>
     <string name="no_tasks_get_help">Reach out to your Neighbrs to borrow tools, organize an event or even ask for a ride to the store!</string>
     <string name="task_complete">Mark Complete</string>
@@ -65,5 +66,13 @@
     <string name="err_msg_date">Please select a valid date or range of dates.</string>
     <string name="err_msg_time">Please enter a valid time range.</string>
     <string name="err_msg_location">Please select a valid location.</string>
+
+    <string name="drawer_opened">Opened</string>
+    <string name="drawer_closed">Closed</string>
+    <string name="title_activity_navigation">NavigationActivity</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="title_activity_main2">Main2Activity</string>
 
 </resources>

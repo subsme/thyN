@@ -5,11 +5,13 @@ import android.content.Context;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.ListFragment;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import android.util.Log;
 import android.content.Intent;
@@ -35,6 +37,8 @@ import com.thyn.common.MyServerSettings;
 import com.thyn.connection.GoogleAPIConnector;
 import com.thyn.db.thynTaskDBHelper;
 import com.thyn.graphics.MLRoundedImageView;
+import com.thyn.navigate.NavigationActivity;
+import com.thyn.tab.DashboardFragment;
 import com.thyn.task.TaskActivity;
 import com.thyn.task.TaskFragment;
 import com.thyn.collection.MyTaskLab;
@@ -42,6 +46,8 @@ import com.thyn.R;
 import com.thyn.tab.DashboardActivity;
 import com.thyn.task.view.TaskPagerViewOnlyActivity;
 import com.thyn.task.view.TaskPagerViewOnlyFragment;
+import com.thyn.task.view.edit.TaskPagerEditOnlyActivity;
+import com.thyn.task.view.edit.TaskPagerEditOnlyFragment;
 
 
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -86,7 +92,7 @@ public class TaskListFragment extends ListFragment{
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
         userprofileid = MyServerSettings.getUserProfileId(getActivity());
-        getActivity().setTitle(R.string.task_title);
+        //getActivity().setTitle(R.string.task_title);
 
         if(manager == null) manager = MyTaskLab.get(getActivity());
     }
@@ -126,6 +132,7 @@ public class TaskListFragment extends ListFragment{
         if(!MyServerSettings.getLocalTaskCache(getActivity()) || toRefresh) {
             Log.d(TAG, "No cache exists. Getting the latest tasks from server...Will Take some time...");
             //callAsyncThread(getArguments());
+
             refreshContent(numRowsToShow);
             Log.d(TAG, "LOCAL-CACHE is " + MyServerSettings.getLocalTaskCache(getContext()));
         }
@@ -147,10 +154,10 @@ public class TaskListFragment extends ListFragment{
         if(arguments != null && arguments.containsKey(EXTRA_NUM_ITEMS)) {
             int numItems = arguments.getInt(EXTRA_NUM_ITEMS, 0);
             System.out.println("onResume: numItems to print is: " + numItems);
-            new RetrieveFromServerAsyncTask(numItems).execute();
+            new RetrieveFromServerAsyncTask(numItems, getActivity()).execute();
         }
 
-        else new RetrieveFromServerAsyncTask().execute();
+        else new RetrieveFromServerAsyncTask(getActivity()).execute();
 
 
     }
@@ -188,13 +195,34 @@ public class TaskListFragment extends ListFragment{
     public void onListItemClick(ListView l, View v, int position, long id){
         // The id argument will be Task ID; CursorAdapter gives this to us for FREE
         Log.d(TAG, "The id given by the cursor adapter is: " + id);
-        //Task t = ((TaskCursorAdapter)getListAdapter()).getItem(position);
-       /* Intent i = new Intent(getActivity(), TaskActivity.class);
-        i.putExtra(TaskFragment.EXTRA_TASK_ID, id);
-        startActivity(i);*/
-        Intent i = new Intent(getActivity(), TaskPagerViewOnlyActivity.class);
-        i.putExtra(TaskPagerViewOnlyFragment.EXTRA_TASK_ID, id);
-        startActivity(i);
+
+        Task t = MyTaskLab.get(getActivity()).getTask(id);
+        Long userprofileid = MyServerSettings.getUserProfileId(getActivity());
+        Log.i(TAG, "user profile id is: " + userprofileid);
+        Log.i(TAG, "my profile key is: " + t.getUserProfileKey());
+        Intent i = null;
+        if(userprofileid.equals(t.getUserProfileKey())) {
+            Log.i(TAG, "the ids are the same");
+            /*i = new Intent(getActivity(), TaskPagerEditOnlyActivity.class);
+            i.putExtra(TaskPagerEditOnlyFragment.EXTRA_TASK_ID, id);*/
+            TaskPagerEditOnlyFragment tpEditOnlyFragment = TaskPagerEditOnlyFragment.newInstance(id);
+            FragmentManager manager = getActivity().getSupportFragmentManager();
+            manager.beginTransaction().replace(R.id.navigation_fragment_container,
+                    tpEditOnlyFragment,
+                    tpEditOnlyFragment.getTag()).addToBackStack(null).commit();
+        }
+        else{
+            Log.i(TAG, "the ids are not the same");
+           /* i = new Intent(getActivity(), TaskPagerViewOnlyActivity.class);
+            i.putExtra(TaskPagerViewOnlyFragment.EXTRA_TASK_ID, id);*/
+            TaskPagerViewOnlyFragment tpViewOnlyFragment = TaskPagerViewOnlyFragment.newInstance(id);
+            FragmentManager manager = getActivity().getSupportFragmentManager();
+            manager.beginTransaction().replace(R.id.navigation_fragment_container,
+                    tpViewOnlyFragment,
+                    tpViewOnlyFragment.getTag()).addToBackStack(null).commit();
+
+        }
+//        startActivity(i);
     }
 
  /* Commenting this because it was used for TaskListAdapter when we got the information
@@ -229,7 +257,8 @@ public class TaskListFragment extends ListFragment{
          */
         manager.purgeTasks();
         Log.d(TAG, "In refreshContent()");
-        new RetrieveFromServerAsyncTask(numRows).execute();
+
+        new RetrieveFromServerAsyncTask(numRows, getActivity()).execute();
 
     }
 
@@ -311,7 +340,16 @@ public class TaskListFragment extends ListFragment{
             TextView locationTextView = (TextView)view.findViewById(R.id.task_list_item_locationTextView);
             //locationTextView.setText(task.getBeginLocation());
             locationTextView.setText(task.getCity());
+            TextView distanceTextView = (TextView)view.findViewById(R.id.task_distance);
 
+            double dist = task.getDistance();
+            Log.d(TAG, "The task list distance is " + task.getDistance());
+            distanceTextView.setText(Double.toString(dist));
+            if(dist >=0) {
+               // dist = (double) Math.round(dist * 100.0) / 100.0;
+                DecimalFormat f = new DecimalFormat("##0.0 mi");
+                distanceTextView.setText(f.format(dist));
+            }
         }
 
     }
@@ -327,17 +365,26 @@ public class TaskListFragment extends ListFragment{
         Log.d(TAG, "In onCreateView, numitems is " + numItems);
         if(numItems == 2) {
             v = inflater.inflate(R.layout.fragment_tasklist, container, false);
+            ListView listView = (ListView)v.findViewById(android.R.id.list);
+            listView.setEmptyView(v.findViewById(android.R.id.empty));
             ImageView img_view = (ImageView) v.findViewById(R.id.expand);
             img_view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Intent intent = new Intent(getActivity().getApplicationContext(), DashboardActivity.class);
-                    startActivity(intent);
+                   // Intent intent = new Intent(getActivity().getApplicationContext(), DashboardActivity.class);
+                   // startActivity(intent);
+                    DashboardFragment dashboardFragment = new DashboardFragment();
+                    FragmentManager manager = getActivity().getSupportFragmentManager();
+                    manager.beginTransaction().replace(R.id.navigation_fragment_container,
+                            dashboardFragment,
+                            dashboardFragment.getTag()).commit();
                 }
             });
             return v;
         }
         v = inflater.inflate(R.layout.fragment_tasklist_nobutton, container, false);
+        ListView listView = (ListView)v.findViewById(android.R.id.list);
+        listView.setEmptyView(v.findViewById(android.R.id.empty));
         mSwipeRefreshLayout = (SwipeRefreshLayout) v.findViewById(R.id.activity_main_swipe_refresh_layout);
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -373,14 +420,23 @@ app fires off.
 
     private class RetrieveFromServerAsyncTask extends AsyncTask<Void, Void, List> {
         int numItems;
-
-        public RetrieveFromServerAsyncTask(int numItems) {
+        int filterradius = 0;
+        private Context c = null;
+        public RetrieveFromServerAsyncTask(int numItems, Context c) {
             super();
             this.numItems = numItems;
+            this.c = c;
+        }
+        public RetrieveFromServerAsyncTask(int numItems, int radius, Context c) {
+            super();
+            this.numItems = numItems;
+            this.filterradius = radius;
+            this.c = c;
         }
 
-        public RetrieveFromServerAsyncTask() {
+        public RetrieveFromServerAsyncTask(Context c) {
             super();
+            this.c = c;
         }
 
         @Override
@@ -389,7 +445,10 @@ app fires off.
 
             try {
                 Log.d(TAG, "Sending user profile id:"+userprofileid);
-                l = GoogleAPIConnector.connect_TaskAPI().listTasks(false, userprofileid, false).execute().getItems();
+                Log.d(TAG, "Sending distance filter: " +  MyServerSettings.getFilterRadius(c));
+                //l = GoogleAPIConnector.connect_TaskAPI().listTasks(false, userprofileid, false).execute().getItems();
+                l = GoogleAPIConnector.connect_TaskAPI().listTasks(MyServerSettings.getFilterRadius(c), false, MyServerSettings.getUserSocialId(c), MyServerSettings.getUserSocialType(c), false).execute().getItems();
+
             } catch (IOException e) {
                 e.getMessage();
             }

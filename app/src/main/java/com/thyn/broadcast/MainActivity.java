@@ -76,10 +76,10 @@ public class MainActivity extends AppCompatActivity {
         // Registering BroadcastReceiver
         registerReceiver();
 
-        if (MyServerSettings.getEnvironment() == MyServerSettings.DevServer || checkPlayServices()) {
+        if (checkPlayServices()) {
             // Start IntentService to register this application with GCM.
-            if(checkPlayServices())
-                Log.d(TAG, "checkPlayServices() is successful. starting GcmRegistrationIntentService.class");
+
+            Log.d(TAG, "checkPlayServices() is successful. starting GcmRegistrationIntentService.class");
             Intent intent = new Intent(this, GcmRegistrationIntentService.class);
             startService(intent);
         }

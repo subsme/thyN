@@ -11,6 +11,7 @@ import com.thyn.db.thynTaskDBHelper;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.TimeZone;
 
 /**
  * Created by shalu on 3/24/16.
@@ -79,7 +80,12 @@ public class TaskLab {
    public  void convertRemotetoLocalTask(MyTask t){
         Task a = new Task();
         Log.d(TAG, "Copying MyTask into Task...");
-        Log.d(TAG, "Title: " + t.getTaskTitle() + ",Description: " + t.getTaskDescription() + ",Image URL: " + t.getImageURL());
+        Log.d(TAG, "Title: " + t.getTaskTitle()
+                + ",Description: " + t.getTaskDescription()
+                + ",Image URL: " + t.getImageURL()
+                + ", Distance: " + t.getDistanceFromOrigin()
+                + ", create date: " + t.getCreateDate()
+                + ", update date: " + t.getUpdateDate());
 
         a.setId(t.getId());
         a.setEndLocation(t.getEndLocation());
@@ -95,20 +101,33 @@ public class TaskLab {
         a.setLONG(t.getLong());
         a.setCity(t.getCity());
         a.setTaskTimeRange(t.getServiceTimeRange());
+        a.setDistance(t.getDistanceFromOrigin());
 
-
-        SimpleDateFormat sdFormat = new SimpleDateFormat("E MMM dd HH:mm:ss z y");
+        SimpleDateFormat sdFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+        //TimeZone tz = TimeZone.getDefault();
+        //TimeZone tz1 = TimeZone.getTimeZone("");
+       //need to use joda time. this is looking crazy.
+       // Log.d(TAG, "TimeZone   "+tz.getDisplayName(false, TimeZone.SHORT)+" Timezone id :: " +tz.getID());
+        //Log.d(TAG, "TimeZone   "+tz1.getDisplayName(false, TimeZone.SHORT)+" Timezone id :: " +tz1.getID());
+       /* Subu  11/02 by setting the time zone to "", i am able to get the correct time. dont have to set to pst. weird.
+       * need to do somemore testing in other phones. if thins are weird, have to investigate the use of joda time.*/
+       sdFormat.setTimeZone(TimeZone.getTimeZone(""));
         try {
-            if(t.getCreateDate() != null) a.setCreateDate(sdFormat.parse(t.getCreateDate()));
+
+            if(t.getCreateDate() != null){
+                a.setCreateDate(sdFormat.parse(t.getCreateDate().toString()));
+                Log.d(TAG,"create date converted: "  +a.getCreateDate());
+            }
+            if(t.getUpdateDate() != null) a.setUpdateDate(sdFormat.parse(t.getUpdateDate().toString()));
 
             if(t.getServiceDate() != null){
-                a.setServiceDate(sdFormat.parse(t.getServiceDate()));
-                a.setTaskFromDate(sdFormat.parse(t.getServiceDate()));
+                a.setServiceDate(sdFormat.parse(t.getServiceDate().toString()));
+                a.setTaskFromDate(sdFormat.parse(t.getServiceDate().toString()));
             }
 
         }
         catch(ParseException e){
-            e.printStackTrace();
+            Log.d(TAG, "Exception caught - " +  e.getMessage());
         }
        if(t.getHelperUserProfileKey() != null){
            a.setIsAccepted(true);

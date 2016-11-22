@@ -1,5 +1,9 @@
 package com.thyn.backend.api;
-
+/*subu - just converted dates from sting to date type (the dates are read as datetime at the client end).
+        need to see how this changes the backend database structure.
+        i need this because i need to retrieve tasks lin listtask only if the current date is less than the servive date.
+        need to index the service date.
+        */
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;
 import com.google.api.server.spi.config.ApiMethod.HttpMethod;
@@ -21,6 +25,8 @@ import com.thyn.backend.gcm.GcmSender;
 import com.thyn.backend.utilities.security.SecurityUtilities;
 import com.thyn.backend.utilities.security.ThyNSession;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
 import java.util.Date;
@@ -80,47 +86,86 @@ public class MyTaskEndpoint {
     public CollectionResponse<MyTask> listTasks(@Nullable @Named("count") Integer count,
                                                 @Named("helper") Boolean helper,
                                                 @Named("solved") Boolean isSolved,
-                                                @Named("profileId") Long profileID,
+                                                @Named("socialType") int socialType,
+                                                @Named("socialID") String socialID,
+                                                @Named("filterRadius") Integer radius,
                                                 HttpServletRequest req) throws APIErrorException{
-  /*      ThyNSession currentSession = SecurityUtilities.enforceAuthenticationForCurrentAPICall(req);
-        User sessionUser = currentSession.getSessionUser();
-        if(sessionUser == null)
-            throw new APIErrorException(401, "UADU01 - Unauthorized.");
-
-        profileID = sessionUser.getProfileId();
-**/
-        Cookie cookies[] = req.getCookies();
-        if(cookies!= null) {
-            for (int i = 0; i < cookies.length; i++) {
-                Cookie c = cookies[i];
-                logger.info("cookies: " + c.getName() + "-" + c.getValue());
-            }
+        User user = null;
+        if(socialType == 0) {//Facebook login
+            user = DatastoreHelpers.tryLoadEntityFromDatastore(User.class, "fbUserId ==", socialID);
+        }
+        else{//Google Login
+            user = DatastoreHelpers.tryLoadEntityFromDatastore(User.class, "googUserId ==", socialID);
+        }
+        if(user == null){
+            logger.severe("The user " + socialID + " doesnt exist in the database. Returning null. BYE BYE");
+            return null;
         }
 
-                logger.info("In listTasks. The profile id is : " + profileID);
+        Long profileID = user.getProfileId();
+        logger.info("In listTasks. The profile id is : " + profileID);
+
+        //Getting the current date and time
+
+        Date currentDate = new Date();
+
         Query<MyTask> query = null;
         if(helper){
             logger.info("HELPER is SET");
-            if(!isSolved) query = ofy().load().type(MyTask.class).filter("helperUserProfileKey", profileID).order("-mCreateDate");
-            else query = ofy().load().type(MyTask.class).filter("helperUserProfileKey",profileID).filter("isSolved", true).order("-mCreateDate");
+            if(!isSolved) query = ofy().load().type(MyTask.class).filter("helperUserProfileKey", profileID);//order("-mCreateDate");
+            else query = ofy().load().type(MyTask.class).filter("helperUserProfileKey",profileID).filter("isSolved", true);//.order("-mCreateDate");
         }
         else {
             logger.info("HELPER is not SET");
-            if(!isSolved) //query = ofy().load().type(MyTask.class).filter("helperUserProfileKey ==",null);
-                query = ofy().load().type(MyTask.class).filter("isSolved", false).order("-mCreateDate");
-            else query = ofy().load().type(MyTask.class).filter("isSolved", true).order("-mCreateDate");
+            if(!isSolved)
+                query = ofy().load().type(MyTask.class).filter("isSolved", false);//.filter("mServiceDate >", df.format(dateobj));//.order("-mCreateDate");
+            else query = ofy().load().type(MyTask.class).filter("isSolved", true);//.order("-mCreateDate");
             //.order("-mCreateDate");
         }
         logger.info("The query is : " + query);
+
+        double distance = 20;
+        if(radius > 0) distance = radius;
+        logger.info("The search radius is set to: " + distance);
+        double originLAT = user.getLAT();
+        double originLONG = user.getLONG();
+        if(originLAT == 0 || originLONG == 0){
+            logger.severe("The user " + profileID + " never set their location while signing up with thyNeighbr. Returning null. BYE BYE");
+            return null;
+        }
 
         if (count != null) query.limit(count);
 
         List<MyTask> records = new ArrayList<MyTask>();
         QueryResultIterator<MyTask> iterator = query.iterator();
         int num = 0;
+        logger.info("adding task lists");
         while (iterator.hasNext()) {
-            records.add(iterator.next());
-            logger.info("adding iterator ");
+            MyTask task = iterator.next();
+            if(!helper) {
+                double val = checkIfDistanceCriteriaIsMet(originLAT, originLONG, task.getLAT(), task.getLONG());
+                logger.info("Task is: " + task.getTaskTitle()
+                        + "\nDistance is: " + val
+                        + "\nAddress is: " + task.getBeginLocation()
+                        + "\nTask create date is: " + task.getCreateDate()
+                        + "\nTask update date is: " + task.getUpdateDate()
+                        + "\nTask service date is: " + task.getServiceDate()
+                        + "\ncurrent date: " + currentDate
+                        + "\ntask.getServiceDate().compareTo(currentDate): " + task.getServiceDate().compareTo(currentDate));
+                if (val <= distance &&
+                        ((task.getServiceDate().compareTo(currentDate)>0) ||
+                                (task.getServiceDate().compareTo(currentDate)==0))){ // If the current date is less or equal to task service date. Other dates just expire without being helped.
+                    logger.info("Less than " + distance + ". Adding " + task.getTaskTitle());
+                    task.setDistanceFromOrigin(val);
+                    records.add(task);
+                } else {
+                    logger.info("Greater than " + distance + ". Not Adding " + task.getTaskTitle());
+                }
+            }
+            else{//  helper is set
+                logger.info("Adding Task: " + task.getTaskTitle());
+                records.add(task);
+            }
             if (count != null) {
                 num++;
                 if (num == count) break;
@@ -161,8 +206,9 @@ public class MyTaskEndpoint {
         But thats the easy way to get all the task information when TaskListFragment calls the server */
         //Long profileID = sessionUser.getProfileId();
         Profile prof = DatastoreHelpers.tryLoadEntityFromDatastore(Profile.class, profileID);
-        myTask.setUserProfileName(prof.getFirstName()+ " " + prof.getLastName());
-        myTask.setCreateDate(new Date().toString());
+        myTask.setUserProfileName(prof.getFirstName() + " " + prof.getLastName());
+        myTask.setCreateDate(new Date());
+        myTask.setUpdateDate(new Date());
         ofy().save().entity(myTask).now();
         //myTask.setTaskDescription("Mutating the task description: " + myTask.getTaskDescription());
 
@@ -191,7 +237,8 @@ public class MyTaskEndpoint {
         myTask.setUserProfileKey(user.getProfileId());
         myTask.setUserProfileName(user.getName());
         myTask.setImageURL(user.getImageURL());
-        myTask.setCreateDate(new Date().toString());
+        myTask.setCreateDate(new Date());
+        myTask.setUpdateDate(new Date());
 
         logger.info("Saving task information in database...");
         ofy().save().entity(myTask).now();
@@ -205,25 +252,68 @@ public class MyTaskEndpoint {
      * @return The object to be added.
      */
     @ApiMethod(name = "updateMyTask", httpMethod = HttpMethod.POST)
-    public void updateMyTask(MyTask myTask, HttpServletRequest req) throws ParseException, NullPointerException, APIErrorException{
-        // TODO: Implement this function
+    public APIGeneralResult updateMyTask(MyTask myTask, @Named("socialType") int socialType, @Named("socialID") String socialID, HttpServletRequest req) throws ParseException, NullPointerException, APIErrorException{
+        // TODO: Subu - This requires me to check if the social
         logger.info("Calling updateMyTask method");
-  /*      ThyNSession currentSession = SecurityUtilities.enforceAuthenticationForCurrentAPICall(req);
-        User sessionUser = currentSession.getSessionUser();
-        if(sessionUser == null)
-            throw new APIErrorException(401, "UADU01 - Unauthorized.");
-*/
+        logger.info("Client inserting a task. Calling insertMyTaskWithSocialID method");
+        logger.info("The social id is : " + socialID + ", The social type is: " + socialType);
+        logger.info("----------------Task Information sent from client-----------------");
+        logger.info("Title: " + myTask.getTaskTitle()
+                +   ", Description: " + myTask.getTaskDescription()
+                +   ", Location: " + myTask.getBeginLocation()
+                +   ", From Date: " + myTask.getServiceDate()
+                +   ", To Date: " + myTask.getServiceToDate()
+                +   ", Time Range: " + myTask.getServiceTimeRange());
+        User user = null;
+        if(socialType == 0) {//Facebook login
+            user = DatastoreHelpers.tryLoadEntityFromDatastore(User.class, "fbUserId ==", socialID);
+        }
+        else{//Google Login
+            user = DatastoreHelpers.tryLoadEntityFromDatastore(User.class, "googUserId ==", socialID);
+        }
+        logger.info("User profile id retrieved from the database is: " + user.getProfileId());
+
+
         MyTask task = null;
         if(myTask.getId() != null){
             task = DatastoreHelpers.tryLoadEntityFromDatastore(MyTask.class,myTask.getId());
         }
         if(task == null) throw new NullPointerException("Task object is null");
 
+        if(!task.getUserProfileKey().equals(user.getProfileId())){
+            logger.severe("Unknown user is trying to update a task not owned by him/her.");
+            return new APIGeneralResult("Fail", "Unknown user is trying to update a task not owned by him/her.");
+        }
+        task.setTaskTitle(myTask.getTaskTitle());
         task.setTaskDescription(myTask.getTaskDescription());
         task.setBeginLocation(myTask.getBeginLocation());
         task.setServiceDate(myTask.getServiceDate());
-        task.setUpdateDate(new Date().toString());
-        DatastoreHelpers.trySaveEntityOnDatastore(task);
+        task.setServiceToDate(myTask.getServiceToDate());
+        task.setLONG(myTask.getLONG());
+        task.setLAT(myTask.getLAT());
+        task.setCity(myTask.getCity());
+        task.setServiceTimeRange(myTask.getServiceTimeRange());
+        task.setUpdateDate(new Date());
+        try {
+            DatastoreHelpers.trySaveEntityOnDatastore(task);
+        }
+        catch(Exception e){
+            return new APIGeneralResult("Fail", "Task Update failed");
+        }
+        return new APIGeneralResult("OK", "Task Update was successful");
+    }
+    @ApiMethod(name = "deleteMyTask", httpMethod = HttpMethod.POST)
+    public APIGeneralResult deleteMyTask(@Named("taskId") Long taskId, @Named("profileID") Long profileID, HttpServletRequest req) throws ParseException, NullPointerException, APIErrorException{
+        logger.info("Calling deleteMyTask method");
+        MyTask myTask = DatastoreHelpers.tryLoadEntityFromDatastore(MyTask.class, taskId);
+        if(!profileID.equals(myTask.getUserProfileKey())){
+            logger.info("the profile id is: " + profileID);
+            logger.info("The task's profile id is: " + myTask.getUserProfileKey());
+            return new APIGeneralResult("Fail", "User is not authenticated to delete this task");
+        }
+        boolean b = myTask.dispose();
+        if(!b) return new APIGeneralResult("Fail", "Task Delete failed");
+        return new APIGeneralResult("OK", "Task delete successfully");
     }
 
     @ApiMethod(name = "updateTaskHelper", httpMethod = HttpMethod.POST, path="mytask/updatetaskhelper")
@@ -231,12 +321,7 @@ public class MyTaskEndpoint {
     {
         logger.info("Calling updateTaskHelper method. task id is: " + taskId);
         logger.info("The profile id is : " + profileID);
-       /* ThyNSession currentSession = SecurityUtilities.enforceAuthenticationForCurrentAPICall(req);
-        User sessionUser = currentSession.getSessionUser();
-        if(sessionUser == null)
-            throw new APIErrorException(401, "UADU01 - Unauthorized.");
-*/
-      //  Long profileID = sessionUser.getProfileId();
+
         MyTask mTask = DatastoreHelpers.tryLoadEntityFromDatastore(MyTask.class, taskId);
 
         if(mTask.getHelperUserProfileKey() == null) {
@@ -255,7 +340,7 @@ public class MyTaskEndpoint {
             // the above line didnt work because profile_key is Long but the profileID that I was passing is String. So made sure profileID is passed as Long.
             Device device = ofy().load().type(Device.class).filter("profile_key ==", mTask.getUserProfileKey()).first().now();
             if(device == null) throw new APIErrorException(500, "UADU03 - Internal Server Error. Can't find the device based on profile id " +  profileID);
-            GcmSender.sendMessageToDeviceGroup(device.getNotification_key(),"Yay! " + prof.getFirstName() + " " + prof.getLastName() + " is interested in helping you.");
+            GcmSender.sendMessageToDeviceGroup(device.getNotification_key(),"thyNeighbr: Yay! " + prof.getFirstName() + " " + prof.getLastName() + " is interested in helping you.");
         }
         else
         {
@@ -306,7 +391,7 @@ public class MyTaskEndpoint {
         // the above line didnt work because profile_key is Long but the profileID that I was passing is String. So made sure profileID is passed as Long.
         Device device = ofy().load().type(Device.class).filter("profile_key ==", profileID).first().now();
         if(device == null) throw new APIErrorException(500, "UADU03 - Internal Server Error. Can't find the device based on profile id " +  profileID);
-        GcmSender.sendMessageToDeviceGroup(device.getNotification_key(), "Yay! " + prof.getFirstName() + " " + prof.getLastName() + " has marked the task Complete.");
+        GcmSender.sendMessageToDeviceGroup(device.getNotification_key(), "thyNeighbr: Yay! " + prof.getFirstName() + " " + prof.getLastName() + " has marked the task Complete.");
 
     }
 
@@ -330,6 +415,21 @@ public class MyTaskEndpoint {
     private void log(String action, Long profileID, Long neighbrWhoIsHelpedID, Long taskId, int points){
         Log_Action log = Log_Action.createNewUserOnDatastore(action, new Date(),profileID, neighbrWhoIsHelpedID, taskId, points);
         DatastoreHelpers.trySaveEntityOnDatastore(log);
+    }
+
+    private double checkIfDistanceCriteriaIsMet(    double originLAT
+                                                    , double originLONG
+                                                    , double destLAT
+                                                    , double destLONG){
+        double distance  = ((
+        Math.acos(
+                Math.sin(originLAT * Math.PI / 180) *
+                        Math.sin(destLAT * Math.PI / 180) +
+                        Math.cos(originLAT * Math.PI / 180) *
+                                Math.cos(destLAT * Math.PI / 180) *
+                                Math.cos((originLONG - destLONG) * Math.PI / 180)
+        ) * 180 / Math.PI ) * 60 * 1.1515);
+       return distance;
     }
 
 

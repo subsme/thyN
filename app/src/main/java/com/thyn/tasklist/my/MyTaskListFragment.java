@@ -7,6 +7,7 @@ import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.ListFragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
@@ -26,18 +27,25 @@ import com.thyn.android.backend.myTaskApi.MyTaskApi;
 import com.thyn.android.backend.myTaskApi.model.MyTask;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 
 import com.thyn.collection.MyPersonalTaskLab;
+import com.thyn.collection.MyTaskLab;
 import com.thyn.collection.Task;
 import com.thyn.common.MyServerSettings;
 import com.thyn.connection.GoogleAPIConnector;
 import com.thyn.db.thynTaskDBHelper;
 import com.thyn.graphics.MLRoundedImageView;
+import com.thyn.tab.DashboardFragment;
 import com.thyn.task.TaskActivity;
+import com.thyn.task.view.TaskPagerViewOnlyActivity;
+import com.thyn.task.view.TaskPagerViewOnlyFragment;
+import com.thyn.task.view.edit.TaskPagerEditOnlyActivity;
+import com.thyn.task.view.edit.TaskPagerEditOnlyFragment;
 import com.thyn.task.view.my.MyTaskViewOnlyFragment;
 import com.thyn.task.TaskFragment;
 import com.thyn.task.view.my.MyTaskPagerViewOnlyActivity;
@@ -74,11 +82,12 @@ public class MyTaskListFragment extends ListFragment{
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
         userprofileid = MyServerSettings.getUserProfileId(getActivity());
-        getActivity().setTitle(R.string.task_title);
+        //getActivity().setTitle(R.string.task_title);
+
+        //if(pmanager == null) pmanager = MyPersonalTaskLab.get(getActivity());
+
         Log.d(TAG, " in onCreate ");
-        Log.d(TAG, "LOCAL-CACHE is " + PreferenceManager
-                .getDefaultSharedPreferences(getActivity())
-                .getBoolean(MyServerSettings.LOCAL_TASK_CACHE, false));
+        Log.d(TAG, "LOCAL-CACHE is " + MyServerSettings.getLocalTaskCache(getContext()));
     }
 
     @Override
@@ -108,39 +117,36 @@ public class MyTaskListFragment extends ListFragment{
             setListAdapter(adapter);
         }
     }
-    /*private void callAsyncThread(Bundle arguments){
-        new RetrieveFromServerAsyncTask().execute();
-    }*/
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater){
-        super.onCreateOptionsMenu(menu, inflater);
-        inflater.inflate(R.menu.fragment_task_list, menu);
-    }
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item){
-        switch(item.getItemId()){
-            case R.id.menu_item_new_task:
-                Task t = new Task();
-                MyPersonalTaskLab.get(getActivity()).addTask(t);
-                Intent i = new Intent(getActivity(), TaskActivity.class);
-                i.putExtra(TaskFragment.EXTRA_TASK_ID, t.getId());
-                startActivityForResult(i,0);
-                //Intent i = new Intent(getActivity(), EndpointsAsyncTaskActivity.class);
-                //startActivity(i);
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
+
 
    @Override
    public void onListItemClick(ListView l, View v, int position, long id){
        //Task t = ((TaskAdapter)getListAdapter()).getItem(position);
        Log.d(TAG, id + " was clicked"); //page 191 big nerdranch
-       //Start TaskPagerActivity
-       Intent i = new Intent(getActivity(), MyTaskPagerViewOnlyActivity.class);
-       i.putExtra(MyTaskViewOnlyFragment.EXTRA_TASK_ID, id);
-       startActivity(i);
+       Log.d(TAG, "The id given by the cursor adapter is: " + id);
+
+       Task t = MyTaskLab.get(getActivity()).getTask(id);
+       Long userprofileid = MyServerSettings.getUserProfileId(getActivity());
+       Log.i(TAG, "user profile id is: " + userprofileid);
+       Log.i(TAG, "my profile key is: " + t.getUserProfileKey());
+       Intent i = null;
+       if(userprofileid.equals(t.getUserProfileKey())) {
+           Log.i(TAG, "the ids are the same");
+           TaskPagerEditOnlyFragment tpEditOnlyFragment = TaskPagerEditOnlyFragment.newInstance(id);
+           FragmentManager manager = getActivity().getSupportFragmentManager();
+           manager.beginTransaction().replace(R.id.navigation_fragment_container,
+                   tpEditOnlyFragment,
+                   tpEditOnlyFragment.getTag()).commit();
+       }
+       else{
+           Log.i(TAG, "the ids are not the same");
+           TaskPagerViewOnlyFragment tpViewOnlyFragment = TaskPagerViewOnlyFragment.newInstance(id);
+           FragmentManager manager = getActivity().getSupportFragmentManager();
+           manager.beginTransaction().replace(R.id.navigation_fragment_container,
+                   tpViewOnlyFragment,
+                   tpViewOnlyFragment.getTag()).commit();
+       }
+
    }
     private void refreshContent(){
         //remove the local database and then refresh content.
@@ -149,7 +155,7 @@ public class MyTaskListFragment extends ListFragment{
          */
         pmanager.purgeTasks();
         Log.d(TAG, "In refreshContent()");
-        new RetrieveFromServerAsyncTask().execute();
+        new RetrieveFromServerAsyncTask(getActivity()).execute();
     }
 
     public void onPause() {
@@ -228,7 +234,18 @@ public class MyTaskListFragment extends ListFragment{
           TextView userTextView = (TextView)view.findViewById(R.id.task_list_item_User);
           userTextView.setText(task.getUserProfileName());
           TextView locationTextView = (TextView)view.findViewById(R.id.task_list_item_locationTextView);
-          locationTextView.setText(task.getBeginLocation());
+          locationTextView.setText(task.getCity());
+
+          double dist = task.getDistance();
+          Log.d(TAG, "The task list distance is " + task.getDistance());
+
+          TextView distanceTextView = (TextView)view.findViewById(R.id.task_distance);
+          distanceTextView.setText(Double.toString(dist));
+          if(dist >=0) {
+              // dist = (double) Math.round(dist * 100.0) / 100.0;
+              DecimalFormat f = new DecimalFormat("##0.0 mi");
+              distanceTextView.setText(f.format(dist));
+          }
 
       }
 
@@ -245,18 +262,28 @@ public class MyTaskListFragment extends ListFragment{
 
         if(numItems == 2) {
             v = inflater.inflate(R.layout.fragment_tasklist1, container, false);
+            ListView listView = (ListView)v.findViewById(android.R.id.list);
+            listView.setEmptyView(v.findViewById(android.R.id.empty));
             ImageView img_view = (ImageView) v.findViewById(R.id.expand);
             img_view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Intent intent = new Intent(getActivity().getApplicationContext(), DashboardActivity.class);
+                   /* Intent intent = new Intent(getActivity().getApplicationContext(), DashboardActivity.class);
                     intent.putExtra(DashboardActivity.SELECT_SECOND_TAB, true);
-                    startActivity(intent);
+                    startActivity(intent);*/
+                    MyTaskListFragment myTaskListFragment = MyTaskListFragment.newInstance(true);
+                    FragmentManager manager = getActivity().getSupportFragmentManager();
+                    manager.beginTransaction().replace(R.id.navigation_fragment_container,
+                            myTaskListFragment,
+                            myTaskListFragment.getTag()).commit();
                 }
             });
         }
         else{
             v = inflater.inflate(R.layout.fragment_tasklist_nobutton, container, false);
+            // BUG: Subu i see "no tasks available when there are no tasks.
+             ListView listView = (ListView)v.findViewById(android.R.id.list);
+            listView.setEmptyView(v.findViewById(android.R.id.empty));
             mSwipeRefreshLayout = (SwipeRefreshLayout) v.findViewById(R.id.activity_main_swipe_refresh_layout);
             mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
                 @Override
@@ -276,7 +303,11 @@ public class MyTaskListFragment extends ListFragment{
 
     private class RetrieveFromServerAsyncTask extends AsyncTask<Void, Void, List> {
 
-
+        private Context c = null;
+        public RetrieveFromServerAsyncTask(Context c) {
+            super();
+            this.c = c;
+        }
         @Override
         protected List doInBackground(Void... params) {
             List l = null;
@@ -284,7 +315,10 @@ public class MyTaskListFragment extends ListFragment{
             try {
                 userprofileid = MyServerSettings.getUserProfileId(getActivity());
                 Log.d(TAG, "Sending user profile id:"+userprofileid);
-                l = GoogleAPIConnector.connect_TaskAPI().listTasks(false, userprofileid, false).execute().getItems();
+                Log.d(TAG, "Sending distance filter: " +  MyServerSettings.getFilterRadius(c));
+                //l = GoogleAPIConnector.connect_TaskAPI().listTasks(false, userprofileid, false).execute().getItems();
+                l = GoogleAPIConnector.connect_TaskAPI().listTasks(MyServerSettings.getFilterRadius(c), false, MyServerSettings.getUserSocialId(c), MyServerSettings.getUserSocialType(c), true).execute().getItems();
+
             } catch (IOException e) {
                  e.getMessage();
             }

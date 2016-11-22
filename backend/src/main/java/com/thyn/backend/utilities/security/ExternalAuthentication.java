@@ -130,6 +130,7 @@ public class ExternalAuthentication {
         }
         else{
             logger.info("The user " + userId + " exists in the database. Not creating the user again.");
+            return user;
         }
 
         return null;
@@ -184,6 +185,24 @@ public class ExternalAuthentication {
 
         } else {
             System.out.println("Invalid ID token.");
+        }
+        return user;
+    }
+
+    public static User extractUserFromDataStore(int socialType, String idTokenString) {
+        User user = null;
+
+        if(socialType == 1) {
+            user = DatastoreHelpers.tryLoadEntityFromDatastore(User.class, "googUserId ==", idTokenString);
+        }
+        else{
+            user = DatastoreHelpers.tryLoadEntityFromDatastore(User.class, "fbUserId ==", idTokenString);
+        }
+        if(user == null) {
+            logger.info("The user " + idTokenString + " doesnt exist in the database.");
+            }
+        else{
+            logger.info("User exists in the database");
         }
         return user;
     }

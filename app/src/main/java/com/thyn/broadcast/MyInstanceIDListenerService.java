@@ -17,6 +17,7 @@
 package com.thyn.broadcast;
 
 import android.content.Intent;
+import android.util.Log;
 
 import com.google.android.gms.iid.InstanceIDListenerService;
 
@@ -33,6 +34,7 @@ public class MyInstanceIDListenerService extends InstanceIDListenerService {
     @Override
     public void onTokenRefresh() {
         // Fetch updated Instance ID token and notify our app's server of any changes (if applicable).
+        Log.d(TAG, "Refreshing Token");
         Intent intent = new Intent(this, GcmRegistrationIntentService.class);
         startService(intent);
     }

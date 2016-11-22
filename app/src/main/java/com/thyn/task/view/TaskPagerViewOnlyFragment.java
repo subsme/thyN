@@ -32,6 +32,7 @@ import com.thyn.connection.GoogleAPIConnector;
 
 import com.thyn.R;
 import com.thyn.graphics.MLRoundedImageView;
+import com.thyn.navigate.NavigationActivity;
 import com.thyn.tab.WelcomePageActivity;
 import com.thyn.task.ThumbsUpActivity;
 import com.thyn.task.ThumbsUpFragment;
@@ -196,9 +197,13 @@ public class TaskPagerViewOnlyFragment extends Fragment {
             mTaskBackToDashboard.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    getActivity().finish();
+                    //getActivity().finish();
+                    getActivity().getSupportFragmentManager().popBackStack();
                 }
             });
+        }
+        if (getActivity() instanceof NavigationActivity) {
+            ((NavigationActivity) getActivity()).hideFloatingActionButton();
         }
         return v;
     }

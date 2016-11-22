@@ -30,7 +30,7 @@ import com.thyn.user.LoginActivity;
  * Created by shalu on 3/31/16.
  */
 public class GcmRegistrationIntentService extends IntentService{
-    private static final String TAG = "GcmRegistratioIntentService";
+    private static final String TAG = "GcmRegistrationIntentService";
     private static final String[] TOPICS = {"global"};
 
     public GcmRegistrationIntentService() {

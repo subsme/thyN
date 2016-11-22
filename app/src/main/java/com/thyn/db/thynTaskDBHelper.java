@@ -14,6 +14,7 @@ import android.util.Log;
 import android.widget.CursorAdapter;
 
 import com.thyn.collection.Task;
+import com.thyn.common.MyServerSettings;
 
 import java.io.File;
 import java.text.ParseException;
@@ -26,7 +27,7 @@ import java.util.ArrayList;
 public class thynTaskDBHelper  extends SQLiteOpenHelper {
     private static String TAG                                           = "thynTaskDBHelper";
     private static final String DB_NAME                                 = "thyn.sqlite";
-    private static final int VERSION                                    = 2;
+    private static final int VERSION                                    = 3;
 
     private  String TABLE_TASK;
 
@@ -51,17 +52,21 @@ public class thynTaskDBHelper  extends SQLiteOpenHelper {
     private static final String COLUMN_TASK_IS_SOLVED                   = "is_solved";
     private static final String COLUMN_TASK_IMAGE_URL                   = "image_url";
     private static final String COLUMN_TASK_TITLE                       = "task_title";
+    private static final String COLUMN_TASK_DISTANCE                    = "task_distance";
 
     private int count                                            = 0;
 
+    private Context context = null;
+
     public thynTaskDBHelper(Context context, String TableName) {
         super(context, DB_NAME, null, VERSION);
+        this.context = context;
         TABLE_TASK = TableName;
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        Log.d(TAG, "Creating table: "+ TABLE_TASK);
+        Log.d(TAG, "Creating table: " + TABLE_TASK);
        try {
            db.execSQL(
                    "CREATE TABLE " + TABLE_TASK + " (" +
@@ -83,7 +88,8 @@ public class thynTaskDBHelper  extends SQLiteOpenHelper {
                            ", helper_profile_name varchar(100)" +
                            ", time_serviced text" +
                            ", date_serviced text" +
-                           ", user_wait_response_time" +
+                           ", user_wait_response_time integer" +
+                           ", task_distance real" +
                            ", is_solved integer" +
                            " )"
            );
@@ -95,7 +101,12 @@ public class thynTaskDBHelper  extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-
+        /* Subu: When is onUpgrade called? Read this -
+        http://stackoverflow.com/questions/3163845/is-the-onupgrade-method-ever-called
+         */
+        Log.i(TAG, "In OnUpgrade. The old version was: " + oldVersion + " and the new version is " + newVersion);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_TASK);
+        onCreate(db);
     }
 
     public long insertTask(Task task){
@@ -117,7 +128,7 @@ public class thynTaskDBHelper  extends SQLiteOpenHelper {
         cv.put(COLUMN_TASK_USER_PROFILE_KEY,task.getUserProfileKey());
         cv.put(COLUMN_TASK_USER_PROFILE_NAME, task.getUserProfileName());
         cv.put(COLUMN_TASK_DATE_CREATED, task.getCreateDate().toString());
-        cv.put(COLUMN_TASK_DATE_UPDATED, task.getCreateDate().toString());
+        cv.put(COLUMN_TASK_DATE_UPDATED, task.getUpdateDate().toString());
         if(task.getHelperProfileKey() != null)
             cv.put(COLUMN_TASK_HELPER_PROFILE_KEY, task.getHelperProfileKey().toString());
         cv.put(COLUMN_TASK_HELPER_PROFILE_NAME, task.getHelperProfileName());
@@ -127,6 +138,7 @@ public class thynTaskDBHelper  extends SQLiteOpenHelper {
         cv.put(COLUMN_TASK_IS_SOLVED, "");
         cv.put(COLUMN_TASK_IMAGE_URL,task.getImageURL());
         cv.put(COLUMN_TASK_TITLE, task.getTaskTitle());
+        cv.put(COLUMN_TASK_DISTANCE, task.getDistance());
 
         return getWritableDatabase().insert(TABLE_TASK, null, cv);
     }
@@ -138,7 +150,32 @@ public class thynTaskDBHelper  extends SQLiteOpenHelper {
     public void purgeTable()
     {
         SQLiteDatabase db = getWritableDatabase();
-        db.delete(TABLE_TASK, null, null);
+        if(isTableExists(db, TABLE_TASK, false))
+            db.delete(TABLE_TASK, null, null);
+        else{
+            Log.d(TAG, "The table " + TABLE_TASK + " doesn't exist in this database");
+        }
+    }
+    public boolean isTableExists(SQLiteDatabase mDatabase, String tableName, boolean openDb) {
+        if(openDb) {
+            if(mDatabase == null || !mDatabase.isOpen()) {
+                mDatabase = getReadableDatabase();
+            }
+
+            if(!mDatabase.isReadOnly()) {
+                mDatabase.close();
+                mDatabase = getReadableDatabase();
+            }
+        }
+
+        Cursor cursor = mDatabase.rawQuery("select DISTINCT tbl_name from sqlite_master where tbl_name = '" + tableName + "'", null);
+        if(cursor!=null) {
+            if(cursor.getCount()>0) {
+                Log.d(TAG, "Cursor count is " + cursor.getCount());
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Count no. of records in the table */
@@ -151,14 +188,33 @@ public class thynTaskDBHelper  extends SQLiteOpenHelper {
     }
 
     public TaskCursor queryTasks(){
-        //Equivalent to "select * from task order by date_created
-        Cursor wrapped = getReadableDatabase().query(TABLE_TASK,
-                null,
-                "helper_profile_key is null or helper_profile_key = ?",
-                new String[]{""},
-                null,
-                null,
-                COLUMN_TASK_DATE_CREATED + " asc");
+
+        String[] args={""};
+        Cursor wrapped=null;
+        if(MyServerSettings.getFilterSetting(context) == 3 ||
+                MyServerSettings.getFilterSetting(context) == -1){//when filter is set to filter.mostrecent or no filter is set.
+        wrapped = getReadableDatabase().rawQuery("SELECT * FROM "
+                + TABLE_TASK +
+                " where helper_profile_key is null or helper_profile_key = ? order by datetime("
+                + COLUMN_TASK_DATE_CREATED +
+                ") desc", args);
+        }
+        else if(MyServerSettings.getFilterSetting(context) == 1){ //When Filter is set to filter.closestToMyHome
+            wrapped = getReadableDatabase().query(TABLE_TASK,
+                    null,
+                    "helper_profile_key is null or helper_profile_key = ?",
+                    new String[]{""},
+                    null,
+                    null,
+                    COLUMN_TASK_DISTANCE + " asc");
+        }
+        else if(MyServerSettings.getFilterSetting(context) == 2){// When Filter is set to filter.expiringSoon
+            wrapped = getReadableDatabase().rawQuery("SELECT * FROM "
+                    + TABLE_TASK +
+                    " where helper_profile_key is null or helper_profile_key = ? order by datetime("
+                    + COLUMN_TASK_DATE_SERVICED +
+                    ") asc", args);
+        }
 
         Log.d(TAG,"CUrsor count is: " + wrapped.getCount());
         return new TaskCursor(wrapped);
@@ -236,7 +292,7 @@ public class thynTaskDBHelper  extends SQLiteOpenHelper {
        /* String q = "select * from  " + TABLE_TASK + " where " + COLUMN_ID + " = ?";
         Log.d(TAG,q);
         Cursor wrapped = getReadableDatabase().rawQuery(q,new String[]{String.valueOf(id)});*/
-        Log.d(TAG, wrapped == null?"null cursor":"not a null cursor");
+        Log.d(TAG, wrapped == null ? "null cursor" : "not a null cursor");
         return new TaskCursor(wrapped);
     }
     /* A convenience class to wrap the cursor.
@@ -282,10 +338,9 @@ public class thynTaskDBHelper  extends SQLiteOpenHelper {
             }
 
             task.setTaskTimeRange(getString(getColumnIndex(COLUMN_TASK_TIME_SERVICED)));
-
+            task.setDistance(getDouble(getColumnIndex(COLUMN_TASK_DISTANCE)));
 
             return task;
-
         }
     }
 /*Subu
@@ -338,6 +393,7 @@ public ArrayList<Cursor> getData(String Query){
         return alc;
     }
 
-
 }
+
+
 }

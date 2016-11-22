@@ -2,20 +2,30 @@ package com.thyn.task;
 
 
 import android.content.Intent;
+import android.graphics.Color;
+import android.location.Address;
+import android.location.Geocoder;
 import android.os.AsyncTask;
+import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 
 import android.support.v4.app.NavUtils;
+import android.support.v4.content.ContextCompat;
+import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.Button;
 
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 
 import java.io.IOException;
+import java.text.DateFormat;
 import java.util.Date;
 
 import android.annotation.TargetApi;
@@ -27,6 +37,15 @@ import android.app.Activity;
 
 import java.util.Calendar;
 
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
+import com.google.android.gms.common.GooglePlayServicesRepairableException;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.ui.PlaceAutocomplete;
+import com.google.android.gms.maps.model.LatLng;
+
+import com.google.api.client.util.DateTime;
+import com.thyn.android.backend.myTaskApi.model.APIGeneralResult;
 import com.thyn.collection.Task;
 import com.thyn.collection.MyTaskLab;
 import com.thyn.common.MyServerSettings;
@@ -36,12 +55,20 @@ import com.thyn.field.AddressFragment;
 
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.thyn.android.backend.myTaskApi.MyTaskApi;
 import com.thyn.android.backend.myTaskApi.model.MyTask;
 
 import java.text.SimpleDateFormat;
+import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
+
 import com.thyn.R;
+
+import org.florescu.android.rangeseekbar.RangeSeekBar;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -50,26 +77,36 @@ public class TaskFragment extends Fragment {
     private static final String TAG = "TaskFragment";
     public static final String EXTRA_TASK_ID =
             "com.android.android.thyn.task_id";
-    public static final String OPERATION = "com.android.android.thyn.TaskFragment.Operation";
-    private static final int ADDRESS_ACTIVITY_REQUEST_CODE=1;
-    private static final int DESCRIPTION_ACTIVITY_REQUEST_CODE=1;
 
+    private static final int PLACE_AUTOCOMPLETE_REQUEST_CODE=1;
+
+    private TextInputLayout descriptionLayoutName;
+    private TextInputLayout titleLayoutName;
     private Task mTask;
-    private String operation;
+    private TextView mQuickTip;
     private EditText mTaskDescriptionField;
-    private EditText mTaskFromAddress;
-    private EditText mTaskToAddress;
-    private Button mDateButton;
-    private Button mTimeButton;
+    private EditText mTitle;
+    private CheckBox mTaskDateRange;
+    private CheckBox mTimeFlexible;
+    private TextInputLayout dateLayoutName;
+    private EditText mTaskDate;
+    private TextInputLayout timeLayoutName;
+    private EditText mTaskTime;
+    private TextInputLayout locationLayoutName;
+    private EditText mTaskLocation;
     private Button mTaskDone;
-
-    private EditText mTaskDescription2;
+    private CheckBox mUseMyAddress;
+    private static Date startDate = null;
+    private static Date endDate = null;
 
     private static final String DIALOG_DATE = "date";
     private static final int REQUEST_DATE = 0;
     private static final int REQUEST_TIME = 2;
 
     private MyTaskLab myTaskLab = null;
+    private static double mLAT;
+    private static double mLONG;
+    private static String mCity;
 
     @Override
     public void onCreate(Bundle savedInstanceState){
@@ -81,36 +118,16 @@ public class TaskFragment extends Fragment {
             if (taskID != -1) {
                 mTask = myTaskLab.getTask(taskID);
                 Log.d(TAG,"Retrieved task: " + mTask.getTaskDescription());
+                mLAT = mTask.getLAT();
+                mLONG = mTask.getLONG();
+                mCity = mTask.getCity();
             }
         }
-        if(mTask == null){
-            mTask = new Task();
-        }
-        //operation = (String)getArguments().getSerializable(OPERATION);
-        //Log.d(TAG, "The operation is: " + operation);
-        //mTask = MyTaskLab.get(getActivity()).getTask(taskID);
-        //Log.d(TAG,"Retrieved task: " + mTask.getTaskDescription());
-        //setHasOptionsMenu(true);
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item){
-        switch(item.getItemId()){
-            case android.R.id.home:
-                if(NavUtils.getParentActivityName(getActivity()) != null){
-                    NavUtils.navigateUpFromSameTask(getActivity());
-                    Log.d(TAG, "Menu item clicked");
-                   // MyTaskLab.get(getActivity()).removeTask(mTask);
-                }
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
-    public static TaskFragment newInstance(Long taskId, String operation){
+    public static TaskFragment newInstance(Long taskId){
         Bundle args = new Bundle();
         args.putSerializable(EXTRA_TASK_ID, taskId);
-        args.putSerializable(OPERATION, operation);
 
         TaskFragment fragment = new TaskFragment();
         fragment.setArguments(args);
@@ -122,15 +139,10 @@ public class TaskFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View v = inflater.inflate(R.layout.fragment_task, container, false);
-        /*if(mTask!=null)
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB){
-            if(NavUtils.getParentActivityName(getActivity())!=null) {
-                getActivity().getActionBar().setDisplayHomeAsUpEnabled(true);
-            }
-        }*/
-        /*
-        mTaskDescriptionField = (EditText)v.findViewById(R.id.task_description);
+        View v = inflater.inflate(R.layout.fragment_randomtask, container, false);
+
+        descriptionLayoutName = (TextInputLayout) v.findViewById(R.id.description_input_layout);
+        mTaskDescriptionField = (EditText)v.findViewById(R.id.t_description);
         if(mTask != null) mTaskDescriptionField.setText(mTask.getTaskDescription());
         mTaskDescriptionField.addTextChangedListener(new TextWatcher() {
             @Override
@@ -147,85 +159,274 @@ public class TaskFragment extends Fragment {
             public void afterTextChanged(Editable editable) {
 
             }
-        });*/
-        mTaskDescription2 = (EditText)v.findViewById(R.id.t_description);
-        mTaskDescription2.setHint(getString(R.string.hint_detailed_description));
-        mDateButton = (Button)v.findViewById(R.id.task_date);
-        //mDateButton.setText(mCrime.getmDate().toString()); Encapsulating the code page 223 big nerd ranch
-        if(mTask != null) updateDate();
-        //mDateButton.setEnabled(false); enabling button page 214. big nerd ranch
-        mDateButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                FragmentManager fm = getActivity()
-                        .getSupportFragmentManager();
+        });
 
-                    DatePickerFragment dialog = DatePickerFragment.newInstance(mTask.getServiceDate());
+        mQuickTip = (TextView)v.findViewById(R.id.quick_tip);
+        mQuickTip.setText(Html.fromHtml(getString(R.string.quick_tip)));
+
+        titleLayoutName = (TextInputLayout) v.findViewById(R.id.title_input_layout);
+        mTitle = (EditText)v.findViewById(R.id.t_title);
+        mTitle.setText(mTask.getTaskTitle());
+
+        mTitle.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                mTask.setTaskTitle(charSequence.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
+        dateLayoutName = (TextInputLayout) v.findViewById(R.id.date_input_layout);
+        mTaskDate = (EditText)v.findViewById(R.id.t_date);
+        startDate = mTask.getTaskFromDate();
+        endDate = mTask.getTaskToDate();
+        String fromDate = convertDateToString(startDate);
+        String toDate = "";
+        if(endDate != null)
+            toDate = " - " + convertDateToString(endDate);
+        fromDate = fromDate + toDate;
+        mTaskDate.setText(fromDate);
+        mTaskDate.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        clearDateText();
+                        mTaskDateRange.setChecked(false);
+                        FragmentManager fm = getActivity()
+                                .getSupportFragmentManager();
+                        DateRangePickerFragment dialog = DateRangePickerFragment.newInstance(false);
+                        dialog.setTargetFragment(TaskFragment.this, REQUEST_DATE);
+                        dialog.show(fm, DIALOG_DATE);
+                    }
+                }
+        );
+        mTaskDateRange = (CheckBox)v.findViewById(R.id.t_date_range);
+        mTaskDateRange.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    clearDateText();
+                    FragmentManager fm = getActivity()
+                            .getSupportFragmentManager();
+                    DateRangePickerFragment dialog = DateRangePickerFragment.newInstance(true);
                     dialog.setTargetFragment(TaskFragment.this, REQUEST_DATE);
                     dialog.show(fm, DIALOG_DATE);
 
-            }
-        });
-        mTimeButton = (Button)v.findViewById(R.id.task_time);
-        if (mTask!= null) updateTime();
-        mTimeButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                FragmentManager fm = getActivity()
-                        .getSupportFragmentManager();
-
-                    TimePickerFragment dialog = TimePickerFragment.newInstance(mTask.getServiceDate());
-                    dialog.setTargetFragment(TaskFragment.this, REQUEST_TIME);
-                    dialog.show(fm, DIALOG_DATE);
-
-            }
-        });
-        mTaskFromAddress    = (EditText)v.findViewById(R.id.task_from);
-        if(mTask != null) mTaskFromAddress.setText(mTask.getBeginLocation());
-        mTaskFromAddress.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.d(TAG, "From was clicked");
-                Intent i = new Intent(getActivity(), AddressActivity.class);
-                i.putExtra("t","from");
-                startActivityForResult(i, ADDRESS_ACTIVITY_REQUEST_CODE);
-            }
-        });
-       /* mTaskToAddress    = (EditText)v.findViewById(R.id.task_to);
-        mTaskToAddress.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.d(TAG, "to was clicked");
-                Intent i = new Intent(getActivity(), AddressActivity.class);
-                i.putExtra("t","to");
-                startActivityForResult(i, ADDRESS_ACTIVITY_REQUEST_CODE);
-            }
-        });*/
-        mTaskDone = (Button)v.findViewById(R.id.task_done);
-        mTaskDone.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                if(NavUtils.getParentActivityName(getActivity()) != null){
-                    NavUtils.navigateUpFromSameTask(getActivity());
-                    Log.d(TAG, "Done button clicked");
-                    Log.d(TAG, "operation value is: " + operation);
-                    if(operation==null)
-                        new InsertAsyncTask().execute(mTask);
-                    else
-                        new UpdateAsyncTask().execute(mTask);
                 }
             }
         });
+
+        timeLayoutName = (TextInputLayout) v.findViewById(R.id.time_input_layout);
+        mTaskTime = (EditText)v.findViewById(R.id.t_time);
+
+        String timeRange = mTask.getTaskTimeRange();
+        mTaskTime.setText(timeRange);
+
+        long fromTime = stringToValue(true,timeRange.substring(0, timeRange.indexOf("-")));
+        long toTime = stringToValue(false, timeRange.substring(timeRange.indexOf("-") + 1));
+        Log.d(TAG, "fromTime is: " + fromTime);
+        Log.d(TAG, "toTime is: " +  toTime);
+
+        // Setup the new range seek bar
+        long min_val = 0;
+        final long max_val = 24*4;
+        final RangeSeekBar<Long> rangeSeekBar = new RangeSeekBar<Long>(getActivity());
+        // Set the range
+
+        rangeSeekBar.setRangeValues(min_val, max_val);
+        rangeSeekBar.setSelectedMinValue(fromTime);
+        rangeSeekBar.setSelectedMaxValue(toTime);
+        //final String timeStr = "";
+        rangeSeekBar.setOnRangeSeekBarChangeListener(new RangeSeekBar.OnRangeSeekBarChangeListener<Long>() {
+            @Override
+            public void onRangeSeekBarValuesChanged(RangeSeekBar<Long> bar, Long minValue, Long maxValue) {
+                mTaskTime.setTextColor(Color.BLACK);
+                String timeStr = rangeSeekBar.valueToString(minValue) + " - " + rangeSeekBar.valueToString(maxValue);
+                mTaskTime.setText(timeStr);
+            }
+        });
+// Add to layout
+        LinearLayout layout = (LinearLayout) v.findViewById(R.id.seekbar_placeholder);
+        layout.addView(rangeSeekBar);
+        final TimeFoo tfoo= new TimeFoo();
+        mTimeFlexible = (CheckBox)v.findViewById(R.id.t_time_flex);
+
+        mTimeFlexible.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    rangeSeekBar.setVisibility(View.INVISIBLE);
+                    tfoo.setTime(mTaskTime.getText().toString());
+                    mTaskTime.setTextColor(Color.argb(1, 197, 110, 72));
+                    mTaskTime.setText("Time");
+                } else {
+                    rangeSeekBar.setVisibility(View.VISIBLE);
+                    mTaskTime.setTextColor(Color.BLACK);
+                    mTaskTime.setText(tfoo.getTime());
+                }
+            }
+        });
+
+        locationLayoutName = (TextInputLayout) v.findViewById(R.id.location_input_layout);
+        mTaskLocation = (EditText)v.findViewById(R.id.t_location);
+        mTaskLocation.setText(mTask.getBeginLocation());
+        mTaskLocation.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                callPlaceAutocompleteActivityIntent();
+            }
+        });
+
+        mUseMyAddress = (CheckBox)v.findViewById(R.id.t_my_address);
+        mUseMyAddress.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    mTaskLocation.setText(MyServerSettings.getUserAddress(getActivity()));
+                }
+            }
+        });
+
+        mTaskDone = (Button)v.findViewById(R.id.task_done);
+        mTaskDone.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+
+                //Don't submit the form if the validation fails.
+                if (!validateForm()) return;
+
+              /*  if(NavUtils.getParentActivityName(getActivity()) != null) {
+                    callPlaceAutocompleteActivityIntent();
+                    NavUtils.navigateUpFromSameTask(getActivity());*/
+
+                Log.d(TAG, "Done button clicked. Task id is: " + mTask.getId());
+                Log.d(TAG, "LAT/Long/city is" + mLAT + " " + mLONG + " " + mCity);
+
+                mTask.setTaskTitle(mTitle.getText().toString());
+                mTask.setTaskDescription(mTaskDescriptionField.getText().toString());
+                mTask.setTaskFromDate(startDate);
+                mTask.setTaskToDate(endDate);
+                mTask.setTaskTimeRange(mTaskTime.getText().toString());
+                mTask.setBeginLocation(mTaskLocation.getText().toString());
+                mTask.setLAT(mLAT);
+                mTask.setLONG(mLONG);
+                mTask.setCity(mCity);
+                new UpdateAsyncTask().execute(mTask);
+                //}
+
+                Intent intent =
+                        new Intent(getActivity(), ThumbsUpActivity.class);
+                startActivity(intent);
+            }
+        });
+
     return v;
     }
-    private void updateDate(){
-        if(mTask.getServiceDate() == null) mTask.setServiceDate(new Date());
-        Log.d(TAG, "In updateDate(). The service date is: " + mTask.getServiceDate());
-        SimpleDateFormat sdFormat = new SimpleDateFormat("EEE, MMM d");
-        mDateButton.setText(sdFormat.format(mTask.getServiceDate()));
+
+    private boolean validateForm(){
+        if( !validateTitle()
+                ||  !validateDescription()
+                ||  !validateDate()
+                ||  !validateTime()
+                ||  !validateAddress())
+            return false;
+        return true;
     }
-    private void updateTime(){
-        if(mTask.getServiceDate() == null) mTask.setServiceDate(new Date());
-        Log.d(TAG, "In updateTime(). The service date is: " + mTask.getServiceDate());
-        SimpleDateFormat sdFormat = new SimpleDateFormat("h:mm a");
-        mTimeButton.setText(sdFormat.format(mTask.getServiceDate()));
+    private boolean validateTitle(){
+        if (mTitle.getText().toString().trim().isEmpty()) {
+            titleLayoutName.setError(getString(R.string.err_msg_title));
+            requestFocus(mTitle);
+            return false;
+        }else {
+            titleLayoutName.setError(null);
+        }
+        return true;
+    }
+    private boolean validateDescription(){
+        if (mTaskDescriptionField.getText().toString().trim().isEmpty()) {
+            descriptionLayoutName.setError(getString(R.string.err_msg_description));
+            requestFocus(mTaskDescriptionField);
+            return false;
+        }else {
+            descriptionLayoutName.setError(null);
+        }
+
+        return true;
+    }
+    private boolean validateDate(){
+        if(mTaskDate.getText().toString().trim().isEmpty()){
+            dateLayoutName.setError(getString(R.string.err_msg_date));
+            requestFocus(mTaskDate);
+            return false;
+        }else {
+            dateLayoutName.setError(null);
+        }
+        return true;
+    }
+    private boolean validateTime(){
+        if(mTaskTime.getText().toString().trim().isEmpty()){
+            timeLayoutName.setError(getString(R.string.err_msg_time));
+            requestFocus(mTaskTime);
+            return false;
+        }else {
+            timeLayoutName.setError(null);
+        }
+        return true;
+    }
+    private boolean validateAddress(){
+        if(mTaskLocation.getText().toString().trim().isEmpty()){
+            locationLayoutName.setError(getString(R.string.err_msg_location));
+            requestFocus(mTaskLocation);
+            return false;
+        }else {
+            locationLayoutName.setError(null);
+        }
+        return true;
+    }
+    private void requestFocus(View view) {
+        if (view.requestFocus()) {
+            getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
+        }
+    }
+    public long stringToValue(boolean first, String time){
+        if(time == null) return -1;
+        time = time.trim();
+        if(!time.contains(":")) return -1;
+
+        Log.d(TAG, "time is: " + time);
+        String ampm = time.substring(time.indexOf(" ")).trim();
+
+        long hour = Long.parseLong(time.substring(0,time.indexOf(":")));
+        String min = time.substring(time.indexOf(":"));
+
+        long val = 0;
+        if(ampm.equalsIgnoreCase("AM")){
+                val = hour *4;
+            if(!first && hour == 12) val = 24 * 4;
+        }
+        else if(ampm.equalsIgnoreCase("PM")){
+            val = (hour+12)*4;
+        }
+        switch(min){
+            case "15": val = val + 15; break;
+            case "30": val = val + 30; break;
+            case "45": val = val + 45; break;
+        }
+        Log.d(TAG, "the val is: " + val);
+        return val;
+    }
+    private String convertDateToString(Date d){
+        if(d == null) return null;
+        DateFormat converter = new SimpleDateFormat("MMM dd");
+        converter.setTimeZone(TimeZone.getTimeZone("GMT"));
+        return converter.format(d);
     }
     @Override
     public void onResume(){
@@ -235,90 +436,80 @@ public class TaskFragment extends Fragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == ADDRESS_ACTIVITY_REQUEST_CODE) {
-            if(resultCode == Activity.RESULT_OK){
-                String  from =data.getStringExtra(AddressFragment.EXTRA_ADDRESS_ID);
-                String to = data.getStringExtra(AddressFragment.EXTRA_TO_ADDRESS_ID);
-                if (from != null) {
-                    mTask.setBeginLocation(from);
-                    mTaskFromAddress.setText(from);
+        if(requestCode == REQUEST_DATE) {
+            startDate = (Date) data
+                    .getSerializableExtra(DateRangePickerFragment.EXTRA_START_DATE);
+
+            endDate = (Date) data
+                    .getSerializableExtra(DateRangePickerFragment.EXTRA_END_DATE);
+
+            /*
+             setting date text
+             */
+            setDateText();
+
+        }
+
+        else if (requestCode == PLACE_AUTOCOMPLETE_REQUEST_CODE) {
+            if (resultCode == Activity.RESULT_OK) {
+                Place place = PlaceAutocomplete.getPlace(getActivity(), data);
+                Log.i(TAG, "Place:" + place.toString());
+                mTaskLocation.setText(place.getAddress());
+
+                LatLng LatLong = place.getLatLng();
+                mLAT = LatLong.latitude;
+                mLONG = LatLong.longitude;
+                Geocoder mGeocoder = new Geocoder(getActivity(), Locale.getDefault());
+                try {
+                    List<Address> addresses = mGeocoder.getFromLocation(mLAT, mLONG, 1);
+                    if (addresses != null && addresses.size() > 0) {
+                        this.mCity = addresses.get(0).getLocality();
+                        Log.i(TAG, "The city is: " + this.mCity);
+                    }
+                }catch(Exception e){
+                    e.printStackTrace();
                 }
-                if (to != null) {
-                    mTask.setEndLocation(to);
-                    mTaskToAddress.setText(to);
-                }
+
+            } else if (resultCode == PlaceAutocomplete.RESULT_ERROR) {
+                Status status = PlaceAutocomplete.getStatus(getActivity(), data);
+                Log.i(TAG, status.getStatusMessage());
+            } else if (requestCode == Activity.RESULT_CANCELED) {
+
             }
-
         }
-        else if(requestCode == REQUEST_DATE){
-            Date date = (Date)data
-                    .getSerializableExtra(DatePickerFragment.EXTRA_DATE);
 
-            mTask.setServiceDate(date);
-            updateDate();
-        }
-        else if(requestCode == REQUEST_TIME){
-            Date timedate = (Date)data
-                    .getSerializableExtra(TimePickerFragment.EXTRA_TIME);
-            Log.d(TAG, "hour and minutes is " + timedate);
-
-            Calendar calendarSource = Calendar.getInstance();
-            calendarSource.setTime(timedate);
-
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTime(mTask.getServiceDate());
-
-            calendar.set(Calendar.HOUR, calendarSource.get(Calendar.HOUR_OF_DAY));
-            calendar.set(Calendar.MINUTE, calendarSource.get(Calendar.MINUTE));
-
-            mTask.setServiceDate(calendar.getTime());
-
-            Log.d(TAG, "mTask datetime is" + mTask.getServiceDate());
-
-            updateTime();
-        }
     }
 
-    private static MyTaskApi myApiService = null;
-
-    private class InsertAsyncTask extends AsyncTask<Task, String, Void> {
-
-
-        @Override
-        protected Void doInBackground(Task... params) {
-            try {
-                MyTask a = copyToEndpointTask(params[0]);
-                //Log.d(TAG, params[0].toString());
-                //a.setTaskDescription("take off homie 2");
-                //return myApiService.replay(2,a).execute().getTaskDescription();
-                Long userprofileid = MyServerSettings.getUserProfileId(getActivity());
-                Log.d(TAG, "Sending user profile id:" + userprofileid);
-                GoogleAPIConnector.connect_TaskAPI().insertMyTask(userprofileid, a).execute();
-                //return myApiService2.sayHi("joojoo").execute().getData();
-            } catch (IOException e) {
-                e.getMessage();
-            }
-            return null;
+    private void clearDateText(){
+        mTaskDate.setText("");
+    }
+    private void setDateText(){
+        String startDateText = new SimpleDateFormat("MMM d").format(startDate);
+        String endDateText = "";
+        if(endDate != null){
+            endDateText = " - " + new SimpleDateFormat("MMM d").format(endDate);
         }
-
-
-        private MyTask copyToEndpointTask(Task task){
-            MyTask myTask = new MyTask();
-            myTask.setTaskDescription(task.getTaskDescription());
-            myTask.setBeginLocation(task.getBeginLocation());
-            myTask.setEndLocation(task.getEndLocation());
-            myTask.setIsSolved(task.isSolved());
-            myTask.setWaitResponseTime(task.getmWaitResponseTime());
-            myTask.setServiceDate(task.getServiceDate().toString());
-            //DateFormat converter = new SimpleDateFormat("E MMM dd HH:mm:ss z y");
-            //converter.setTimeZone(TimeZone.getTimeZone("GMT"));
-           // myTask.setServiceDate(converter.format(task.getServiceDate()));
-
-            myTask.setUserProfileKey(
-                    MyServerSettings.getUserProfileId(getActivity())
-            );
-            return myTask;
+        mTaskDate.setText(startDateText + endDateText);
+        mTask.setTaskFromDate(startDate);
+        mTask.setTaskToDate(endDate);
+    }
+    private void callPlaceAutocompleteActivityIntent() {
+        try {
+            Intent intent =
+                    new PlaceAutocomplete.IntentBuilder(PlaceAutocomplete.MODE_FULLSCREEN)
+                            .build(getActivity());
+            startActivityForResult(intent, 1);
+        //PLACE_AUTOCOMPLETE_REQUEST_CODE is integer for request code
+        } catch (GooglePlayServicesRepairableException | GooglePlayServicesNotAvailableException e) {
+            // TODO: Handle the error.
         }
+    }
+    private class TimeFoo{
+        private String timeStr;
+        public void setTime(String str){
+            timeStr = str;
+        }
+        public String getTime(){return timeStr;}
     }
     private class UpdateAsyncTask extends AsyncTask<Task, String, Void> {
 
@@ -327,13 +518,12 @@ public class TaskFragment extends Fragment {
         protected Void doInBackground(Task... params) {
             try {
                 MyTask a = copyToEndpointTask(params[0]);
-                //Log.d(TAG, params[0].toString());
-                //a.setTaskDescription("take off homie 2");
-                //return myApiService.replay(2,a).execute().getTaskDescription();
-                //Long userprofileid = MyServerSettings.getUserProfileId(getActivity());
+
                 Log.d(TAG, "Sending task:" + a.getId());
-                GoogleAPIConnector.connect_TaskAPI().updateMyTask(a).execute();
-                //return myApiService2.sayHi("joojoo").execute().getData();
+                String socialID = MyServerSettings.getUserSocialId(getActivity());
+                int socialType = MyServerSettings.getUserSocialType(getActivity());
+                APIGeneralResult result = GoogleAPIConnector.connect_TaskAPI().updateMyTask(socialType, socialID, a).execute();
+                Log.d(TAG, "response from the server is: " + result.getMessage());
             } catch (IOException e) {
                 e.getMessage();
             }
@@ -343,22 +533,25 @@ public class TaskFragment extends Fragment {
 
         private MyTask copyToEndpointTask(Task task){
             MyTask myTask = new MyTask();
-            /* For update - setting this field is the difference */
             myTask.setId(task.getId());
-            Log.d(TAG, "Task description: " + task.getTaskDescription());
+            myTask.setTaskTitle(task.getTaskTitle());
             myTask.setTaskDescription(task.getTaskDescription());
-            Log.d(TAG, "Task Begin location: " + task.getBeginLocation());
             myTask.setBeginLocation(task.getBeginLocation());
-            myTask.setWaitResponseTime(task.getmWaitResponseTime());
-            myTask.setServiceDate(task.getServiceDate().toString());
-            //DateFormat converter = new SimpleDateFormat("E MMM dd HH:mm:ss z y");
-            //converter.setTimeZone(TimeZone.getTimeZone("GMT"));
-            // myTask.setServiceDate(converter.format(task.getServiceDate()));
+            myTask.setLat(task.getLAT());
+            myTask.setLong(task.getLONG());
+            myTask.setCity(task.getCity());
 
-            /*myTask.setUserProfileKey(
-                    MyServerSettings.getUserProfileId(getActivity())
-            );*/
+            myTask.setServiceDate(new DateTime(task.getTaskFromDate()));
+            myTask.setServiceToDate(new DateTime(dateToString(task.getTaskToDate())));
+            myTask.setServiceTimeRange(task.getTaskTimeRange());
+
             return myTask;
+        }
+        private String dateToString(Date d){
+            if(d == null) return null;
+            DateFormat converter = new SimpleDateFormat("E MMM dd HH:mm:ss z y");
+            converter.setTimeZone(TimeZone.getTimeZone("GMT"));
+            return converter.format(d);
         }
     }
 }

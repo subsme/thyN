@@ -28,6 +28,7 @@ import com.thyn.common.MyServerSettings;
 import com.thyn.connection.GoogleAPIConnector;
 import com.thyn.field.AddressActivity;
 import com.thyn.field.AddressFragment;
+import com.thyn.navigate.NavigationActivity;
 import com.thyn.tab.WelcomePageActivity;
 
 import java.io.IOException;
@@ -53,6 +54,7 @@ public class BasicProfileActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_basic_profile);
         final EditText phoneField = (EditText) findViewById(R.id.phone);
+        Log.d(TAG, "onCreate");
         phoneField.addTextChangedListener(new PhoneNumberFormattingTextWatcher(){
             String lastChar="";
             @Override
@@ -91,8 +93,7 @@ public class BasicProfileActivity extends AppCompatActivity {
                         Double.toString(mLAT),
                         Double.toString(mLONG),
                         mCity);
-                Intent intent = new Intent(getApplicationContext(), WelcomePageActivity.class);
-                startActivity(intent);
+
             }
         });
     }
@@ -161,12 +162,21 @@ public class BasicProfileActivity extends AppCompatActivity {
                 APIGeneralResult result = GoogleAPIConnector.connect_UserAPI().updateMyProfile(l_address,l_city, l_lat, l_long, l_phone, socialID, socialType).execute();
                 if(result.getStatusCode().equalsIgnoreCase("OK")){
                         MyServerSettings.initializeUserAddress(getApplicationContext(), l_address, l_city, l_lat, l_long);
+                    /*
+                     After I set the address, I start polling.
+                     */
+                        MyServerSettings.startPolling(getApplicationContext());
                 }
             } catch (IOException e) {
                 e.getMessage();
             }
 
             return null;
+        }
+        @Override
+        protected void onPostExecute(Void result) {
+            Intent intent = new Intent(getApplicationContext(), LoginSplash.class);
+            startActivity(intent);
         }
     }
 }

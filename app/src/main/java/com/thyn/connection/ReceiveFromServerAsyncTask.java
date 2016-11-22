@@ -1,6 +1,7 @@
 package com.thyn.connection;
 
 import android.app.Service;
+import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -18,12 +19,14 @@ public class ReceiveFromServerAsyncTask extends AsyncTask<Void, Void, List> {
     Long userprofileid;
     Service service;
     private MyTaskLab manager;
+    private Context c;
 
-    public ReceiveFromServerAsyncTask(PollService p) {
+    public ReceiveFromServerAsyncTask(PollService p, Context c) {
         super();
         userprofileid = MyServerSettings.getUserProfileId(p);
         this.service = p;
         if(manager == null) manager = MyTaskLab.get(p);
+        this.c = c;
         /*Subu
         First thing is I am going to delete the current cache.
          */
@@ -35,8 +38,10 @@ public class ReceiveFromServerAsyncTask extends AsyncTask<Void, Void, List> {
         List l = null;
 
         try {
-            Log.d(TAG, "Sending user profile id:" + userprofileid);
-            l = GoogleAPIConnector.connect_TaskAPI().listTasks(false, Long.valueOf(userprofileid), false).execute().getItems();
+
+            Log.d(TAG, "Sending user profile id:" + MyServerSettings.getUserSocialId(c));
+            //l = GoogleAPIConnector.connect_TaskAPI().listTasks(false, Long.valueOf(userprofileid), false).execute().getItems();
+            l = GoogleAPIConnector.connect_TaskAPI().listTasks(MyServerSettings.getFilterRadius(c), false, MyServerSettings.getUserSocialId(c), MyServerSettings.getUserSocialType(c), false).execute().getItems();
         } catch (IOException e) {
             e.getMessage();
             Log.d(TAG,e.getMessage());
@@ -57,7 +62,7 @@ public class ReceiveFromServerAsyncTask extends AsyncTask<Void, Void, List> {
         if(!MyServerSettings.getLocalTaskCache(service)){
             while (i.hasNext()) {
                 MyTask myTask = (MyTask) i.next();
-                Log.d(TAG, " Inserting Task. Description: " + myTask.getTaskTitle());
+                Log.d(TAG, " Inserting Task. Description: " + myTask.getTaskTitle() + ", Distance: " + myTask.getDistanceFromOrigin());
                 manager.convertRemotetoLocalTask(myTask);
             }
             MyServerSettings.initializeLocalTaskCache(service.getApplicationContext());

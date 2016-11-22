@@ -726,6 +726,8 @@ public class RangeSeekBar<T extends Number> extends ImageView {
         return retStr;
     }
 
+
+
     /**
      * Overridden to save instance state when device orientation changes. This method is called automatically if you assign an id to the RangeSeekBar widget using the {@link #setId(int)} method. Other members of this class than the normalized min and max values don't need to be saved.
      */

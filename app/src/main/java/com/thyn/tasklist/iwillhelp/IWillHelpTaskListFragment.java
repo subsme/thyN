@@ -144,7 +144,7 @@ public class IWillHelpTaskListFragment extends ListFragment{
          */
             manager.purgeTasks();
             Log.d(TAG, "In refreshContent()");
-            new RetrieveFromServerAsyncTask().execute();
+            new RetrieveFromServerAsyncTask(getActivity()).execute();
 
         }
 
@@ -200,6 +200,8 @@ public class IWillHelpTaskListFragment extends ListFragment{
 
             View v= null;
             v = inflater.inflate(R.layout.fragment_tasklist_nobutton, container, false);
+            ListView listView = (ListView)v.findViewById(android.R.id.list);
+            listView.setEmptyView(v.findViewById(android.R.id.empty));
             mSwipeRefreshLayout = (SwipeRefreshLayout) v.findViewById(R.id.activity_main_swipe_refresh_layout);
             mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
                 @Override
@@ -220,8 +222,10 @@ public class IWillHelpTaskListFragment extends ListFragment{
 
         private class RetrieveFromServerAsyncTask extends AsyncTask<Void, Void, List> {
 
-            public RetrieveFromServerAsyncTask() {
+            private Context c = null;
+            public RetrieveFromServerAsyncTask(Context c) {
                 super();
+                this.c = c;
             }
 
             @Override
@@ -230,7 +234,9 @@ public class IWillHelpTaskListFragment extends ListFragment{
 
                 try {
                     Log.d(TAG, "Sending user profile id:"+userprofileid);
-                    l = GoogleAPIConnector.connect_TaskAPI().listTasks(false, userprofileid, false).execute().getItems();
+                    //l = GoogleAPIConnector.connect_TaskAPI().listTasks(false, userprofileid, false).execute().getItems();
+                    l = GoogleAPIConnector.connect_TaskAPI().listTasks(MyServerSettings.getFilterRadius(c), false, MyServerSettings.getUserSocialId(c), MyServerSettings.getUserSocialType(c), false).execute().getItems();
+
                 } catch (IOException e) {
                     e.getMessage();
                 }

@@ -2,8 +2,14 @@ package com.thyn.intro;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -25,19 +31,26 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.thyn.R;
 import com.thyn.android.backend.userAPI.model.APIGeneralResult;
 import com.thyn.android.backend.userAPI.model.APIUserInformation;
 import com.thyn.android.backend.userAPI.model.ExternalLogonPackage;
+import com.thyn.broadcast.GCMPreferences;
+import com.thyn.broadcast.GcmRegistrationIntentService;
+import com.thyn.broadcast.MainActivity;
 import com.thyn.common.MyServerSettings;
+import com.thyn.connection.AppStatus;
 import com.thyn.connection.GoogleAPIConnector;
 import com.thyn.connection.ReceiveStatsFromServerAsyncTask;
 import com.thyn.deleteMeInProd.AndroidDatabaseManager;
+import com.thyn.navigate.NavigationActivity;
 import com.thyn.tab.WelcomePageActivity;
 import android.content.Intent;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.auth.api.Auth;
 
@@ -62,6 +75,9 @@ public class IntroLogin extends AppCompatActivity implements
     private GoogleApiClient mGoogleApiClient;
 
     private ProgressDialog dialog;
+    private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
+    private BroadcastReceiver mRegistrationBroadcastReceiver;
+    private boolean isReceiverRegistered;
 
     @Override
     protected void onCreate(Bundle savedInstanceState){
@@ -127,6 +143,7 @@ public class IntroLogin extends AppCompatActivity implements
         callbackManager = CallbackManager.Factory.create();
         fbloginButton = (LoginButton) findViewById(R.id.fb_login_button);
         fbloginButton.setReadPermissions("email");
+
         // Callback registration
         fbloginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
@@ -134,7 +151,7 @@ public class IntroLogin extends AppCompatActivity implements
                 // App code
                 AccessToken token = loginResult.getAccessToken();
                 final String fbToken = token.getToken();
-                Log.d(TAG, "FB Access token is" + fbToken);
+                Log.d(TAG, "FB Access token is: " + fbToken);
                 final String userid;
                 GraphRequest request = GraphRequest.newMeRequest(
                         token,
@@ -146,6 +163,7 @@ public class IntroLogin extends AppCompatActivity implements
                                 // Application code
                                 Log.d(TAG, "The id is : " + object.optString("id"));
                                 Log.d(TAG, "The name is : " + object.optString("name"));
+
                                 try {
                                     JSONObject picturedata = object.getJSONObject("picture");
                                     JSONObject pdata = picturedata.getJSONObject("data");
@@ -171,10 +189,12 @@ public class IntroLogin extends AppCompatActivity implements
                 We have authenticated with facebook. Now we are sending the token to the server.
                 After sending the token to the server, we are starting a new activity - WelcomePageActivity.
                  */
-
-                new SendToServerAsyncTask(getParent()).execute(fbToken, "Facebook");
-
-
+                //Log.d(TAG, "Calling SendToServerAsyncTask for Facebook login");
+                //new SendToServerAsyncTask(getParent()).execute(fbToken, "Facebook");
+                Intent intent = new Intent(getApplicationContext(), LoginSplash.class);
+                intent.putExtra("TOKEN", fbToken);
+                intent.putExtra("LOGIN_TYPE", "Facebook");
+                startActivity(intent);
             }
 
             @Override
@@ -193,9 +213,9 @@ public class IntroLogin extends AppCompatActivity implements
     public void onPause() {
         super.onPause();
 
-        if ((dialog != null) && dialog.isShowing())
+      /*  if ((dialog != null) && dialog.isShowing())
             dialog.dismiss();
-        dialog = null;
+        dialog = null;*/
     }
 
     private void signIn() {
@@ -213,6 +233,12 @@ public class IntroLogin extends AppCompatActivity implements
         }
         else{
             Log.d(TAG,"FB callbackmanager called.");
+            Context c = getApplicationContext();
+            if (!AppStatus.getInstance(c).isOnline()) {
+                Toast.makeText(getApplicationContext(), "Sorry! There is no Internet connection", Toast.LENGTH_SHORT).show();
+                Log.v(TAG, "############Not online!!!!#########");
+                return;
+            }
             callbackManager.onActivityResult(requestCode, resultCode, data);
         }
     }
@@ -240,14 +266,17 @@ public class IntroLogin extends AppCompatActivity implements
                     , acct.getPhotoUrl().toString());
 
             //updateUI(true);
-            new SendToServerAsyncTask(this).execute(acct.getIdToken(), "Google");
-           /* new android.os.Handler().postDelayed(new Runnable() {
+            //new SendToServerAsyncTask(this).execute(acct.getIdToken(), "Google");
+            /*new android.os.Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    Intent intent = new Intent(getApplicationContext(), WelcomePageActivity.class);
-                    startActivity(intent);
+
                 }
-            }, 10000);*/
+            }, 1000);*/
+            Intent intent = new Intent(getApplicationContext(), LoginSplash.class);
+            intent.putExtra("TOKEN", acct.getIdToken());
+            intent.putExtra("LOGIN_TYPE", "Google");
+            startActivity(intent);
 
         } else {
             Log.d(TAG, "sign in failure");
@@ -264,93 +293,15 @@ public class IntroLogin extends AppCompatActivity implements
 
     @Override
     public void onClick(View v) {
+        if (!AppStatus.getInstance(this).isOnline()) {
+            Toast.makeText(getApplicationContext(), "Sorry! There is no Internet connection", Toast.LENGTH_SHORT).show();
+            Log.v(TAG, "############Not online!!!!#########");
+            return;
+        }
         switch (v.getId()) {
             case R.id.google_sign_in_button:
                 signIn();
                 break;
-        }
-    }
-    private class SendToServerAsyncTask extends AsyncTask<String, Void, Void> {
-        private Activity activity;
-        private boolean shouldWeShowBasicProfileScreen;
-        public SendToServerAsyncTask(Activity activity){
-            this.activity = activity;
-            shouldWeShowBasicProfileScreen = false;
-        }
-
-        @Override
-        protected Void doInBackground(String... params) {
-
-
-            String token = params[0].toString();
-            String loginType = params[1].toString();
-
-            Log.d(TAG,"Login type: " + loginType);
-            Log.d(TAG,"token: " + token);
-
-            ExternalLogonPackage logPack = new ExternalLogonPackage();
-            logPack.setAccessToken(token);
-            APIUserInformation rslt = null;
-
-                   try {
-                       if(loginType.equalsIgnoreCase("Google")) {
-                           rslt = GoogleAPIConnector.connect_UserAPI().logonWithGoogle(logPack).execute();
-                       }
-                       else if(loginType.equalsIgnoreCase("Facebook")){
-                           rslt = GoogleAPIConnector.connect_UserAPI().logonWithFacebook(logPack).execute();
-                       }
-
-                       if (rslt != null && rslt.getResult().getStatusCode() != null) {
-
-                           String message = rslt.getResult().getMessage();
-                           Log.d(TAG, "78The message from the server is: " + message);
-                           Log.d(TAG, "The user profile id is: " + rslt.getProfileID());
-                           MyServerSettings.initializeUserProfileID(getApplicationContext(), rslt.getProfileID());
-                           MyServerSettings.initializeUserName(getApplicationContext(), rslt.getName());
-                           Log.d(TAG, "Profile ID set: " + MyServerSettings.getUserProfileId(getApplicationContext()));
-                           Log.d(TAG, "Neighbors helped" + rslt.getNumNeighbrsHelped());
-                           Log.d(TAG, "points gathered " + rslt.getThyNPoints());
-                           MyServerSettings.initializeNumNeighbrsIHelped(getApplicationContext(), rslt.getNumNeighbrsHelped());
-                           MyServerSettings.initializePoints(getApplicationContext(), rslt.getThyNPoints());
-                           MyServerSettings.initializeUserAddress(getApplicationContext(),rslt.getAddress(), rslt.getCity(), Double.toString(rslt.getLatitude()), Double.toString(rslt.getLongitude()));
-                           if(!rslt.getBasicprofileInfo()){
-                               Log.d(TAG, "We dont have profile information(phone, address) for the user");
-                               this.shouldWeShowBasicProfileScreen = true;
-                           }
-                       }
-                   }
-                   catch(Exception e){
-                       e.printStackTrace();
-                   }
-            return null;
-        }
-        @Override
-        protected void onPreExecute() {
-            dialog = new ProgressDialog(activity);
-            dialog.setMessage("Please wait");
-            dialog.show();
-        }
-
-        @Override
-        protected void onPostExecute(Void result) {
-            MyServerSettings.initializeEnvironment(getBaseContext());
-            Intent intent = null;
-            if(!this.shouldWeShowBasicProfileScreen) {
-                intent = new Intent(getApplicationContext(), WelcomePageActivity.class);
-            }
-            else {
-                intent = new Intent(getApplicationContext(), BasicProfileActivity.class);
-            }
-            startActivity(intent);
-            dismissProgressDialog();
-        }
-
-        protected void dismissProgressDialog() {
-
-            if (dialog != null && dialog.isShowing()) {
-                dialog.dismiss();
-            }
-
         }
     }
 

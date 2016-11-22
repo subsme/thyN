@@ -142,8 +142,18 @@ public class IntroActivity extends AppCompatActivity{
     }
 
     private void launchHomeScreen() {
-          prefManager.setFirstTimeLaunch(false);
-         startActivity(new Intent(IntroActivity.this, IntroLogin.class));
+         prefManager.setFirstTimeLaunch(false);
+
+        Context c = getBaseContext();
+        Intent i = null;
+        if(MyServerSettings.getUserSocialId(c) != null &&
+                MyServerSettings.getUserSocialType(c) != -1) {
+            i = new Intent(IntroActivity.this, LoginSplash.class);
+        }
+        else{
+            i = new Intent(IntroActivity.this, IntroLogin.class);
+        }
+         startActivity(i);
          finish();
     }
     private void initializeFirstPage(){

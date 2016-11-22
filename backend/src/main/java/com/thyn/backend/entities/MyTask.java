@@ -1,11 +1,14 @@
 package com.thyn.backend.entities;
 
 import java.text.ParseException;
-
+import java.util.Date;
 
 
 import com.googlecode.objectify.annotation.Entity;
+import com.googlecode.objectify.annotation.Ignore;
 import com.googlecode.objectify.annotation.Index;
+import com.thyn.backend.datastore.DatastoreHelpers;
+import com.thyn.backend.entities.users.Profile;
 
 /**
  * Created by subu sundaram on 3/2/16.
@@ -13,34 +16,33 @@ import com.googlecode.objectify.annotation.Index;
 @Entity
 public class MyTask extends EntityObject{
 
+    private Long taskId;
     private String mBeginLocation;
     private double mLAT;
     private double mLONG;
     private String mCity;
-
     private String mEndLocation;
-    private String mServiceDate;
-    private String mServiceToDate;
-    private String mServiceTimeRange;
-
     @Index
-    private String mCreateDate;
-    private String mUpdateDate;
+    private Date mServiceDate;
+    private Date mServiceToDate;
+    private String mServiceTimeRange;
+    @Index
+    private Date mCreateDate;
+    private Date mUpdateDate;
     private String mTaskTitle;
     private String mTaskDescription;
     private int mWaitResponseTime;
     @Index
     private boolean isSolved;
-
     @Index
-   private Long userProfileKey;
+    private Long userProfileKey;
     private String userProfileName;
     @Index
     private Long helperUserProfileKey;
-
     private String helperProfileName;
-
     private String imageURL;
+    @Ignore
+    private double distanceFromOrigin;
 
     public String getImageURL() {
         return imageURL;
@@ -50,7 +52,7 @@ public class MyTask extends EntityObject{
         this.imageURL = imageURL;
     }
 
-    public void setServiceToDate(String mServiceToDate) {
+    public void setServiceToDate(Date mServiceToDate) {
         this.mServiceToDate = mServiceToDate;
     }
 
@@ -69,6 +71,13 @@ public class MyTask extends EntityObject{
         this.helperProfileName = helperProfileName;
     }
 
+    public Long getTaskId() {
+        return taskId;
+    }
+
+    public void setTaskId(Long taskId) {
+        this.taskId = taskId;
+    }
 
     public String getUserProfileName() {
         return userProfileName;
@@ -120,12 +129,12 @@ public class MyTask extends EntityObject{
         this.mEndLocation = mEndLocation;
     }
 
-    public String getServiceDate() {
+    public Date getServiceDate() {
         return mServiceDate;
     }
 
 
-    public void setServiceDate(String sDate) throws ParseException{
+    public void setServiceDate(Date sDate) throws ParseException{
         this.mServiceDate = sDate;
     }
 
@@ -145,28 +154,31 @@ public class MyTask extends EntityObject{
         this.mWaitResponseTime = mWaitResponseTime;
     }
     @Override
-    public boolean dispose() { return true;}
+    public boolean dispose() {
+
+        return DatastoreHelpers.removeEntityFromDatastore(this);
+    }
     @Override
     public String getName(){ return null;}
 
 
-    public String getServiceToDate() {
+    public Date getServiceToDate() {
         return mServiceToDate;
     }
 
-    public String getCreateDate() {
+    public Date getCreateDate() {
         return mCreateDate;
 
     }
 
-    public void setCreateDate(String mCreateDate) {
+    public void setCreateDate(Date mCreateDate) {
         this.mCreateDate = mCreateDate;
     }
-    public String getUpdateDate() {
+    public Date getUpdateDate() {
         return mUpdateDate;
     }
 
-    public void setUpdateDate(String mUpdateDate) {
+    public void setUpdateDate(Date mUpdateDate) {
         this.mUpdateDate = mUpdateDate;
     }
 
@@ -200,5 +212,13 @@ public class MyTask extends EntityObject{
 
     public void setCity(String mCity) {
         this.mCity = mCity;
+    }
+
+    public double getDistanceFromOrigin() {
+        return distanceFromOrigin;
+    }
+
+    public void setDistanceFromOrigin(double distanceFromOrigin) {
+        this.distanceFromOrigin = distanceFromOrigin;
     }
 }

@@ -10,6 +10,10 @@ import com.thyn.android.backend.registration.Registration;
 import com.google.api.client.http.HttpHeaders;
 
 import java.io.IOException;
+
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.util.Log;
 
 import com.google.api.client.googleapis.services.AbstractGoogleClient;

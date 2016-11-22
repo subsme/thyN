@@ -144,7 +144,9 @@ public class UserAPI {
         Profile prof = null;
         try
         {
-            user = ExternalAuthentication.getInfoFromGoogleForLogin(googUserToken);
+            user = ExternalAuthentication.extractUserFromDataStore(1, googUserToken);
+            if(user == null) // Go talk to google api only if we dont have the user in our database;
+                user = ExternalAuthentication.getInfoFromGoogleForLogin(googUserToken);
 
         }catch(Exception e)
         {
@@ -159,6 +161,7 @@ public class UserAPI {
         APIUserInformation userStats = getUserStatisticsForHomePage(user, 20);
 
         return userStats;
+
     }
 
 
@@ -174,7 +177,9 @@ public class UserAPI {
         Profile prof = null;
         try
         {
-            user = ExternalAuthentication.getInfoFromFacebookForLogin(fbUserToken);
+            user = ExternalAuthentication.extractUserFromDataStore(0, fbUserToken);
+            if(user == null) // Go talk to fb api only if we dont have the user in our database;
+                user = ExternalAuthentication.getInfoFromFacebookForLogin(fbUserToken);
 
         }catch(Exception e)
         {
@@ -366,7 +371,7 @@ public class UserAPI {
         myTask.setUserProfileKey(user.getProfileId());
         myTask.setUserProfileName(user.getName());
         myTask.setImageURL(user.getImageURL());
-        myTask.setCreateDate(new Date().toString());
+        myTask.setCreateDate(new Date());
 
         logger.info("Saving task information in database...");
         ofy().save().entity(myTask).now();
@@ -491,12 +496,6 @@ public class UserAPI {
         }
         Logger.logInfo("token value is: " + token);
         Logger.logInfo("profileId value is: " + profileID);
-
-       /* ThyNSession currentSession = SecurityUtilities.enforceAuthenticationForCurrentAPICall(req);
-        User sessionUser = currentSession.getSessionUser();
-        if(sessionUser == null)
-            throw new APIErrorException(401, "UADU01 - Unauthorized.");
-*/
 
         Device device = DatastoreHelpers.tryLoadEntityFromDatastore(Device.class, "registration_token ==", token);
         if(device != null) {

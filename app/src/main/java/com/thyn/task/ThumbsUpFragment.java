@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,8 +14,8 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.thyn.R;
-import com.thyn.connection.PollService;
-import com.thyn.tab.DashboardActivity;
+
+import com.thyn.tab.DashboardFragment;
 
 import org.w3c.dom.Text;
 
@@ -61,10 +62,15 @@ public class ThumbsUpFragment extends Fragment {
         mGoToDashboard.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
 
-                Intent intent =
+               /* Intent intent =
                         new Intent(getActivity(), DashboardActivity.class);
                 intent.putExtra(DashboardActivity.REFRESH_NEEDED, true);
-                startActivity(intent);
+                startActivity(intent);*/
+                DashboardFragment dashboardFragment = DashboardFragment.newInstance(true, false);
+                FragmentManager manager = getActivity().getSupportFragmentManager();
+                manager.beginTransaction().replace(R.id.navigation_fragment_container,
+                        dashboardFragment,
+                        dashboardFragment.getTag()).commit();
 
             }
         });

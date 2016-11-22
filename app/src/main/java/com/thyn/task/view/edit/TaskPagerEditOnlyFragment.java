@@ -20,11 +20,15 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 import com.thyn.R;
+import com.thyn.android.backend.myTaskApi.model.APIGeneralResult;
 import com.thyn.collection.MyTaskLab;
 import com.thyn.collection.Task;
 import com.thyn.common.MyServerSettings;
 import com.thyn.connection.GoogleAPIConnector;
 import com.thyn.graphics.MLRoundedImageView;
+import com.thyn.navigate.NavigationActivity;
+import com.thyn.task.TaskActivity;
+import com.thyn.task.TaskFragment;
 import com.thyn.task.ThumbsUpActivity;
 import com.thyn.task.ThumbsUpFragment;
 import com.thyn.task.view.AcceptTaskDialogFragment;
@@ -36,10 +40,10 @@ import java.text.SimpleDateFormat;
  * Created by shalu on 10/25/16.
  */
 public class TaskPagerEditOnlyFragment extends Fragment {
-    private static final String LOG_TAG = "TaskPagerViewOnlyFragment";
+    private static final String LOG_TAG = "TaskPagerEditOnlyFragment";
     public static final String EXTRA_TASK_ID =
             "com.android.android.thyn.form.view.task_id";
-    private static final String DIALOG_ACCEPT_TASK = "acceptTaskDialog";
+    private static final String DIALOG_CANCEL_TASK = "cancelTaskDialog";
 
     private Task mTask;
     private TextView mTaskDescriptionField;
@@ -54,17 +58,19 @@ public class TaskPagerEditOnlyFragment extends Fragment {
     private TextView mTaskWhenStartDateField;
     private TextView mTaskWhenEndDateField;
 
-    private Button mButton;
+    private Button mEditButton;
+    private Button mDeleteButton;
     private Button mTaskBackToDashboard;
     private MLRoundedImageView mTask_user_profile_image;
 
     private static final String DIALOG_DATE = "date";
     private static final int REQUEST_DATE = 0;
+    private Long taskID;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Long taskID = (Long) getArguments().getSerializable(EXTRA_TASK_ID);
+        taskID = (Long) getArguments().getSerializable(EXTRA_TASK_ID);
         Log.d(LOG_TAG, "The Task ID here is: " + taskID);
         mTask = MyTaskLab.get(getActivity()).getTask(taskID);
         setHasOptionsMenu(true);
@@ -97,7 +103,7 @@ public class TaskPagerEditOnlyFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View v = inflater.inflate(R.layout.fragment_task_viewmode, container, false);
+        View v = inflater.inflate(R.layout.fragment_task_editmode, container, false);
 
         /* Subu - I am not going to go back from the action bar. There is a different button to click to go back to dashboar.d
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
@@ -145,55 +151,49 @@ public class TaskPagerEditOnlyFragment extends Fragment {
 
         Log.d(LOG_TAG, "task description is: " + mTask.getTaskDescription());
         Log.d(LOG_TAG, "isAccepted is " +mTask.isAccepted());
-        if(!mTask.isAccepted()) {//Only the tasks that aren't accepted will show a Accept button.
-           /* mButton = (Button) v.findViewById(R.id.task_accept);
-            mButton.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
 
-                    Log.d(LOG_TAG, "Accept button clicked. Task descr: " + mTask.getTaskDescription());
-                    FragmentManager fm = getActivity().getSupportFragmentManager();
-                    AcceptTaskDialogFragment dialog = AcceptTaskDialogFragment.newInstance(mTask.getTaskDescription());
-                    dialog.setTargetFragment(TaskPagerViewOnlyFragment.this, 0);
-                    dialog.show(fm, DIALOG_ACCEPT_TASK);
-
-                }
-            });*/
             LinearLayout lm = (LinearLayout) v.findViewById(R.id.linear_layout_task_view);
             if(lm == null) Log.d(LOG_TAG,"Linearlayout is null");
             // create the layout params that will be used to define how your
             // button will be displayed
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-            mButton = (Button) v.findViewById(R.id.accept_this_request);
-            mButton.setOnClickListener(new View.OnClickListener() {
+            mEditButton = (Button) v.findViewById(R.id.edit);
+            mEditButton.setOnClickListener(new View.OnClickListener(){
                 @Override
                 public void onClick(View v) {
-                    Log.d(LOG_TAG, "Accept button clicked. Task descr: " + mTask.getTaskDescription());
+                    /*Intent i = new Intent(getActivity(), TaskActivity.class);
+                    i.putExtra(TaskFragment.EXTRA_TASK_ID, taskID);
+                    startActivity(i);*/
+                    TaskFragment taskFragment = TaskFragment.newInstance(taskID);
+                    FragmentManager manager = getActivity().getSupportFragmentManager();
+                    manager.beginTransaction().replace(R.id.navigation_fragment_container,
+                            taskFragment,
+                            taskFragment.getTag()).commit();
+                }
+            });
+            mDeleteButton = (Button) v.findViewById(R.id.delete_this_request);
+            mDeleteButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Log.d(LOG_TAG, "Delete button clicked. Task descr: " + mTask.getTaskDescription());
                     FragmentManager fm = getActivity().getSupportFragmentManager();
-                    AcceptTaskDialogFragment dialog = AcceptTaskDialogFragment.newInstance(mTask.getUserProfileName());
+                    CancelTaskDialogFragment dialog = CancelTaskDialogFragment.newInstance(mTask.getUserProfileName());
                     dialog.setTargetFragment(TaskPagerEditOnlyFragment.this, 0);
-                    dialog.show(fm, DIALOG_ACCEPT_TASK);
+                    dialog.show(fm, DIALOG_CANCEL_TASK);
                 }
             });
 
-           /* Button btn = new Button(getActivity());
-            btn.setText("Accept");
-            lm.addView(btn, params);
-            btn.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    Log.d(LOG_TAG, "Accept button clicked. Task descr: " + mTask.getTaskDescription());
-                    FragmentManager fm = getActivity().getSupportFragmentManager();
-                    AcceptTaskDialogFragment dialog = AcceptTaskDialogFragment.newInstance(mTask.getTaskDescription());
-                    dialog.setTargetFragment(TaskPagerViewOnlyFragment.this, 0);
-                    dialog.show(fm, DIALOG_ACCEPT_TASK);
-                }
-            });*/
+
             mTaskBackToDashboard.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    getActivity().finish();
+                    //getActivity().finish();
+                    getActivity().getSupportFragmentManager().popBackStack();
                 }
             });
+        if (getActivity() instanceof NavigationActivity) {
+            ((NavigationActivity) getActivity()).hideFloatingActionButton();
         }
         return v;
     }
@@ -206,29 +206,33 @@ public class TaskPagerEditOnlyFragment extends Fragment {
             Long userprofileid = MyServerSettings.getUserProfileId(getActivity());
             Log.d(LOG_TAG, "User profile id is: " + userprofileid.toString());
             Log.d(LOG_TAG, "TAsk id is: " + mTask.getId());
-            new SendToServerAsyncTask().execute(mTask);
+            new DeleteAsyncTask().execute(mTask);
 
             Intent i = new Intent(getActivity(), ThumbsUpActivity.class);
             i.putExtra(ThumbsUpFragment.EXTRA_THUMBS_TITLE, "THANK YOU!");
-            i.putExtra(ThumbsUpFragment.EXTRA_THUMBS_DESCRIPTION, "Awesome! Thanks for helping your neighbr " + mTask.getUserProfileName() + ".");
+            i.putExtra(ThumbsUpFragment.EXTRA_THUMBS_DESCRIPTION, "Your task is deleted now. Please create another one if you need some other help.");
             startActivity(i);
         } else Log.d(LOG_TAG, "RESult is CANCEL");
     }
 
 
-    private class SendToServerAsyncTask extends AsyncTask<Task, Void, String> {
+    private class DeleteAsyncTask extends AsyncTask<Task, Void, String> {
 
 
         @Override
         protected String doInBackground(Task... params) {
             try {
-                Log.d(LOG_TAG, "Calling updateTaskHelper with TaskId: "+ mTask.getId());
+                Log.d(LOG_TAG, "Calling deleteMyTask with TaskId: "+ mTask.getId());
                 Long userprofileid = MyServerSettings.getUserProfileId(getActivity());
                 Log.d(LOG_TAG, "Sending user profile id:" + userprofileid);
-                GoogleAPIConnector.connect_TaskAPI().updateTaskHelper(userprofileid, new Long(mTask.getId())).execute();
+                APIGeneralResult result = GoogleAPIConnector.connect_TaskAPI().deleteMyTask(mTask.getId(),userprofileid).execute();
+                if(result.getStatusCode().equalsIgnoreCase("OK")){
+                    Log.d(LOG_TAG, "Task :" + mTask.getId() + " deleted successfully");
+                }
+                else{
 
-
-
+                    Log.d(LOG_TAG, "Task :" + mTask.getId() + " didnt get deleted. The message is: " + result.getMessage());
+                }
             }
             catch(IOException ioe){
                 ioe.printStackTrace();

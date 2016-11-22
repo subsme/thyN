@@ -4,8 +4,10 @@ import android.content.Intent;
 import android.os.Bundle;
 
 
+
 import com.thyn.tab.view.SlidingTabLayout;
 import com.thyn.task.RandomTaskActivity;
+import com.thyn.task.RandomTaskFragment;
 import com.thyn.task.TaskActivity;
 import com.thyn.tasklist.TaskListFragment;
 import com.thyn.tasklist.iwillhelp.IWillHelpTaskListFragment;
@@ -16,15 +18,21 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ImageView;
+
+
 import com.thyn.R;
 import com.oguzdev.circularfloatingactionmenu.library.FloatingActionButton;
+
 
 public class DashboardActivity extends AppCompatActivity {
     private static final String TAG = "DashboardActivity";
@@ -34,6 +42,7 @@ public class DashboardActivity extends AppCompatActivity {
             "com.thyn.tab.dashboard";
     public static final String REFRESH_NEEDED = "com.thyn.tab.refresh";
     public static boolean toRefresh;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,10 +61,13 @@ public class DashboardActivity extends AppCompatActivity {
         }
 
         setContentView(R.layout.activity_dashboard);
+
+
         Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
         //getSupportActionBar().setTitle("Hello world App");  // if i want to change the title.
+
 
         if (savedInstanceState == null) {
             mViewPager = (ViewPager)findViewById(R.id.viewpager);
@@ -85,8 +97,11 @@ public class DashboardActivity extends AppCompatActivity {
         });
     }
     private void createNewTask(){
-        Intent i = new Intent(this, RandomTaskActivity.class);
-        startActivity(i);
+        RandomTaskFragment randomTaskFragment = new RandomTaskFragment();
+        FragmentManager manager = getSupportFragmentManager();
+        manager.beginTransaction().replace(R.id.navigation_fragment_container,
+                randomTaskFragment,
+                randomTaskFragment.getTag()).commit();
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu){
@@ -101,11 +116,12 @@ public class DashboardActivity extends AppCompatActivity {
        // int id = item.getItemId();
 
 
-
         return super.onOptionsItemSelected(item);
     }
 
-class DashboardPagerAdapter extends FragmentPagerAdapter {
+
+
+    class DashboardPagerAdapter extends FragmentPagerAdapter {
     String[] tabs;
 
     public DashboardPagerAdapter(FragmentManager fm) {

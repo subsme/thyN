@@ -34,7 +34,7 @@ public class PollService extends IntentService{
     }
     private void connectToServer(){
         Log.i(TAG, "Starting ReceiveFromServerAsyncTask...");
-        new ReceiveFromServerAsyncTask(this).execute();
+        new ReceiveFromServerAsyncTask(this,getApplicationContext()).execute();
 
        // Log.i(TAG, "Starting ReceiveStatsFromServerAsyncTask...");
        // new ReceiveStatsFromServerAsyncTask(this).execute();

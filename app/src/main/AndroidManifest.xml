@@ -9,6 +9,10 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
 
+    <!-- Subu remove this when production -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
+
     <permission
         android:name="com.thyn.backend.permission.C2D_MESSAGE"
         android:protectionLevel="signature" />
@@ -17,7 +21,7 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/thyn_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.NoActionBar">
@@ -42,16 +46,16 @@
             android:label="@string/app_name"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".task.view.iwillhelp.TaskIWillHelpPagerViewOnlyActivity"
-            android:screenOrientation="portrait" />
-        <activity
             android:name=".task.view.my.MyTaskPagerViewOnlyActivity"
             android:label="@string/app_name"
-            android:screenOrientation="portrait">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.thyn.tasklist.my.completed.MyCompletedTaskListActivity" />
-        </activity>
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".task.view.edit.TaskPagerEditOnlyActivity"
+            android:label="@string/app_name"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".task.view.iwillhelp.TaskIWillHelpPagerViewOnlyActivity"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".tasklist.my.completed.MyCompletedTaskListActivity"
             android:label="@string/app_name"
@@ -68,9 +72,6 @@
         <activity
             android:name=".task.RandomTaskActivity"
             android:screenOrientation="portrait">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.thyn.tab.DashboardActivity" />
         </activity>
         <activity
             android:name=".field.AddressActivity"
@@ -92,24 +93,25 @@
             android:theme="@style/AppTheme.Bluey" />
         <activity
             android:name=".intro.IntroLogin"
-            android:label="@string/title_activity_login"
-            android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.NoActionBar" />
+            android:screenOrientation="portrait"/>
         <activity
             android:name=".intro.IntroActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:screenOrientation="portrait">
+        </activity>
+        <activity android:name=".intro.SplashActivity"
+            android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity android:name=".intro.LoginSplash"
+            android:theme="@style/SplashTheme">
         </activity>
         <activity
             android:name=".broadcast.MainActivity"
             android:label="@string/app_name"
-            android:screenOrientation="portrait"
-            android:theme="@style/TransparentCompat" />
+            android:screenOrientation="portrait" />
         <activity
             android:name="com.facebook.FacebookActivity"
             android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
@@ -169,7 +171,18 @@
         <activity
             android:name=".task.ThumbsUpActivity"
             android:screenOrientation="portrait" />
-        <activity android:name=".intro.BasicProfileActivity"></activity>
+        <activity android:name=".intro.BasicProfileActivity" />
+        <activity
+            android:name=".navigate.NavigationActivity"
+            android:label="@string/title_activity_navigation"
+            android:screenOrientation="portrait"
+            android:launchMode="singleInstance"
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
+        <activity
+            android:name=".navigate.Main2Activity"
+            android:label="@string/title_activity_main2"
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
+
 
     </application>
 
