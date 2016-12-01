@@ -1,0 +1,146 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+
+    tools:context="com.thyn.tab.FilterFragment">
+
+    <!-- TODO: Update blank fragment layout -->
+
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/white"
+        android:showDividers="middle">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textColor="@android:color/black"
+            android:textSize="20sp"
+            android:layout_margin="16dp"
+            android:text="FILTERS" />
+        <View
+            android:id="@+id/SplitLine_hor1"
+            android:layout_width="match_parent"
+            android:layout_height= "2dp"
+            android:background="@color/greyseparator" />
+
+        <RadioGroup
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checkedButton="@+id/check_MostRecent">
+
+        <RadioButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:buttonTint="@color/bg_screen2"
+            android:text="Most recent"
+            android:layout_margin="16dp"
+            android:textSize="20sp"
+            android:id="@+id/check_MostRecent" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height= "2dp"
+                android:layout_marginLeft="50dp"
+                android:background="@color/greyseparator" />
+        <RadioButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:buttonTint="@color/bg_screen2"
+            android:text="Expiring soon"
+            android:layout_margin="16dp"
+            android:textSize="20sp"
+            android:id="@+id/check_ExpiringSoon" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height= "2dp"
+                android:layout_marginLeft="50dp"
+                android:background="@color/greyseparator" />
+        <RadioButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:buttonTint="@color/bg_screen2"
+            android:text="Closest to my home"
+            android:textSize="20sp"
+            android:layout_margin="16dp"
+            android:id="@+id/check_ClosestHome" />
+        </RadioGroup>
+
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height= "2dp"
+            android:background="@color/greyseparator" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textColor="@android:color/black"
+            android:textSize="20sp"
+            android:layout_margin="16dp"
+            android:text="DISTANCE FROM HOME" />
+
+        <SeekBar
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/seekBar"
+            android:thumbTint="@color/bg_screen2"
+            android:progressBackgroundTint="@color/bg_screen2"
+            android:progressTint="@color/bg_screen2"
+            android:max="60"
+            android:progress="10" />
+
+        <TextView
+            android:id="@+id/distance_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textSize="20sp"
+            android:gravity="center"
+            android:layout_margin="16dp"
+            android:text="10 miles"
+           />
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <LinearLayout android:id="@+id/linearLayout1"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_width="fill_parent"
+                android:layout_alignParentBottom="true">
+                <Button
+                    android:id="@+id/cancel_action"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginTop="20dp"
+                    android:text="CANCEL"
+                    android:textAlignment="center"
+                    android:textColor="@android:color/white"
+                    android:background="@color/blue_grey_500"
+                    android:layout_weight="0.3"
+                    android:textSize="@dimen/slide_desc" />
+                <Button
+                    android:id="@+id/apply_filters"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginTop="20dp"
+                    android:text="APPLY FILTERS"
+                    android:textAlignment="center"
+                    android:textColor="@android:color/white"
+                    android:background="@color/thyn_green"
+                    android:layout_weight="0.7"
+                    android:textSize="@dimen/slide_desc" />
+            </LinearLayout>
+        </RelativeLayout>
+
+    </LinearLayout>
+
+</FrameLayout>

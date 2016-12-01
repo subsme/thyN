@@ -304,12 +304,15 @@ public class MyServerSettings {
     public static void initializeFilterSettings(Context context, Filter filter){
         int filterSetting = 0;
         if(filter.closestToMyHome){
+            Log.d(TAG, "Setting closestto my home");
             filterSetting = 1;
         }
         else if(filter.expiringSoon){
+            Log.d(TAG, "Setting expiring soon");
             filterSetting = 2;
         }
         else if(filter.mostRecent){
+            Log.d(TAG, "Setting mostrecent");
             filterSetting = 3;
         }
         if(filter.distanceRadius <= 0) filter.distanceRadius = 20;
@@ -321,11 +324,11 @@ public class MyServerSettings {
                 .commit();
     }
     public static int getFilterSetting(Context c){
-        return PreferenceManager.getDefaultSharedPreferences(c).getInt(MyServerSettings.PREF_FILTER_OPTION,-1);
+        return PreferenceManager.getDefaultSharedPreferences(c).getInt(MyServerSettings.PREF_FILTER_OPTION,1);
     }
 
     public static int getFilterRadius(Context c){
-        return PreferenceManager.getDefaultSharedPreferences(c).getInt(MyServerSettings.PREF_FILTER_RADIUS,0);
+        return PreferenceManager.getDefaultSharedPreferences(c).getInt(MyServerSettings.PREF_FILTER_RADIUS,20);
     }
 
 }

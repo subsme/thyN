@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<datastore-indexes
+    autoGenerate="true">
+    <datastore-index kind="MyTask" ancestor="false" source="manual">
+        <property name="isSolved" direction="asc"/>
+        <property name="mCreateDate" direction="desc"/>
+    </datastore-index>
+    <datastore-index kind="Log_Action" ancestor="false" source="manual">
+        <property name="action" direction="asc"/>
+        <property name="userKey" direction="asc"/>
+        <property name="actionTime" direction="desc"/>
+    </datastore-index>
+</datastore-indexes>

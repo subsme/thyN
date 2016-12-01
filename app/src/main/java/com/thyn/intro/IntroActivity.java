@@ -148,7 +148,8 @@ public class IntroActivity extends AppCompatActivity{
         Intent i = null;
         if(MyServerSettings.getUserSocialId(c) != null &&
                 MyServerSettings.getUserSocialType(c) != -1) {
-            i = new Intent(IntroActivity.this, LoginSplash.class);
+            //i = new Intent(IntroActivity.this, LoginSplash.class);
+            i = new Intent(IntroActivity.this, IntroLogin.class);
         }
         else{
             i = new Intent(IntroActivity.this, IntroLogin.class);

@@ -3,12 +3,14 @@
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
         <!-- Customize your theme here. -->
+        <item name="textColorError">@color/design_textinput_error_color_light</item>
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
-    <style name="AppTheme.NoActionBar">
+    <style name="AppTheme.NoActionBar" >
+        <item name="textColorError">@color/design_textinput_error_color_dark</item>
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
@@ -32,6 +34,7 @@
     <color name="background">#FAFAFA</color>
 
     <style name="AppTheme.Bluey" parent="Theme.AppCompat">
+        <item name="textColorError">@color/design_textinput_error_color_light</item>
         <item name="android:background">@color/light_blue</item>
         <item name="colorPrimary">@color/colorPrimary1</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark2</item>
@@ -39,11 +42,13 @@
     </style>
 
     <style name="AppTheme.Dark_Dialog">
+        <item name="textColorError">@color/design_textinput_error_color_light</item>
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
 
     <style name="TransparentCompat" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="textColorError">@color/design_textinput_error_color_light</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:colorBackgroundCacheHint">@null</item>

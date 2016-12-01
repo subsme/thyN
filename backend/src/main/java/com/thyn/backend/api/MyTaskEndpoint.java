@@ -152,9 +152,9 @@ public class MyTaskEndpoint {
                         + "\nTask service date is: " + task.getServiceDate()
                         + "\ncurrent date: " + currentDate
                         + "\ntask.getServiceDate().compareTo(currentDate): " + task.getServiceDate().compareTo(currentDate));
-                if (val <= distance &&
+                if (val <= distance /*&&
                         ((task.getServiceDate().compareTo(currentDate)>0) ||
-                                (task.getServiceDate().compareTo(currentDate)==0))){ // If the current date is less or equal to task service date. Other dates just expire without being helped.
+                                (task.getServiceDate().compareTo(currentDate)==0))*/){ // If the current date is less or equal to task service date. Other dates just expire without being helped.
                     logger.info("Less than " + distance + ". Adding " + task.getTaskTitle());
                     task.setDistanceFromOrigin(val);
                     records.add(task);

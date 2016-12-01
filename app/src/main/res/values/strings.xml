@@ -51,6 +51,7 @@
         <item>MY ERRANDS</item>
     </string-array>
     <string name="hint_detailed_description">Optionally add a detailed description, if you need to clarify</string>
+    <string name="hint_title">What do you need help with?</string>
     <string name="quick_tip"><![CDATA[<b>Quick Tip:</b> Keep it as short and sweet<br/> as possible]]></string>
 
     <!-- RangeSeeekBar strings -->

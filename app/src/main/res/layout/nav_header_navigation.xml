@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="250dp"
+    android:background="@drawable/side_nav_bar"
+    android:gravity="bottom"
+    android:orientation="vertical"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:theme="@style/ThemeOverlay.AppCompat.Dark">
+    <RelativeLayout
+        android:id="@+id/ll1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#0083d2">
+        <com.thyn.graphics.MLRoundedImageView
+            android:id="@+id/nav_profile_image"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:gravity="center"
+            android:src="@drawable/login_google"
+            android:enabled="false"
+            android:paddingTop="20dp"
+            android:paddingRight="10dp"
+            android:layout_centerVertical="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:layout_marginRight="42dp"
+            android:layout_marginEnd="42dp">
+        </com.thyn.graphics.MLRoundedImageView>
+        <TextView
+            android:id="@+id/nav_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toLeftOf="@id/nav_profile_image"
+            android:paddingLeft="14dp"
+            android:paddingRight="4dp"
+            android:text="Angie Fu"
+            android:textSize="@dimen/caption_text_size"
+            android:paddingTop="20dp"
+            android:textColor="#ffffff" />
+        <TextView
+            android:id="@+id/nav_address1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/nav_name"
+            android:layout_toLeftOf="@id/nav_profile_image"
+            android:paddingLeft="14dp"
+            android:paddingRight="60dp"
+            android:paddingTop="10dp"
+            android:text="Rancho Riconada"
+            android:textColor="@color/colorHighlight" />
+        <TextView
+            android:id="@+id/nav_address2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/nav_address1"
+            android:layout_toLeftOf="@id/nav_profile_image"
+            android:paddingLeft="14dp"
+            android:paddingRight="60dp"
+            android:text="Cupertino, CA"
+            android:paddingBottom="20dp"
+            android:textColor="@color/colorHighlight" />
+    </RelativeLayout>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height= "2dp"
+        android:background="@color/colorHighlight" />
+    <LinearLayout
+        android:layout_marginTop="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/ngbrs_helped"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="3"
+                android:textSize="40sp"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Neighbrs you've helped"/>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/ngbrs_points"
+                android:text="3"
+                android:textSize="40sp"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Total Neighbr points"/>
+        </LinearLayout>
+    </LinearLayout>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height= "2dp"
+        android:background="@color/colorHighlight" />
+</LinearLayout>

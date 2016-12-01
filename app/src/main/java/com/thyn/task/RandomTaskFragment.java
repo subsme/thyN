@@ -138,6 +138,7 @@ public class RandomTaskFragment extends Fragment {
 
         titleLayoutName = (TextInputLayout) v.findViewById(R.id.title_input_layout);
         mTitle = (EditText)v.findViewById(R.id.t_title);
+        mTitle.setHint(getString(R.string.hint_title));
         mTitle.setHintTextColor(ContextCompat.getColor(getContext(), R.color.greyseparator));
         mTitle.addTextChangedListener(new TextWatcher() {
             @Override

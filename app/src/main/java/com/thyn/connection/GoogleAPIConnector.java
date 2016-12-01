@@ -23,13 +23,13 @@ import com.google.api.client.googleapis.services.AbstractGoogleClient;
  */
 public class GoogleAPIConnector {
     private static String TAG = "GoogleAPIConnector";
-    //xz-logical-bird-e.appspot.com
+
     private static String LOCAL_APP_ENGINE_SERVER_URL_FOR_ANDROID= "http://10.0.2.2:8080";
-    private static String REMOTE_APP_ENGINE_SERVER_URL_FOR_ANDROID= "https://xz-logical-bird-e.appspot.com";
+    private static String REMOTE_APP_ENGINE_SERVER_URL_FOR_ANDROID= "https://xz-logical-bird-e.appspot.com";//"https://default-demo-app-b9b54.appspot.com";//https://xz-logical-bird-e.appspot.com";
 
     private static boolean LOCAL_ANDROID_RUN = false;
 
-    private static String appName = "xz-logical-bird-e";
+   private static String appName = "xz-logical-bird-e";//default-demo-app-b9b54
     public static UserAPI myApiService = null;
     public static MyTaskApi myTaskAPIService = null;
     public static Registration myDeviceRegistrationService = null;
