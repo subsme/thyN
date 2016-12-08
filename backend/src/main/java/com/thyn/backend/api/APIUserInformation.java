@@ -12,9 +12,11 @@ public class APIUserInformation {
     public int thyNPoints;
     public boolean basicprofileInfo;
     public String address;
+    public String aptNo;
     public Double latitude;
     public Double longitude;
     public String city;
+    public String phone;
     public APIGeneralResult result;
 
 
@@ -26,10 +28,12 @@ public class APIUserInformation {
         this.thyNPoints = -1;
         this.name = null;
         this.basicprofileInfo = false;
+        this.aptNo = null;
         this.address = null;
         this.latitude = -1.0;
         this.longitude = -1.0;
         this.city = null;
+        this.phone = null;
     }
 
     public APIUserInformation(APIGeneralResult rslt,
@@ -39,9 +43,11 @@ public class APIUserInformation {
                               int thyNPoints,
                               boolean basicprofileInfo,
                               String address,
+                              String aptNo,
                               Double latitude,
                               Double longitude,
-                              String city
+                              String city,
+                              String phone
     ){
         this.result = rslt;
         this.profileID = profileID;
@@ -50,9 +56,11 @@ public class APIUserInformation {
         this.basicprofileInfo = basicprofileInfo;
         this.name = name;
         this.address = address;
+        this.aptNo = aptNo;
         this.city = city;
         this.latitude = latitude;
         this.longitude = longitude;
+        this.phone = phone;
     }
 
 
@@ -72,7 +80,22 @@ public class APIUserInformation {
         return thyNPoints;
     }
 
+    public String getPhone() {
+        return phone;
+    }
 
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getAptNo() {
+
+        return aptNo;
+    }
+
+    public void setAptNo(String aptNo) {
+        this.aptNo = aptNo;
+    }
 
     public APIGeneralResult getResult() {
         return result;

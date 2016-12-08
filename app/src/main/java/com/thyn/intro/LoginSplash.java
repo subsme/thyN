@@ -34,6 +34,7 @@ public class LoginSplash extends AppCompatActivity {
     private boolean isReceiverRegistered;
     private String token;
     private String loginType;
+    private Context c;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,7 +49,7 @@ public class LoginSplash extends AppCompatActivity {
 
         }
         else{ //Subu: I will come here if its not the first time for the user. The user has already signed in previously (maybe yesterday) and i use the android cache to sign the user in again.
-            Context c = getBaseContext();
+             c = getApplicationContext();
             token = MyServerSettings.getUserSocialId(c);
             int type = MyServerSettings.getUserSocialType(c);
             if(token != null &&
@@ -74,10 +75,12 @@ public class LoginSplash extends AppCompatActivity {
     private class SendToServerAsyncTask extends AsyncTask<String, Void, Void> {
         private Activity activity;
         private boolean shouldWeShowBasicProfileScreen = false;
+        Context c = null;
 
         public SendToServerAsyncTask(Activity activity) {
             this.activity = activity;
             shouldWeShowBasicProfileScreen = false;
+            c = getApplicationContext();
         }
 
         @Override
@@ -106,14 +109,21 @@ public class LoginSplash extends AppCompatActivity {
                     String message = rslt.getResult().getMessage();
                     Log.d(TAG, "78The message from the server is: " + message);
                     Log.d(TAG, "The user profile id is: " + rslt.getProfileID());
-                    MyServerSettings.initializeUserProfileID(getApplicationContext(), rslt.getProfileID());
-                    MyServerSettings.initializeUserName(getApplicationContext(), rslt.getName());
-                    Log.d(TAG, "Profile ID set: " + MyServerSettings.getUserProfileId(getApplicationContext()));
+                    MyServerSettings.initializeUserProfileID(c, rslt.getProfileID());
+                    MyServerSettings.initializeUserName(c, rslt.getName());
+                    Log.d(TAG, "Profile ID set: " + MyServerSettings.getUserProfileId(c));
                     Log.d(TAG, "Neighbors helped" + rslt.getNumNeighbrsHelped());
                     Log.d(TAG, "points gathered " + rslt.getThyNPoints());
-                    MyServerSettings.initializeNumNeighbrsIHelped(getApplicationContext(), rslt.getNumNeighbrsHelped());
-                    MyServerSettings.initializePoints(getApplicationContext(), rslt.getThyNPoints());
-                    MyServerSettings.initializeUserAddress(getApplicationContext(), rslt.getAddress(), rslt.getCity(), Double.toString(rslt.getLatitude()), Double.toString(rslt.getLongitude()));
+                    MyServerSettings.initializeNumNeighbrsIHelped(c, rslt.getNumNeighbrsHelped());
+                    MyServerSettings.initializePoints(c, rslt.getThyNPoints());
+                    MyServerSettings.initializeUserAddress(c, rslt.getAddress(), rslt.getAptNo(), rslt.getCity(), Double.toString(rslt.getLatitude()), Double.toString(rslt.getLongitude()));
+                    MyServerSettings.initializeUserPhone(c, rslt.getPhone());
+                    Log.d(TAG, "Setting local cache with user info from the server:- "
+                            + "address: " + rslt.getAddress()
+                            + "aptno: " + rslt.getAptNo()
+                            + " city: " + rslt.getCity()
+                            + " LAT: " + MyServerSettings.getUserLAT(c)
+                            + " LONG: " + MyServerSettings.getUserLNG(c));
                     if (!rslt.getBasicprofileInfo()) {
                         Log.d(TAG, "We dont have profile information(phone, address) for the user");
                         shouldWeShowBasicProfileScreen = true;
@@ -181,6 +191,7 @@ public class LoginSplash extends AppCompatActivity {
                     if (!b) {
                         Log.d(TAG, "starting NavigationActivity...");
                         intent = new Intent(getApplicationContext(), NavigationActivity.class);
+
                     } else {
                         Log.d(TAG, "starting BasicProfileActivity...");
                         intent = new Intent(getApplicationContext(), BasicProfileActivity.class);

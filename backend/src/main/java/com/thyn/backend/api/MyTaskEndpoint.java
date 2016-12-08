@@ -105,6 +105,13 @@ public class MyTaskEndpoint {
         Long profileID = user.getProfileId();
         logger.info("In listTasks. The profile id is : " + profileID);
 
+        logger.info("User information is: "
+                + " LAT " + user.getLAT()
+                + " LONG " + user.getLONG()
+                + " city " + user.getCity()
+                + " address " + user.getAddress()
+                + " phone " + user.getPhone());
+
         //Getting the current date and time
 
         Date currentDate = new Date();
@@ -122,7 +129,6 @@ public class MyTaskEndpoint {
             else query = ofy().load().type(MyTask.class).filter("isSolved", true);//.order("-mCreateDate");
             //.order("-mCreateDate");
         }
-        logger.info("The query is : " + query);
 
         double distance = 20;
         if(radius > 0) distance = radius;

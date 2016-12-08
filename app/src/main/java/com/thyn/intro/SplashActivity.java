@@ -20,7 +20,7 @@ public class SplashActivity extends AppCompatActivity {
         /*
         Subu - Important to disable this when no need to debug local logs.
          */
-        //MyServerSettings.writeLocalLogs(c);
+        MyServerSettings.writeLocalLogs(c);
 
         String token = MyServerSettings.getUserSocialId(c);
         int type = MyServerSettings.getUserSocialType(c);

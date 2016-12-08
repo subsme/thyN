@@ -320,6 +320,7 @@ public class UserAPI {
     @ApiMethod(name = "updateMyProfile", httpMethod = HttpMethod.POST, path="updateMyProfile")
     public APIGeneralResult updateMyProfile(@Named("phone") String phone,
                                             @Named("address") String address,
+                                            @Named("aptNo") String aptNo,
                                             @Named("lat") String latitude,
                                             @Named("long") String longitude,
                                             @Named("city") String city,
@@ -328,6 +329,7 @@ public class UserAPI {
                                             HttpServletRequest req) throws ConflictException, APIErrorException{
         logger.info("Phone received from the client is: " + phone);
         logger.info("Address received from the client is: " + address
+                + ", aptNo: " + aptNo
                 + ", lat: " + latitude
                 + ", long: " + longitude
                 + ", city: " + city);
@@ -339,6 +341,7 @@ public class UserAPI {
             user = DatastoreHelpers.tryLoadEntityFromDatastore(User.class, "googUserId ==", socialID);
         }
         user.setAddress(address);
+        if(aptNo != null) user.setAptNo(aptNo);
         user.setCity(city);
         user.setLAT(Double.parseDouble(latitude));
         user.setLONG(Double.parseDouble(longitude));
@@ -385,6 +388,7 @@ public class UserAPI {
         String city = user.getCity();
         String phone = user.getPhone();
         String address = user.getAddress();
+        String aptNo = user.getAptNo();
         double latitude = user.getLAT();
         double longitude = user.getLONG();
 
@@ -427,9 +431,11 @@ public class UserAPI {
                 u.get(1),
                 b,
                 address,
+                aptNo,
                 latitude,
                 longitude,
-                city
+                city,
+                phone
                 );
 
         return stats;

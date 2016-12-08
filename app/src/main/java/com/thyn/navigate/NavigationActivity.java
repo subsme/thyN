@@ -29,6 +29,7 @@ import com.thyn.collection.TaskLab;
 import com.thyn.common.MyServerSettings;
 import com.thyn.deleteMeInProd.AndroidDatabaseManager;
 import com.thyn.graphics.MLRoundedImageView;
+import com.thyn.intro.BasicProfileFragment;
 import com.thyn.tab.DashboardFragment;
 import com.thyn.tab.FilterFragment;
 import com.thyn.tab.WelcomePageFragment;
@@ -146,7 +147,6 @@ public class NavigationActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.nav_dashboard) {
-
             WelcomePageFragment welcomePageFragment = new WelcomePageFragment();
             FragmentManager manager = getSupportFragmentManager();
             manager.beginTransaction().replace(R.id.navigation_fragment_container,
@@ -175,7 +175,14 @@ public class NavigationActivity extends AppCompatActivity
                     myTaskListFragment,
                     myTaskListFragment.getTag()).commit();
         }
-        else if(id == R.id.nav_openlogfolder && MyServerSettings.LOCAL_DEBUG){
+        else if (id == R.id.nav_myinfo) {
+            BasicProfileFragment basicProfileFragment = BasicProfileFragment.newInstance("", "");
+            FragmentManager manager = getSupportFragmentManager();
+            manager.beginTransaction().replace(R.id.navigation_fragment_container,
+                    basicProfileFragment,
+                    basicProfileFragment.getTag()).commit();
+        }
+       /* else if(id == R.id.nav_openlogfolder && MyServerSettings.LOCAL_DEBUG){
 
             Intent emailIntent = new Intent(Intent.ACTION_SEND);
             emailIntent.setType("text/plain");
@@ -191,7 +198,7 @@ public class NavigationActivity extends AppCompatActivity
             emailIntent.putExtra(Intent.EXTRA_STREAM, uri);
             startActivity(Intent.createChooser(emailIntent, "Pick an Email provider"));
 
-        }
+        }*/
         /*else if(id == R.id.nav_opendatabase && MyServerSettings.LOCAL_DEBUG){
             Intent dbmanager = new Intent(getApplicationContext(), AndroidDatabaseManager.class);
             startActivity(dbmanager);

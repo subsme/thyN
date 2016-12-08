@@ -38,6 +38,7 @@ public class MyServerSettings {
     public static final String PREF_USER_SOCIAL_ID = "userSocialID";
     public static final String PREF_USER_SOCIAL_TYPE = "userSocialType";
     public static final String PREF_USER_ADDRESS = "userAddress";
+    public static final String PREF_USER_APT_NUMBER = "userAptNumber";
     public static final String PREF_USER_CITY = "userCity";
     public static final String PREF_USER_LANG = "userLang";
     public static final String PREF_USER_LAT = "userLat";
@@ -210,11 +211,12 @@ public class MyServerSettings {
                 .getDefaultSharedPreferences(c)
                 .getInt(MyServerSettings.TOTAL_REQUESTS_WITHIN_RANGE, -1);
     }
-    public static void initializeUserAddress(Context context, String address, String city, String lat, String lng){
+    public static void initializeUserAddress(Context context, String address, String aptNo, String city, String lat, String lng){
 
         PreferenceManager.getDefaultSharedPreferences(context)
                 .edit()
                 .putString(MyServerSettings.PREF_USER_ADDRESS, address)
+                .putString(MyServerSettings.PREF_USER_APT_NUMBER, aptNo)
                 .putString(MyServerSettings.PREF_USER_CITY, city)
                 .putString(MyServerSettings.PREF_USER_LAT, lat)
                 .putString(MyServerSettings.PREF_USER_LANG, lng)
@@ -222,6 +224,9 @@ public class MyServerSettings {
     }
     public static String getUserAddress(Context c){
         return PreferenceManager.getDefaultSharedPreferences(c).getString(MyServerSettings.PREF_USER_ADDRESS, null);
+    }
+    public static String getUserAptNumber(Context c){
+        return PreferenceManager.getDefaultSharedPreferences(c).getString(MyServerSettings.PREF_USER_APT_NUMBER, null);
     }
     public static void initializeUserPhone(Context context, String phone){
         PreferenceManager.getDefaultSharedPreferences(context)

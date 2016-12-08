@@ -6,12 +6,15 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -58,6 +61,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.security.MessageDigest;
+import android.content.pm.Signature;
+
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 /**
@@ -89,7 +96,7 @@ public class IntroLogin extends AppCompatActivity implements
         FacebookSdk.sdkInitialize(getApplicationContext());
 
         setContentView(R.layout.activity_intro_login);
-        Button button =(Button)findViewById(R.id.thyn_sign_in_button);
+        /*Button button =(Button)findViewById(R.id.thyn_sign_in_button);
 
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -97,7 +104,7 @@ public class IntroLogin extends AppCompatActivity implements
                 Intent dbmanager = new Intent(getApplicationContext(), AndroidDatabaseManager.class);
                 startActivity(dbmanager);
             }
-        });
+        });*/
        // buttonGoogleLogin = (ImageView)findViewById(R.id.sign_in_button);
         findViewById(R.id.google_sign_in_button).setOnClickListener(this);
         // [START configure_signin]
@@ -143,6 +150,21 @@ public class IntroLogin extends AppCompatActivity implements
         callbackManager = CallbackManager.Factory.create();
         fbloginButton = (LoginButton) findViewById(R.id.fb_login_button);
         fbloginButton.setReadPermissions("email");
+        // Add code to print out the key hash
+        try {
+            PackageInfo info = getPackageManager().getPackageInfo(
+                    "com.facebook.samples.hellofacebook",
+                    PackageManager.GET_SIGNATURES);
+            for (Signature signature : info.signatures) {
+                MessageDigest md = MessageDigest.getInstance("SHA");
+                md.update(signature.toByteArray());
+                Log.d(TAG, "KeyHash: " + Base64.encodeToString(md.digest(), Base64.DEFAULT));
+            }
+        } catch (PackageManager.NameNotFoundException e) {
+
+        } catch (NoSuchAlgorithmException e) {
+
+        }
 
         // Callback registration
         fbloginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {

@@ -39,6 +39,7 @@ public class User extends EntityObject{
     private String phone;
 
     private String Address;
+    private String aptNo;
     private double mLAT;
     private double mLONG;
     private String mCity;
@@ -151,6 +152,14 @@ public class User extends EntityObject{
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public String getAptNo() {
+        return aptNo;
+    }
+
+    public void setAptNo(String aptNo) {
+        this.aptNo = aptNo;
     }
 
     public String getAddress() {
