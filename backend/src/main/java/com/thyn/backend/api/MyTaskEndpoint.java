@@ -21,6 +21,7 @@ import com.thyn.backend.entities.MyTask;
 import com.thyn.backend.entities.log.Log_Action;
 import com.thyn.backend.entities.users.Device;
 import com.thyn.backend.entities.users.User;
+import com.thyn.backend.entities.users.communication.Message;
 import com.thyn.backend.gcm.GcmSender;
 import com.thyn.backend.utilities.security.SecurityUtilities;
 import com.thyn.backend.utilities.security.ThyNSession;
@@ -129,9 +130,9 @@ public class MyTaskEndpoint {
             else query = ofy().load().type(MyTask.class).filter("isSolved", true);//.order("-mCreateDate");
             //.order("-mCreateDate");
         }
-
-        double distance = 20;
-        if(radius > 0) distance = radius;
+    //Dec 08 Subu setting distance = equator miles.
+        double distance = 24901; //20;
+        // if(radius > 0) distance = radius; Subu Dec 08commenting for now for testing
         logger.info("The search radius is set to: " + distance);
         double originLAT = user.getLAT();
         double originLONG = user.getLONG();
@@ -158,9 +159,9 @@ public class MyTaskEndpoint {
                         + "\nTask service date is: " + task.getServiceDate()
                         + "\ncurrent date: " + currentDate
                         + "\ntask.getServiceDate().compareTo(currentDate): " + task.getServiceDate().compareTo(currentDate));
-                if (val <= distance /*&&
+                if (val <= distance &&
                         ((task.getServiceDate().compareTo(currentDate)>0) ||
-                                (task.getServiceDate().compareTo(currentDate)==0))*/){ // If the current date is less or equal to task service date. Other dates just expire without being helped.
+                                (task.getServiceDate().compareTo(currentDate)==0))){ // If the current date is less or equal to task service date. Other dates just expire without being helped.
                     logger.info("Less than " + distance + ". Adding " + task.getTaskTitle());
                     task.setDistanceFromOrigin(val);
                     records.add(task);
@@ -346,7 +347,17 @@ public class MyTaskEndpoint {
             // the above line didnt work because profile_key is Long but the profileID that I was passing is String. So made sure profileID is passed as Long.
             Device device = ofy().load().type(Device.class).filter("profile_key ==", mTask.getUserProfileKey()).first().now();
             if(device == null) throw new APIErrorException(500, "UADU03 - Internal Server Error. Can't find the device based on profile id " +  profileID);
-            GcmSender.sendMessageToDeviceGroup(device.getNotification_key(),"thyNeighbr: Yay! " + prof.getFirstName() + " " + prof.getLastName() + " is interested in helping you.");
+            GcmSender.sendMessageToDeviceGroup(device.getNotification_key(),"Yay! " + prof.getFirstName() + " " + prof.getLastName() + " is interested in helping you.");
+
+            /* Subu Update Message 12/14/16 */
+            /* Saving a notification for the user who is being helped. */
+            String content = mTask.getTaskTitle() + ": " + prof.getFirstName() + " " + prof.getLastName() + " is interested in helping you.";
+            Message message = Message.createNewMessage(taskId, mTask.getUserProfileKey(), true, content, new Date());
+            DatastoreHelpers.trySaveEntityOnDatastore(message);
+            /* Saving a notification for the user who is helping */
+            content = "You have indicated to help " + mTask.getUserProfileName();
+            message = Message.createNewMessage(taskId, profileID, true, content, new Date());
+            DatastoreHelpers.trySaveEntityOnDatastore(message);
         }
         else
         {
@@ -368,6 +379,21 @@ public class MyTaskEndpoint {
 
         log("HELPER-CANCELLED", profileID, mTask.getUserProfileKey(), taskId, 0);
 
+        Profile prof = DatastoreHelpers.tryLoadEntityFromDatastore(Profile.class,profileID);
+        Device device = ofy().load().type(Device.class).filter("profile_key ==", mTask.getUserProfileKey()).first().now();
+        if(device == null) throw new APIErrorException(500, "UADU03 - Internal Server Error. Can't find the device based on profile id " +  profileID);
+        GcmSender.sendMessageToDeviceGroup(device.getNotification_key(), "Unfortunately " + prof.getFirstName() + " " + prof.getLastName() + " has decided to not help because of something that has come up on their side.");
+
+
+         /* Subu Update Message 12/14/16 */
+            /* Saving a notification for the user who is being helped. */
+        String content = mTask.getTaskTitle() + ": " + mTask.getHelperProfileName() + " has decided to not help because of something that has come up on their side.";
+        Message message = Message.createNewMessage(taskId, mTask.getUserProfileKey(), true, content, new Date());
+        DatastoreHelpers.trySaveEntityOnDatastore(message);
+            /* Saving a notification for the user who is helping */
+        content = "You have decided to not help " + mTask.getUserProfileName();
+        message = Message.createNewMessage(taskId, profileID, true, content, new Date());
+        DatastoreHelpers.trySaveEntityOnDatastore(message);
 
 
     }
@@ -395,10 +421,19 @@ public class MyTaskEndpoint {
 
         //Device device = DatastoreHelpers.tryLoadEntityFromDatastore(Device.class, "profile_key ==", profileID.toString());
         // the above line didnt work because profile_key is Long but the profileID that I was passing is String. So made sure profileID is passed as Long.
-        Device device = ofy().load().type(Device.class).filter("profile_key ==", profileID).first().now();
+        Device device = ofy().load().type(Device.class).filter("profile_key ==", mTask.getUserProfileKey()).first().now();
         if(device == null) throw new APIErrorException(500, "UADU03 - Internal Server Error. Can't find the device based on profile id " +  profileID);
-        GcmSender.sendMessageToDeviceGroup(device.getNotification_key(), "thyNeighbr: Yay! " + prof.getFirstName() + " " + prof.getLastName() + " has marked the task Complete.");
+        GcmSender.sendMessageToDeviceGroup(device.getNotification_key(), "Yay! " + prof.getFirstName() + " " + prof.getLastName() + " has marked the task Complete.");
 
+        /* Subu Update Message 12/14/16 */
+            /* Saving a notification for the user who is being helped. */
+        String content = mTask.getHelperProfileName() + " is saying that they helped you.";
+        Message message = Message.createNewMessage(taskId, mTask.getUserProfileKey(), true, content, new Date());
+        DatastoreHelpers.trySaveEntityOnDatastore(message);
+            /* Saving a notification for the user who is helping */
+        content = "Thank you! You have indicated that you helped " + mTask.getUserProfileName();
+        message = Message.createNewMessage(taskId, profileID, true, content, new Date());
+        DatastoreHelpers.trySaveEntityOnDatastore(message);
     }
 
    /* private MyTask findRecord(Class<T> classType, Long key) {

@@ -174,24 +174,20 @@ public class LoginSplash extends AppCompatActivity {
     private void GCMInitiation(final boolean b){
         Log.d(TAG, "GCMInitiation()");
 
-        //mRegistrationProgressBar = (ProgressBar) findViewById(R.id.registrationProgressBar);
         mRegistrationBroadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                //mRegistrationProgressBar.setVisibility(ProgressBar.GONE);
                 SharedPreferences sharedPreferences =
                         PreferenceManager.getDefaultSharedPreferences(context);
                 boolean sentToken = sharedPreferences
                         .getBoolean(GCMPreferences.SENT_TOKEN_TO_SERVER, false);
                 if (sentToken) {
-                    //mInformationTextView.setText(getString(R.string.gcm_send_message));
-                    Log.d(TAG, "The token has already been sent to the server. Starting MyTaskListActivity.class");
+                    Log.d(TAG, "The token has already been sent to the server.");
 
-                    //Intent intent1 = null;
                     if (!b) {
                         Log.d(TAG, "starting NavigationActivity...");
                         intent = new Intent(getApplicationContext(), NavigationActivity.class);
-
+                        //intent = new Intent(getApplicationContext(), BasicProfileActivity.class);
                     } else {
                         Log.d(TAG, "starting BasicProfileActivity...");
                         intent = new Intent(getApplicationContext(), BasicProfileActivity.class);
@@ -199,12 +195,10 @@ public class LoginSplash extends AppCompatActivity {
                     startActivity(intent);
                     finish();
                 } else {
-                    //mInformationTextView.setText(getString(R.string.token_error_message));
                     Log.d(TAG, "don't have the token in the SharedPreferences cache. Need to ask GCM server for a token that I can send to the app server");
                 }
             }
         };
-        //mInformationTextView = (TextView) findViewById(R.id.informationTextView);
 
         // Registering BroadcastReceiver
         registerReceiver();

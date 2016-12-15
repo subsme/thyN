@@ -218,10 +218,17 @@ public class TaskPagerViewOnlyFragment extends Fragment {
             Log.d(LOG_TAG, "TAsk id is: " + mTask.getId());
             new SendToServerAsyncTask().execute(mTask);
 
-            Intent i = new Intent(getActivity(), ThumbsUpActivity.class);
-            i.putExtra(ThumbsUpFragment.EXTRA_THUMBS_TITLE, "THANK YOU!");
-            i.putExtra(ThumbsUpFragment.EXTRA_THUMBS_DESCRIPTION, "Awesome! Thanks for helping your neighbr " + mTask.getUserProfileName() + ".");
-            startActivity(i);
+            //Intent i = new Intent(getActivity(), ThumbsUpActivity.class);
+            //i.putExtra(ThumbsUpFragment.EXTRA_THUMBS_TITLE, "THANK YOU!");
+            //i.putExtra(ThumbsUpFragment.EXTRA_THUMBS_DESCRIPTION, "Awesome! Thanks for helping your neighbr " + mTask.getUserProfileName() + ".");
+            //startActivity(i);
+            ThumbsUpFragment thumbsUpFragment = ThumbsUpFragment.newInstance("THANK YOU!", "Awesome! Thanks for helping your neighbr " + mTask.getUserProfileName() + ".");
+            FragmentManager manager = getActivity().getSupportFragmentManager();
+            manager.beginTransaction().replace(R.id.navigation_fragment_container,
+                    thumbsUpFragment,
+                    thumbsUpFragment.getTag()).commit();
+
+
         } else Log.d(LOG_TAG, "RESult is CANCEL");
     }
 

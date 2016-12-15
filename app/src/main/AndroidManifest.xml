@@ -9,6 +9,7 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
 
+
     <!-- Subu remove this when production -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
@@ -171,7 +172,11 @@
         <activity
             android:name=".task.ThumbsUpActivity"
             android:screenOrientation="portrait" />
-        <activity android:name=".intro.BasicProfileActivity" />
+        <activity
+            android:name=".intro.BasicProfileActivity"
+            android:windowSoftInputMode="adjustResize"
+            android:screenOrientation="portrait">
+        </activity>
         <activity
             android:name=".navigate.NavigationActivity"
             android:label="@string/title_activity_navigation"

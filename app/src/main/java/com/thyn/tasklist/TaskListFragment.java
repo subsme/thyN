@@ -377,7 +377,8 @@ public class TaskListFragment extends ListFragment{
                     FragmentManager manager = getActivity().getSupportFragmentManager();
                     manager.beginTransaction().replace(R.id.navigation_fragment_container,
                             dashboardFragment,
-                            dashboardFragment.getTag()).commit();
+                            dashboardFragment.getTag()).addToBackStack(null).commit();
+
                 }
             });
             return v;

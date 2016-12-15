@@ -92,7 +92,7 @@ public class BasicProfileActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Log.d(TAG, "apt No. was clicked");
-                callPlaceAutocompleteActivityIntent();
+
             }
         });
 
@@ -102,7 +102,7 @@ public class BasicProfileActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Log.d(TAG, aptNoField.getText().toString());
                 String aptNo = null;
-                if(aptNoField.getText() != null && aptNoField.getText().toString().equalsIgnoreCase("Apt No.")){
+                if(aptNoField.getText() != null){
                    aptNo = aptNoField.getText().toString();
                 }
                 new SendMyProfileAsync().execute(phoneField.getText().toString(),
@@ -180,7 +180,8 @@ public class BasicProfileActivity extends AppCompatActivity {
                                 + ", LAT: " + l_lat
                                 + ", LONG: " + l_long
                 );
-                APIGeneralResult result = GoogleAPIConnector.connect_UserAPI().updateMyProfile(l_address,l_aptno, l_city, l_lat, l_long, l_phone, socialID, socialType).execute();
+                //APIGeneralResult result = GoogleAPIConnector.connect_UserAPI().updateMyProfile(l_address,l_aptno, l_city, l_lat, l_long, l_phone, socialID, socialType).execute();
+                APIGeneralResult result = GoogleAPIConnector.connect_UserAPI().updateMyProfile(l_address, l_city, l_lat, l_long, l_phone, socialID, socialType).set("aptNo", l_aptno).execute();
                 if(result.getStatusCode().equalsIgnoreCase("OK")){
                         MyServerSettings.initializeUserAddress(getApplicationContext(), l_address, l_aptno, l_city, l_lat, l_long);
                     /*

@@ -253,7 +253,9 @@ public class BasicProfileFragment extends Fragment {
                                 + ", LAT: " + l_lat
                                 + ", LONG: " + l_long
                 );
-                APIGeneralResult result = GoogleAPIConnector.connect_UserAPI().updateMyProfile(l_address,l_aptno, l_city, l_lat, l_long, l_phone, socialID, socialType).execute();
+                //APIGeneralResult result = GoogleAPIConnector.connect_UserAPI().updateMyProfile(l_address,l_aptno, l_city, l_lat, l_long, l_phone, socialID, socialType).execute();
+                APIGeneralResult result = GoogleAPIConnector.connect_UserAPI().updateMyProfile(l_address, l_city, l_lat, l_long, l_phone, socialID, socialType).set("aptNo", l_aptno).execute();
+
                 if(result.getStatusCode().equalsIgnoreCase("OK")){
                     MyServerSettings.initializeUserAddress(getContext(), l_address, l_aptno, l_city, l_lat, l_long);
                     /*

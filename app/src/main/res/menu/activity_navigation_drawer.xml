@@ -17,9 +17,9 @@
         <item
             android:id="@+id/nav_myinfo"
             android:title="My Info" />
-       <!-- <item
+        <item
             android:id="@+id/nav_openlogfolder"
-            android:title="Email Log File" />-->
+            android:title="Email Log File" />
     </group>
 
     <!--<item android:title="Communicate">

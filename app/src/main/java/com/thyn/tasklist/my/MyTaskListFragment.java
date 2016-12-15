@@ -227,7 +227,7 @@ public class MyTaskListFragment extends ListFragment{
 
           // Set up the text view values
           TextView descTextView = (TextView)view.findViewById(R.id.task_list_item_titleTextView);
-          descTextView.setText(task.getTaskDescription());
+          descTextView.setText(task.getTaskTitle());
 
           TextView dateTextView = (TextView)view.findViewById(R.id.task_list_item_createDateTextView);
           if(task.getCreateDate()!=null) dateTextView.setText(task.getDateReadableFormat());

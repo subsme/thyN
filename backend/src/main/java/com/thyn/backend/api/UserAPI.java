@@ -8,6 +8,7 @@ import com.google.api.server.spi.config.ApiMethod.HttpMethod;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 
+import com.google.api.server.spi.config.Nullable;
 import com.google.appengine.api.datastore.QueryResultIterator;
 import com.google.appengine.repackaged.com.google.api.services.datastore.client.Datastore;
 
@@ -320,7 +321,7 @@ public class UserAPI {
     @ApiMethod(name = "updateMyProfile", httpMethod = HttpMethod.POST, path="updateMyProfile")
     public APIGeneralResult updateMyProfile(@Named("phone") String phone,
                                             @Named("address") String address,
-                                            @Named("aptNo") String aptNo,
+                                            @Named("aptNo") @Nullable String aptNo,
                                             @Named("lat") String latitude,
                                             @Named("long") String longitude,
                                             @Named("city") String city,
@@ -503,7 +504,9 @@ public class UserAPI {
         Logger.logInfo("token value is: " + token);
         Logger.logInfo("profileId value is: " + profileID);
 
-        Device device = DatastoreHelpers.tryLoadEntityFromDatastore(Device.class, "registration_token ==", token);
+        /* Subu 12/12 Don't know what i am doing here. I am commenting this for now. because i never go into the if block
+        * because registration_token sent from the client is always different. So the device is always null.*/
+        /*Device device = DatastoreHelpers.tryLoadEntityFromDatastore(Device.class, "registration_token ==", token);
         if(device != null) {
             Device device1 = DatastoreHelpers.tryLoadEntityFromDatastore(Device.class, "profile_key ==", profileID);
             if(device1 != null) return new APIGeneralResult("OK", "Not adding device. This device already added previously");
@@ -511,9 +514,18 @@ public class UserAPI {
                 device.setProfile_key(profileID);
                 DatastoreHelpers.trySaveEntityOnDatastore(device);
             }
-        }
+        }*/
 
-        //Profile prof = DatastoreHelpers.tryLoadEntityFromDatastore(Profile.class, sessionUser.getProfileId());
+        /* Subu 12/12 Added this. I don't want to send a GcmSender.createDeviceGroup api call if i already have a device associated
+         * with this person. I get it that i need to implement something for multiple devices for an individual.
+          * need to think about that logic.*/
+        Device device = DatastoreHelpers.tryLoadEntityFromDatastore(Device.class, "profile_key ==", profileID);
+        if(device != null) {
+            return new APIGeneralResult("OK", "Not adding device. This device already added previously");
+        }
+        /*
+        Subu - go to the next step only if device is null.
+         */
         /* Retrieve the profile */
         Profile prof = DatastoreHelpers.tryLoadEntityFromDatastore(Profile.class,profileID);
         device = new Device(prof.getFirstName(), token, prof.getId());

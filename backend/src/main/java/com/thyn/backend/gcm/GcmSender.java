@@ -193,6 +193,7 @@ public class GcmSender {
             conn.setRequestMethod("POST");
             conn.setDoOutput(true);
 
+            System.out.println("The payload is: " +  jGcmData.toString());
             // Send GCM message content.
             OutputStream outputStream = conn.getOutputStream();
             outputStream.write(jGcmData.toString().getBytes());
@@ -200,9 +201,13 @@ public class GcmSender {
             // Read GCM response.
             InputStream inputStream = conn.getInputStream();
             resp = IOUtils.toString(inputStream);
-            System.out.println("the response from GSM server is: " + resp);
+            System.out.println("the response from GCM server is: " + resp);
             System.out.println("Check your device/emulator for notification or logcat for " +
                     "confirmation of the receipt of the GCM message.");
+            if(resp == null){
+                System.out.println("Got a Null Response from the server. Returning");
+                return null;
+            }
             JSONObject jResp = null;
             try {
                 jResp = new JSONObject(resp);

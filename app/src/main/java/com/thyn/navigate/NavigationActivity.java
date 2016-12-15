@@ -49,7 +49,6 @@ public class NavigationActivity extends AppCompatActivity
         setContentView(R.layout.activity_navigation);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
         Context c = getApplicationContext();
 
         fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -60,18 +59,15 @@ public class NavigationActivity extends AppCompatActivity
                 createNewTask();
             }
         });
-
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
-
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         navigationView.setCheckedItem(R.id.nav_dashboard);
         navigationView.getMenu().performIdentifierAction(R.id.nav_dashboard, 0);
-
         View hView = navigationView.getHeaderView(0);
 
         TextView nav_user = (TextView) hView.findViewById(R.id.nav_name);
@@ -90,7 +86,7 @@ public class NavigationActivity extends AppCompatActivity
                 .load(MyServerSettings.getUserProfileImageURL(c))
                 .into(nav_profile_image);
 
-
+        Log.d(TAG, "step 5");
         TextView nghbr_helped = (TextView) hView.findViewById(R.id.ngbrs_helped);
         nghbr_helped.setText(MyServerSettings.getNumNeighbrsIHelped(c)+"");
 
@@ -182,23 +178,23 @@ public class NavigationActivity extends AppCompatActivity
                     basicProfileFragment,
                     basicProfileFragment.getTag()).commit();
         }
-       /* else if(id == R.id.nav_openlogfolder && MyServerSettings.LOCAL_DEBUG){
+        else if(id == R.id.nav_openlogfolder && MyServerSettings.LOCAL_DEBUG){
 
             Intent emailIntent = new Intent(Intent.ACTION_SEND);
             emailIntent.setType("text/plain");
             emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[] {"subusundaram@gmail.com"});
             emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Log file - thyNeighbr");
             emailIntent.putExtra(Intent.EXTRA_TEXT, "body text");
-            Log.d(TAG, "Opening " + MyServerSettings.getLocalFileLocation(getApplicationContext()));
-            File file = new File(MyServerSettings.getLocalFileLocation(getApplicationContext()));
+            Log.d(TAG, "Opening " + MyServerSettings.getLocalFileLocation(getBaseContext()));
+            File file = new File(MyServerSettings.getLocalFileLocation(getBaseContext()));
             if (!file.exists() || !file.canRead()) {
-                Log.d(TAG, "cant open " + MyServerSettings.getLocalFileLocation(getApplicationContext()));;
+                Log.d(TAG, "cant open " + MyServerSettings.getLocalFileLocation(getBaseContext()));;
             }
             Uri uri = Uri.fromFile(file);
             emailIntent.putExtra(Intent.EXTRA_STREAM, uri);
             startActivity(Intent.createChooser(emailIntent, "Pick an Email provider"));
 
-        }*/
+        }
         /*else if(id == R.id.nav_opendatabase && MyServerSettings.LOCAL_DEBUG){
             Intent dbmanager = new Intent(getApplicationContext(), AndroidDatabaseManager.class);
             startActivity(dbmanager);

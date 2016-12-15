@@ -34,6 +34,7 @@ import com.thyn.connection.GoogleAPIConnector;
 import com.thyn.R;
 import com.thyn.graphics.MLRoundedImageView;
 import com.thyn.tab.DashboardActivity;
+import com.thyn.tab.DashboardFragment;
 import com.thyn.tab.WelcomePageActivity;
 import com.thyn.task.ThumbsUpActivity;
 import com.thyn.task.ThumbsUpFragment;
@@ -227,14 +228,24 @@ public class TaskIWillHelpPagerViewOnlyFragment extends Fragment {
             i.putExtra("TAB","2");
             startActivity(i);*/
             if(CancelOrCompleteTaskDialogFragment.DONE == CANCEL_OR_COMPLETE) {
-                Intent i = new Intent(getActivity(), ThumbsUpActivity.class);
+                /*Intent i = new Intent(getActivity(), ThumbsUpActivity.class);
                 i.putExtra(ThumbsUpFragment.EXTRA_THUMBS_TITLE, "THANK YOU!");
                 i.putExtra(ThumbsUpFragment.EXTRA_THUMBS_DESCRIPTION, "Awesome! Thanks for helping your neighbr " + mTask.getUserProfileName() + ".");
-                startActivity(i);
+                startActivity(i);*/
+                ThumbsUpFragment thumbsUpFragment = ThumbsUpFragment.newInstance("THANK YOU!", "Awesome! Thanks for helping your neighbr " + mTask.getUserProfileName() + ".");
+                FragmentManager manager = getActivity().getSupportFragmentManager();
+                manager.beginTransaction().replace(R.id.navigation_fragment_container,
+                        thumbsUpFragment,
+                        thumbsUpFragment.getTag()).commit();
             }
             else {
-                Intent i = new Intent(getActivity(), DashboardActivity.class);
-                startActivity(i);
+                /*Intent i = new Intent(getActivity(), DashboardActivity.class);
+                startActivity(i);*/
+                DashboardFragment dashFragment = new DashboardFragment();
+                FragmentManager manager = getActivity().getSupportFragmentManager();
+                manager.beginTransaction().replace(R.id.navigation_fragment_container,
+                        dashFragment,
+                        dashFragment.getTag()).commit();
             }
         } else Log.d(LOG_TAG, "RESult is CANCEL");
     }
@@ -258,7 +269,7 @@ public class TaskIWillHelpPagerViewOnlyFragment extends Fragment {
         @Override
         protected String doInBackground(Task... params) {
             try {
-                Log.d(LOG_TAG, "Calling updateTaskHelper with TaskId: "+ mTask.getId());
+                Log.d(LOG_TAG, "Calling markComplete/cancleTaskHelper with TaskId: "+ mTask.getId());
                 Long userprofileid = MyServerSettings.getUserProfileId(getActivity());
                 Log.d(LOG_TAG, "Sending user profile id:" + userprofileid);
                 if(CANCEL_OR_COMPLETE==CancelOrCompleteTaskDialogFragment.CANCEL) {

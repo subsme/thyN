@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:id="@+id/scrollview"
+    android:layout_height="fill_parent"
+    android:layout_width="fill_parent"
+    android:isScrollContainer="true"
+    android:fillViewport="true">
     <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
@@ -49,21 +57,16 @@
                 android:layout_height="wrap_content"
                 android:hint="Apt No."
                 android:layout_marginTop="40dp" />
-        </LinearLayout>
-        <RelativeLayout
-            android:id="@+id/InnerRelativeLayout"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true" >
-
             <Button android:id="@+id/done"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="40dp"
                 android:layout_marginBottom="16dp"
                 android:text="Save"
                 style="?android:attr/borderlessButtonStyle"
                 />
+        </LinearLayout>
 
-        </RelativeLayout>
     </RelativeLayout>
+    </ScrollView>
 

@@ -208,10 +208,15 @@ public class TaskPagerEditOnlyFragment extends Fragment {
             Log.d(LOG_TAG, "TAsk id is: " + mTask.getId());
             new DeleteAsyncTask().execute(mTask);
 
-            Intent i = new Intent(getActivity(), ThumbsUpActivity.class);
+           /* Intent i = new Intent(getActivity(), ThumbsUpActivity.class);
             i.putExtra(ThumbsUpFragment.EXTRA_THUMBS_TITLE, "THANK YOU!");
             i.putExtra(ThumbsUpFragment.EXTRA_THUMBS_DESCRIPTION, "Your task is deleted now. Please create another one if you need some other help.");
-            startActivity(i);
+            startActivity(i);*/
+            ThumbsUpFragment thumbsUpFragment = ThumbsUpFragment.newInstance("THANK YOU!", "Your task is deleted now. Please create another one if you need some other help.");
+            FragmentManager manager = getActivity().getSupportFragmentManager();
+            manager.beginTransaction().replace(R.id.navigation_fragment_container,
+                    thumbsUpFragment,
+                    thumbsUpFragment.getTag()).commit();
         } else Log.d(LOG_TAG, "RESult is CANCEL");
     }
 

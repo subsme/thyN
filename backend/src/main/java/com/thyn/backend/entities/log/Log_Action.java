@@ -9,7 +9,7 @@ import com.thyn.backend.entities.EntityObject;
 import java.util.Date;
 
 /**
- * Created by shalu on 10/11/16.
+ * Created by Subu Sundaram on 10/11/16.
  */
 @Entity
 public class Log_Action extends EntityObject {

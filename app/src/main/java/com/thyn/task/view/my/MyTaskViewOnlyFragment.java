@@ -141,7 +141,7 @@ public class MyTaskViewOnlyFragment extends Fragment {
         @Override
         protected String doInBackground(Task... params) {
             try {
-                Log.d(LOG_TAG, "Calling updateTaskHelper with TaskId: " + mTask.getId());
+                Log.d(LOG_TAG, "Calling markComplete with TaskId: " + mTask.getId());
                 Long userprofileid = MyServerSettings.getUserProfileId(getActivity());
                 GoogleAPIConnector.connect_TaskAPI().markComplete(mTask.getId(),userprofileid).execute();
             }
