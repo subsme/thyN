@@ -24,6 +24,7 @@ import java.text.SimpleDateFormat;
 
 
 import com.squareup.picasso.Picasso;
+import com.thyn.broadcast.GcmRegistrationIntentService;
 import com.thyn.collection.Task;
 import com.thyn.collection.MyTaskLab;
 import com.thyn.common.MyServerSettings;
@@ -36,12 +37,14 @@ import com.thyn.navigate.NavigationActivity;
 import com.thyn.tab.WelcomePageActivity;
 import com.thyn.task.ThumbsUpActivity;
 import com.thyn.task.ThumbsUpFragment;
+import com.thyn.task.view.chat.ChatRoomFragment;
 
 import android.widget.LinearLayout;
 /**
  * A placeholder fragment containing a simple view.
  */
 public class TaskPagerViewOnlyFragment extends Fragment {
+
     private static final String LOG_TAG = "TaskPagerViewOnlyFragment";
     public static final String EXTRA_TASK_ID =
             "com.android.android.thyn.form.view.task_id";
@@ -61,6 +64,7 @@ public class TaskPagerViewOnlyFragment extends Fragment {
     private TextView mTaskWhenEndDateField;
 
     private Button mButton;
+
     private Button mTaskBackToDashboard;
     private MLRoundedImageView mTask_user_profile_image;
 
@@ -182,18 +186,6 @@ public class TaskPagerViewOnlyFragment extends Fragment {
                 }
             });
 
-           /* Button btn = new Button(getActivity());
-            btn.setText("Accept");
-            lm.addView(btn, params);
-            btn.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    Log.d(LOG_TAG, "Accept button clicked. Task descr: " + mTask.getTaskDescription());
-                    FragmentManager fm = getActivity().getSupportFragmentManager();
-                    AcceptTaskDialogFragment dialog = AcceptTaskDialogFragment.newInstance(mTask.getTaskDescription());
-                    dialog.setTargetFragment(TaskPagerViewOnlyFragment.this, 0);
-                    dialog.show(fm, DIALOG_ACCEPT_TASK);
-                }
-            });*/
             mTaskBackToDashboard.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -218,16 +210,17 @@ public class TaskPagerViewOnlyFragment extends Fragment {
             Log.d(LOG_TAG, "TAsk id is: " + mTask.getId());
             new SendToServerAsyncTask().execute(mTask);
 
-            //Intent i = new Intent(getActivity(), ThumbsUpActivity.class);
-            //i.putExtra(ThumbsUpFragment.EXTRA_THUMBS_TITLE, "THANK YOU!");
-            //i.putExtra(ThumbsUpFragment.EXTRA_THUMBS_DESCRIPTION, "Awesome! Thanks for helping your neighbr " + mTask.getUserProfileName() + ".");
-            //startActivity(i);
             ThumbsUpFragment thumbsUpFragment = ThumbsUpFragment.newInstance("THANK YOU!", "Awesome! Thanks for helping your neighbr " + mTask.getUserProfileName() + ".");
             FragmentManager manager = getActivity().getSupportFragmentManager();
             manager.beginTransaction().replace(R.id.navigation_fragment_container,
                     thumbsUpFragment,
                     thumbsUpFragment.getTag()).commit();
 
+            Log.d(LOG_TAG, "Subscribing the user to the Topic: topic_thyN_" + mTask.getId());
+            Intent intent = new Intent(getActivity(), GcmRegistrationIntentService.class);
+            intent.putExtra(GcmRegistrationIntentService.KEY, GcmRegistrationIntentService.SUBSCRIBE);
+            intent.putExtra(GcmRegistrationIntentService.TOPIC, mTask.getId());
+            getActivity().startService(intent);
 
         } else Log.d(LOG_TAG, "RESult is CANCEL");
     }

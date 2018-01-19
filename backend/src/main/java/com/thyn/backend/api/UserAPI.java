@@ -9,6 +9,7 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 
 import com.google.api.server.spi.config.Nullable;
+import com.google.api.server.spi.response.CollectionResponse;
 import com.google.appengine.api.datastore.QueryResultIterator;
 import com.google.appengine.repackaged.com.google.api.services.datastore.client.Datastore;
 
@@ -16,6 +17,7 @@ import com.google.appengine.repackaged.com.google.api.services.datastore.client.
 import com.googlecode.objectify.cmd.Query;
 import com.thyn.backend.entities.MyTask;
 import com.thyn.backend.entities.log.Log_Action;
+import com.thyn.backend.entities.users.communication.Message;
 import com.thyn.backend.gcm.GcmSender;
 import com.thyn.backend.utilities.security.ExternalAuthentication;
 import com.thyn.backend.utilities.security.ExternalLogonPackage;
@@ -148,6 +150,9 @@ public class UserAPI {
             user = ExternalAuthentication.extractUserFromDataStore(1, googUserToken);
             if(user == null) // Go talk to google api only if we dont have the user in our database;
                 user = ExternalAuthentication.getInfoFromGoogleForLogin(googUserToken);
+            if(user == null) // our database doesnt have this person
+                // and fb api is not able to send credentials for this user. This means the our database has lost information about this user. Someone deleted our database.
+                return new APIUserInformation(new APIGeneralResult("Database corrupt", "Database corrupt"));
 
         }catch(Exception e)
         {
@@ -172,7 +177,7 @@ public class UserAPI {
 
         String fbUserToken = fbLogonPackage.getAccessToken();
         if (!InputValidation.validateTextBoxInput(fbUserToken))
-            throw new APIErrorException(400, "UALG01 - Invalid input for Google Login.");
+            throw new APIErrorException(400, "UALG01 - Invalid input for Facebook Login.");
 
         User user = null;
         Profile prof = null;
@@ -181,7 +186,9 @@ public class UserAPI {
             user = ExternalAuthentication.extractUserFromDataStore(0, fbUserToken);
             if(user == null) // Go talk to fb api only if we dont have the user in our database;
                 user = ExternalAuthentication.getInfoFromFacebookForLogin(fbUserToken);
-
+            if(user == null) // our database doesnt have this person
+            // and fb api is not able to send credentials for this user. This means the our database has lost information about this user. Someone deleted our database.
+                return new APIUserInformation(new APIGeneralResult("Database corrupt", "Database corrupt"));
         }catch(Exception e)
         {
             Logger.logError("UALM03 - Exception while logging user in through thyN logon. Email: " + fbLogonPackage.getUserId() + ". ", e);
@@ -382,8 +389,21 @@ public class UserAPI {
         return new APIGeneralResult("OK", "New Task Created Successfully");
     }
 
+    @ApiMethod(name = "mynotifications", httpMethod = HttpMethod.GET, path="mynotifications")
+    public CollectionResponse<Message> listNotifications( @Named("profileID") Long profileID, HttpServletRequest req) throws APIErrorException {
+        Query<Message> query = null;
+        logger.info("Listing Notifications for user id: " + profileID);
+        query = ofy().load().type(Message.class).filter("userKey", profileID).filter("notification", true).order("-messageTime");
+        List<Message> messages = new ArrayList<Message>();
+        QueryResultIterator<Message> iterator = query.iterator();
+        while (iterator.hasNext()) {
+            Message message = iterator.next();
+            messages.add(message);
+        }
+        return CollectionResponse.<Message>builder().setItems(messages).build();
+    }
 
-    private APIUserInformation getUserStatisticsForHomePage(User user,Integer range){
+        private APIUserInformation getUserStatisticsForHomePage(User user,Integer range){
         Long profileID = user.getProfileId();
         String name = user.getName();
         String city = user.getCity();
@@ -421,8 +441,8 @@ public class UserAPI {
         APIGeneralResult rslt = new APIGeneralResult("OK", "Success");
 
         logger.info("profileID: " + profileID + ", count: " + u.get(0)
-                + " ,totPoints: " + u.get(1)
-                );
+                        + " ,totPoints: " + u.get(1)
+        );
         boolean b = false;
         if(city != null && phone != null) b = true;
         APIUserInformation stats = new APIUserInformation(rslt,
@@ -441,7 +461,9 @@ public class UserAPI {
 
         return stats;
     }
-    private Vector<Integer> findDistinctNeigbrsHelped(Long profileKey){
+
+
+        private Vector<Integer> findDistinctNeigbrsHelped(Long profileKey){
         Query<Log_Action> query = null;
 
         query = ofy().load().type(Log_Action.class)
@@ -520,23 +542,28 @@ public class UserAPI {
          * with this person. I get it that i need to implement something for multiple devices for an individual.
           * need to think about that logic.*/
         Device device = DatastoreHelpers.tryLoadEntityFromDatastore(Device.class, "profile_key ==", profileID);
-        if(device != null) {
-            return new APIGeneralResult("OK", "Not adding device. This device already added previously");
-        }
+        try {
+            if (device != null) {
+                return new APIGeneralResult("OK", "Not adding device. This device already added previously");
+            }
         /*
         Subu - go to the next step only if device is null.
          */
         /* Retrieve the profile */
-        Profile prof = DatastoreHelpers.tryLoadEntityFromDatastore(Profile.class,profileID);
-        device = new Device(prof.getFirstName(), token, prof.getId());
+            Profile prof = DatastoreHelpers.tryLoadEntityFromDatastore(Profile.class, profileID);
+            device = new Device(prof.getFirstName(), token, prof.getId());
 
-       // if device creation was successful. Send the device information to GCM
-        if(device.getNotification_key() == null) {
-            String notification_key = GcmSender.createDeviceGroup(device.getNotification_key_name(), token);
-            if(notification_key != null){
-                device.setNotification_key(notification_key);
-                Device.createNewDeviceOnDatastore(device);
+            // if device creation was successful. Send the device information to GCM
+            if (device.getNotification_key() == null) {
+                String notification_key = GcmSender.createDeviceGroup(device.getNotification_key_name(), token);
+                if (notification_key != null) {
+                    device.setNotification_key(notification_key);
+                    Device.createNewDeviceOnDatastore(device);
+                }
             }
+        }
+        catch(Exception e){
+            return new APIGeneralResult(0, "Failed", "Registration Token failed to create");
         }
         return new APIGeneralResult("OK", "Device sent to GSM API and saved in our database");
     }

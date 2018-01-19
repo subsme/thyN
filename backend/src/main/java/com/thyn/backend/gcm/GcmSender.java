@@ -46,8 +46,9 @@ public class GcmSender {
     public static final String SENDER_ID = "953474522001";
 
     public static void main(String[] args) {
-        createDeviceGroup("subu17-5660980839186432","dV5ce0PriOc:APA91bG-fadA4vVq_IQivSJLIEiMx2cm9KIcSjJ7eoTt-vBctDfbRNpcLoJsxMVxTDTd6C8eczS-RSkDPGc-PXexjcHN6f9X2fVv_JRqRJmLDwCFNEmeponQ2LQFVlNozCnxZfbUHEOe");
-        //removeDeviceFromDeviceGroup("subu-5629499534213120","APA91bG_KOOBzTFv2JRcSwsaQXgFRgNHx6nSiQqLxY-0zlLZgPVpAKKdESFHkn1WlhGkAiJhJw6EbQasjT3L9klke5trE0vdPHWYRJV4KfeAOmbLCydYXlhOBqUSBlFZnZYus_n7eOMb","f38JKKETDJQ:APA91bE_afJyHvrRET_bZM-HzjQvsdCJBIW7tW-2DJC9pduBOpxp6foOb46BV8TBktX-M4XnmwwlUsqNFtI5kYJXVRMzlSCJz1QtnxCxCH1GYaC70ksLFMmiyA_qFLsbgUbDCz3eSeUL");
+        //listAllDevicesFromDeviceGroups();
+        //createDeviceGroup("subu17-5660980839186432","dV5ce0PriOc:APA91bG-fadA4vVq_IQivSJLIEiMx2cm9KIcSjJ7eoTt-vBctDfbRNpcLoJsxMVxTDTd6C8eczS-RSkDPGc-PXexjcHN6f9X2fVv_JRqRJmLDwCFNEmeponQ2LQFVlNozCnxZfbUHEOe");
+        //removeDeviceFromDeviceGroup("Subu-5763263606292480","APA91bEyiB0BFLFu9P_XEkKkOoxUc_lJu3L81HQnIyQwFy3a_H5Y7WwhfFo-Z7wOknifMs3M58G9k1AOmYFTDQwgZsIZXeIoAR_bPtNnr5f0qdfC86KMCUdejXBC1MUZRe8MgmwkQa7K","eaSKx_2UPZc:APA91bFwRBzgw8KcUdTR0rB2JRNWhGeywx8mTRLACf1L5pZdUKF16xhPyWWyHrzYzwoLMURsU2ebp8V2fc-9gKw7JZnz-Zann_rFHYH4Ops2Rbz_dqoLJSvB6pgv5k-fBf76juBXVH8l");
         //removeDeviceFromDeviceGroup("shalu-6192449487634432","APA91bEdwNUehYOSj4cRqJyK1eY42nPtRMo8SKIk1X0_n0ku3lz8XG85vSbLCLAVSFwvBJUdrN06d8LOu51LKLvLwkg-QSpjjxDKpXLabyzO0R4nKF5ol7IpZe0cPXp2n609Z6P8MbRC","f38JKKETDJQ:APA91bE_afJyHvrRET_bZM-HzjQvsdCJBIW7tW-2DJC9pduBOpxp6foOb46BV8TBktX-M4XnmwwlUsqNFtI5kYJXVRMzlSCJz1QtnxCxCH1GYaC70ksLFMmiyA_qFLsbgUbDCz3eSeUL");
         //removeDeviceFromDeviceGroup("subu13-5629499534213120", "APA91bFq-gcDZlyk-FGnZrjR2ASjJXO_jvT5KzxiJWO8Fu1sg4MCMQuTlVvtCYf5GrMTtS-lQMVwBtJCGBTYaCjO5pGriIH6Pv3wCUHySl22KKKousFMg2vlA_rNM7h97B4r4h8gNJJi", "dV5ce0PriOc:APA91bG-fadA4vVq_IQivSJLIEiMx2cm9KIcSjJ7eoTt-vBctDfbRNpcLoJsxMVxTDTd6C8eczS-RSkDPGc-PXexjcHN6f9X2fVv_JRqRJmLDwCFNEmeponQ2LQFVlNozCnxZfbUHEOe");
         //removeDeviceFromDeviceGroup("subu8-5629499534213120", "APA91bFU_wBBwiYTvpgRkTZEB2uBZWBhOFwfaRsn3IxQXL54Gy3rWcvmercvY74uG07mhlPyGD4Qk4pVE0TpJFYg74X_yJ58yNWOidLGVRFw5yXTksDQhwilt2OW5apPjLkAMEeBN3Zt", "f38JKKETDJQ:APA91bE_afJyHvrRET_bZM-HzjQvsdCJBIW7tW-2DJC9pduBOpxp6foOb46BV8TBktX-M4XnmwwlUsqNFtI5kYJXVRMzlSCJz1QtnxCxCH1GYaC70ksLFMmiyA_qFLsbgUbDCz3eSeUL");
@@ -56,7 +57,9 @@ public class GcmSender {
        // sendMessageToDeviceGroup(
        //         "APA91bGWxap-fwoH8s1lWFyvka7WBu-weQ8CIWuqCxfSIpasPiCxHixD70oVDOMXAkWBH-5PZJFdRe1zrAzXNzMVGZ034Tzva8eSYIIA3rVJ90NrnPDi7l4MjCKTLBWd1NziWU6EF90V","To infinity and beyond.");
         //removeDeviceFromDeviceGroup(args[0],args[1],args[2]);
-        /*if (args.length < 1 || args.length > 2 || args[0] == null) {
+        //sendMessageToDeviceGroup("APA91bEyiB0BFLFu9P_XEkKkOoxUc_lJu3L81HQnIyQwFy3a_H5Y7WwhfFo-Z7wOknifMs3M58G9k1AOmYFTDQwgZsIZXeIoAR_bPtNnr5f0qdfC86KMCUdejXBC1MUZRe8MgmwkQa7K", "infinity and beyond");
+      sendMessageToTopic("Jingcha", "hello there");
+       /* if (args.length < 1 || args.length > 2 || args[0] == null) {
             System.err.println("usage: ./gradlew run -Pmsg=\"MESSAGE\" [-Pto=\"DEVICE_TOKEN\"]");
             System.err.println("");
             System.err.println("Specify a test message to broadcast via GCM. If a device's GCM registration token is\n" +
@@ -111,6 +114,7 @@ public class GcmSender {
             e.printStackTrace();
         }
         */
+
     }
 
     public static boolean deleteAllDevicesFromDeviceGroups(){
@@ -127,7 +131,17 @@ public class GcmSender {
         }
         return true;
     }
+    public static boolean listAllDevicesFromDeviceGroups(){
+        List l = DatastoreHelpers.tryGetAllEntitiesOfAClass(Device.class);
+        if(l == null) return false;
+        Iterator<Device> i = l.iterator();
+        while (i.hasNext()) {
+            Device d = i.next();
+            System.out.println("Notification key" + d.getNotification_key() + ", Notification key name: " + d.getNotification_key_name() + ", Registration token: " + d.getRegistration_token());
 
+        }
+        return true;
+    }
     public static void sendMessageToTopic(String topic, String message){
         try {
             // Prepare JSON containing the GCM message content. What to send and where to send.
@@ -135,8 +149,9 @@ public class GcmSender {
             JSONObject jData = new JSONObject();
             jData.put("message", message);
             // Where to send GCM message.
+            String topicName = "/topics/topic_thyN_" + topic.trim();
             if (topic != null) {
-                jGcmData.put("to", topic.trim());
+                jGcmData.put("to", topicName);
             } else {
                 jGcmData.put("to", "/topics/global");
             }
@@ -159,8 +174,11 @@ public class GcmSender {
             InputStream inputStream = conn.getInputStream();
             String resp = IOUtils.toString(inputStream);
             System.out.println(resp);
+            System.out.println("Sending message: '" + message + "' to " + topicName);
             System.out.println("Check your device/emulator for notification or logcat for " +
                     "confirmation of the receipt of the GCM message.");
+        } catch (NullPointerException e){
+            e.printStackTrace();
         } catch (IOException e) {
             System.out.println("Unable to send GCM message.");
             System.out.println("Please ensure that API_KEY has been replaced by the server " +
@@ -168,13 +186,16 @@ public class GcmSender {
             e.printStackTrace();
         }
     }
-    public static String sendMessageToDeviceGroup(String to, String message){
+    public static String sendMessageToDeviceGroup(String to, String message, String sender, Long profileID, Long taskID){
         String resp = null;
         try {
             // Prepare JSON containing the GCM message content. What to send and where to send.
             JSONObject jGcmData = new JSONObject();
             JSONObject jData = new JSONObject();
             jData.put("message", message);
+            jData.put("sender", sender);
+            jData.put("profileID", profileID);
+            jData.put("taskID", taskID);
             // Where to send GCM message.
             if (to != null && message != null) {
                 jGcmData.put("to", to.trim());
@@ -201,12 +222,15 @@ public class GcmSender {
             // Read GCM response.
             InputStream inputStream = conn.getInputStream();
             resp = IOUtils.toString(inputStream);
-            System.out.println("the response from GCM server is: " + resp);
-            System.out.println("Check your device/emulator for notification or logcat for " +
-                    "confirmation of the receipt of the GCM message.");
-            if(resp == null){
-                System.out.println("Got a Null Response from the server. Returning");
+
+            if(resp == null || resp.trim().equals("")){
+                System.out.println("Got a Null Response from the server. Unable to send GCM message.");
                 return null;
+            }
+            else{
+                System.out.println("the response from GCM server is: " + resp);
+                System.out.println("Check your device/emulator for notification or logcat for " +
+                        "confirmation of the receipt of the GCM message.");
             }
             JSONObject jResp = null;
             try {

@@ -1,20 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="wrap_content"
-              android:layout_height="wrap_content"
-              android:orientation="horizontal">
-
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
     <TextView
-            android:id="@+id/id"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="@dimen/text_margin"
-            android:textAppearance="?attr/textAppearanceListItem" />
-
+        android:id="@+id/id"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="4dp"
+        android:textSize="10dp"
+        android:text="Dec 18 2:00 AM"
+        android:paddingTop="4dp"
+        android:paddingBottom="10dp"
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="10dp"
+        android:layout_toLeftOf="@+id/content"
+        android:layout_toStartOf="@+id/content"
+        android:textColor="@color/textShaded2" />
+    <com.thyn.graphics.MLRoundedImageView
+        android:id="@+id/recipient_image"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:paddingRight="4dp"
+        android:layout_marginBottom="10dp"
+        android:src="@drawable/login_google"
+        android:layout_below="@+id/id"
+        android:layout_marginLeft="10dp"
+        />
     <TextView
-            android:id="@+id/content"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="@dimen/text_margin"
-            android:textAppearance="?attr/textAppearanceListItem" />
-</LinearLayout>
+        android:id="@+id/content"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Looking to borrow shears"
+        android:textSize="14dp"
+        android:layout_marginLeft="20dp"
+        android:textIsSelectable="true"
+        android:layout_toRightOf="@id/recipient_image"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:textColor="#4d4d4d" />
+</RelativeLayout>

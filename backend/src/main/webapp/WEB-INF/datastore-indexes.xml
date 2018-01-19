@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <datastore-indexes
-    autoGenerate="true">
+    autoGenerate="false">
     <datastore-index kind="MyTask" ancestor="false" source="manual">
         <property name="isSolved" direction="asc"/>
         <property name="mCreateDate" direction="desc"/>
@@ -9,5 +9,10 @@
         <property name="action" direction="asc"/>
         <property name="userKey" direction="asc"/>
         <property name="actionTime" direction="desc"/>
+    </datastore-index>
+    <datastore-index kind="Message" ancestor="false" source="manual">
+        <property name="notification" direction="asc"/>
+        <property name="userKey" direction="asc"/>
+        <property name="messageTime" direction="desc"/>
     </datastore-index>
 </datastore-indexes>

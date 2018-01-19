@@ -6,15 +6,11 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.ListFragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CursorAdapter;
@@ -40,17 +36,9 @@ import com.thyn.common.MyServerSettings;
 import com.thyn.connection.GoogleAPIConnector;
 import com.thyn.db.thynTaskDBHelper;
 import com.thyn.graphics.MLRoundedImageView;
-import com.thyn.tab.DashboardFragment;
-import com.thyn.task.TaskActivity;
-import com.thyn.task.view.TaskPagerViewOnlyActivity;
 import com.thyn.task.view.TaskPagerViewOnlyFragment;
-import com.thyn.task.view.edit.TaskPagerEditOnlyActivity;
 import com.thyn.task.view.edit.TaskPagerEditOnlyFragment;
-import com.thyn.task.view.my.MyTaskViewOnlyFragment;
-import com.thyn.task.TaskFragment;
-import com.thyn.task.view.my.MyTaskPagerViewOnlyActivity;
 import com.thyn.R;
-import com.thyn.tab.DashboardActivity;
 
 /**
  * Created by shalu on 2/22/16.
@@ -155,7 +143,12 @@ public class MyTaskListFragment extends ListFragment{
          */
         pmanager.purgeTasks();
         Log.d(TAG, "In refreshContent()");
-        new RetrieveFromServerAsyncTask(getActivity()).execute();
+        new RetrieveFromServerAsyncTask(getContext()).execute();
+    }
+    public void refreshContent(MyPersonalTaskLab pmanagerLocal, Context c){
+        pmanagerLocal.purgeTasks();
+        Log.d(TAG, "Calling refreshContent(MyPersonalTaskLab");
+        new RetrieveFromServerAsyncTask(c).execute();
     }
 
     public void onPause() {
@@ -313,7 +306,7 @@ public class MyTaskListFragment extends ListFragment{
             List l = null;
 
             try {
-                userprofileid = MyServerSettings.getUserProfileId(getActivity());
+                userprofileid = MyServerSettings.getUserProfileId(getContext());
                 Log.d(TAG, "Sending user profile id:"+userprofileid);
                 Log.d(TAG, "Sending distance filter: " +  MyServerSettings.getFilterRadius(c));
                 //l = GoogleAPIConnector.connect_TaskAPI().listTasks(false, userprofileid, false).execute().getItems();

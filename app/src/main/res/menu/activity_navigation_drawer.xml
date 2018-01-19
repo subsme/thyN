@@ -4,7 +4,7 @@
     <group android:id="@+id/dashboard" android:checkableBehavior="single">
         <item
             android:id="@+id/nav_dashboard"
-            android:title="Dashboard" />
+            android:title="Home" />
         <item
             android:id="@+id/nav_requests"
             android:title="All Requests" />
@@ -19,6 +19,12 @@
             android:title="My Info" />
         <item
             android:id="@+id/nav_openlogfolder"
+            android:title="Email Log File" />
+        <item
+            android:id="@+id/nav_openlogfolder"
+            android:title="Email Log File" />
+        <item
+            android:id="@+id/nav_opendatabase"
             android:title="Email Log File" />
     </group>
 

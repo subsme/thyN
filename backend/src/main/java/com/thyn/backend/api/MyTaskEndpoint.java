@@ -130,7 +130,7 @@ public class MyTaskEndpoint {
             else query = ofy().load().type(MyTask.class).filter("isSolved", true);//.order("-mCreateDate");
             //.order("-mCreateDate");
         }
-    //Dec 08 Subu setting distance = equator miles.
+    //Dec 08,2016 Subu setting distance = equator miles.
         double distance = 24901; //20;
         // if(radius > 0) distance = radius; Subu Dec 08commenting for now for testing
         logger.info("The search radius is set to: " + distance);
@@ -159,9 +159,9 @@ public class MyTaskEndpoint {
                         + "\nTask service date is: " + task.getServiceDate()
                         + "\ncurrent date: " + currentDate
                         + "\ntask.getServiceDate().compareTo(currentDate): " + task.getServiceDate().compareTo(currentDate));
-                if (val <= distance &&
+                if (true/*val <= distance &&
                         ((task.getServiceDate().compareTo(currentDate)>0) ||
-                                (task.getServiceDate().compareTo(currentDate)==0))){ // If the current date is less or equal to task service date. Other dates just expire without being helped.
+                                (task.getServiceDate().compareTo(currentDate)==0))*/){ // If the current date is less or equal to task service date. Other dates just expire without being helped.
                     logger.info("Less than " + distance + ". Adding " + task.getTaskTitle());
                     task.setDistanceFromOrigin(val);
                     records.add(task);
@@ -231,7 +231,10 @@ public class MyTaskEndpoint {
                 +   ", Location: " + myTask.getBeginLocation()
                 +   ", From Date: " + myTask.getServiceDate()
                 +   ", To Date: " + myTask.getServiceToDate()
-                +   ", Time Range: " + myTask.getServiceTimeRange());
+                +   ", Time Range: " + myTask.getServiceTimeRange()
+                +   ", LAT: " + myTask.getLAT()
+                +   ", LONG: " + myTask.getLONG()
+                +   ", CITY: " + myTask.getCity());
 
         User user = null;
         if(socialType == 0) {//Facebook login
@@ -246,6 +249,8 @@ public class MyTaskEndpoint {
         myTask.setImageURL(user.getImageURL());
         myTask.setCreateDate(new Date());
         myTask.setUpdateDate(new Date());
+
+
 
         logger.info("Saving task information in database...");
         ofy().save().entity(myTask).now();
@@ -262,7 +267,7 @@ public class MyTaskEndpoint {
     public APIGeneralResult updateMyTask(MyTask myTask, @Named("socialType") int socialType, @Named("socialID") String socialID, HttpServletRequest req) throws ParseException, NullPointerException, APIErrorException{
         // TODO: Subu - This requires me to check if the social
         logger.info("Calling updateMyTask method");
-        logger.info("Client inserting a task. Calling insertMyTaskWithSocialID method");
+        logger.info("Client inserting a task. Calling updateMyTask method");
         logger.info("The social id is : " + socialID + ", The social type is: " + socialType);
         logger.info("----------------Task Information sent from client-----------------");
         logger.info("Title: " + myTask.getTaskTitle()
@@ -289,7 +294,7 @@ public class MyTaskEndpoint {
 
         if(!task.getUserProfileKey().equals(user.getProfileId())){
             logger.severe("Unknown user is trying to update a task not owned by him/her.");
-            return new APIGeneralResult("Fail", "Unknown user is trying to update a task not owned by him/her.");
+            return new APIGeneralResult(0, "Fail", "Unknown user is trying to update a task not owned by him/her.");
         }
         task.setTaskTitle(myTask.getTaskTitle());
         task.setTaskDescription(myTask.getTaskDescription());
@@ -305,9 +310,11 @@ public class MyTaskEndpoint {
             DatastoreHelpers.trySaveEntityOnDatastore(task);
         }
         catch(Exception e){
-            return new APIGeneralResult("Fail", "Task Update failed");
+            return new APIGeneralResult(0, "Fail", "Task Update failed");
         }
-        return new APIGeneralResult("OK", "Task Update was successful");
+        return new APIGeneralResult(1, "OK", "Task Update was successful");
+        /*use the enum created in APIGeneralResult.javain this reutrn. Use this function in TaskFragment to check if it returned ok result. if ok, then return true and handle it onpostexecute in the thread.
+                in the thread, delete the task from database and update with the new task. then refresh the content in the layout.*/
     }
     @ApiMethod(name = "deleteMyTask", httpMethod = HttpMethod.POST)
     public APIGeneralResult deleteMyTask(@Named("taskId") Long taskId, @Named("profileID") Long profileID, HttpServletRequest req) throws ParseException, NullPointerException, APIErrorException{
@@ -331,7 +338,7 @@ public class MyTaskEndpoint {
 
         MyTask mTask = DatastoreHelpers.tryLoadEntityFromDatastore(MyTask.class, taskId);
 
-        if(mTask.getHelperUserProfileKey() == null) {
+        if(mTask != null && mTask.getHelperUserProfileKey() == null) {
             mTask.setHelperUserProfileKey(profileID);
             Profile helperProf = DatastoreHelpers.tryLoadEntityFromDatastore(Profile.class, profileID);
             mTask.setHelperProfileName(helperProf.getFirstName() + " " + helperProf.getLastName());
@@ -347,16 +354,24 @@ public class MyTaskEndpoint {
             // the above line didnt work because profile_key is Long but the profileID that I was passing is String. So made sure profileID is passed as Long.
             Device device = ofy().load().type(Device.class).filter("profile_key ==", mTask.getUserProfileKey()).first().now();
             if(device == null) throw new APIErrorException(500, "UADU03 - Internal Server Error. Can't find the device based on profile id " +  profileID);
-            GcmSender.sendMessageToDeviceGroup(device.getNotification_key(),"Yay! " + prof.getFirstName() + " " + prof.getLastName() + " is interested in helping you.");
+
+            User user1 = DatastoreHelpers.tryLoadEntityFromDatastore(User.class, "profileKey ==", profileID);
+            User user2 = DatastoreHelpers.tryLoadEntityFromDatastore(User.class, "profileKey ==", mTask.getUserProfileKey());
+            String user1Name = user1.getName().trim();
+            if(user1Name.indexOf(" ") != -1) user1Name = user1Name.substring(0,user1Name.indexOf(" ")); //just the first name of user 1
+            String user2Name = user2.getName().trim();
+            if(user2Name.indexOf(" ") != -1) user2Name = user2Name.substring(0, user2Name.indexOf(" ")); //just the first name of user 2
+
+            GcmSender.sendMessageToDeviceGroup(device.getNotification_key(),"Yay! " + prof.getFirstName() + " " + prof.getLastName() + " is interested in helping you.", user1.getName(), user1.getProfileId(), taskId);
 
             /* Subu Update Message 12/14/16 */
             /* Saving a notification for the user who is being helped. */
             String content = mTask.getTaskTitle() + ": " + prof.getFirstName() + " " + prof.getLastName() + " is interested in helping you.";
-            Message message = Message.createNewMessage(taskId, mTask.getUserProfileKey(), true, content, new Date());
+            Message message = Message.createNewMessage(taskId, mTask.getTaskTitle(), mTask.getUserProfileKey(), user2Name, user2.getImageURL(), profileID, user1Name, user1.getImageURL(), true, content, new Date());
             DatastoreHelpers.trySaveEntityOnDatastore(message);
             /* Saving a notification for the user who is helping */
             content = "You have indicated to help " + mTask.getUserProfileName();
-            message = Message.createNewMessage(taskId, profileID, true, content, new Date());
+            message = Message.createNewMessage(taskId, mTask.getTaskTitle(), profileID, user1Name, user1.getImageURL(), mTask.getUserProfileKey(), user2Name, user2.getImageURL(), true, content, new Date());
             DatastoreHelpers.trySaveEntityOnDatastore(message);
         }
         else
@@ -382,20 +397,159 @@ public class MyTaskEndpoint {
         Profile prof = DatastoreHelpers.tryLoadEntityFromDatastore(Profile.class,profileID);
         Device device = ofy().load().type(Device.class).filter("profile_key ==", mTask.getUserProfileKey()).first().now();
         if(device == null) throw new APIErrorException(500, "UADU03 - Internal Server Error. Can't find the device based on profile id " +  profileID);
-        GcmSender.sendMessageToDeviceGroup(device.getNotification_key(), "Unfortunately " + prof.getFirstName() + " " + prof.getLastName() + " has decided to not help because of something that has come up on their side.");
 
+        User user1 = DatastoreHelpers.tryLoadEntityFromDatastore(User.class, "profileKey ==", profileID);
+        User user2 = DatastoreHelpers.tryLoadEntityFromDatastore(User.class, "profileKey ==", mTask.getUserProfileKey());
+        String user1Name = user1.getName().trim();
+        if(user1Name.indexOf(" ") != -1) user1Name = user1Name.substring(0,user1Name.indexOf(" ")); //just the first name of user 1
+        String user2Name = user2.getName().trim();
+        if(user2Name.indexOf(" ") != -1) user2Name = user2Name.substring(0, user2Name.indexOf(" ")); //just the first name of user 2
+
+        GcmSender.sendMessageToDeviceGroup(device.getNotification_key(), "Unfortunately " + prof.getFirstName() + " " + prof.getLastName() + " has decided to not help because of something that has come up on their side.", user1.getName(), user1.getProfileId(), taskId);
 
          /* Subu Update Message 12/14/16 */
             /* Saving a notification for the user who is being helped. */
         String content = mTask.getTaskTitle() + ": " + mTask.getHelperProfileName() + " has decided to not help because of something that has come up on their side.";
-        Message message = Message.createNewMessage(taskId, mTask.getUserProfileKey(), true, content, new Date());
+        Message message = Message.createNewMessage(taskId, mTask.getTaskTitle(), mTask.getUserProfileKey(), user1Name, user1.getImageURL(), profileID, user2Name, user2.getImageURL(), true, content, new Date());
         DatastoreHelpers.trySaveEntityOnDatastore(message);
             /* Saving a notification for the user who is helping */
         content = "You have decided to not help " + mTask.getUserProfileName();
-        message = Message.createNewMessage(taskId, profileID, true, content, new Date());
+        message = Message.createNewMessage(taskId, mTask.getTaskTitle(), profileID, user2Name, user2.getImageURL(), mTask.getUserProfileKey(), user1Name, user1.getImageURL(), true, content, new Date());
         DatastoreHelpers.trySaveEntityOnDatastore(message);
 
 
+    }
+    @ApiMethod(name = "sendChatMessageToTaskCreator", httpMethod = HttpMethod.POST, path="sendChatMessageToTaskCreator")
+    public APIGeneralResult sendChatMessageToTaskCreator(@Named("taskId") Long taskId, @Named("profileID") Long profileID, @Named("message") String message, HttpServletRequest req) throws APIErrorException{
+
+        MyTask mTask = DatastoreHelpers.tryLoadEntityFromDatastore(MyTask.class, taskId);
+
+        Device device = ofy().load().type(Device.class).filter("profile_key ==", mTask.getUserProfileKey()).first().now();
+        if(device == null) throw new APIErrorException(500, "UADU03 - Internal Server Error. Can't find the device based on profile id " +  profileID);
+
+
+        logger.info("The profile Key for the user who is sending the message: " + profileID);
+        logger.info("The profile Key for task creator is " + mTask.getUserProfileKey());
+        User user1 = DatastoreHelpers.tryLoadEntityFromDatastore(User.class, "profileId", profileID);
+        User user2 = DatastoreHelpers.tryLoadEntityFromDatastore(User.class, "profileId", mTask.getUserProfileKey());
+
+        if(user1 == null){
+            logger.severe("Cant find user: " + profileID);
+        }
+        if(user2 == null){
+            logger.severe("Cant find user: " + mTask.getUserProfileKey());
+        }
+        if(user1 == null) return new APIGeneralResult("400", "No user exists for the profileID: " + profileID);
+        if(user2 == null) return new APIGeneralResult("400", "No user exists for the taskID: " + mTask.getUserProfileKey());
+        logger.info("Calling sendChatMessageToTaskCreator method. task id is: " + taskId +
+                ", title: " + mTask.getTaskTitle() +
+                ", user profile key: " + mTask.getUserProfileKey() +
+                ", Sender: " + user1.getName() +
+                ", Sender ID: " +profileID +
+                ", user image url: " + user1.getImageURL() +
+                ", Recipient: " + user2.getName() +
+                ", Recipeint ID: " + user2.getProfileId() +
+                ", image URL: " + user2.getImageURL() +
+                ", message:  " + message);
+
+
+        String user1Name = user1.getName().trim();
+        if(user1Name.indexOf(" ") != -1) user1Name = user1Name.substring(0,user1Name.indexOf(" ")); //just the first name of user 1
+        String user2Name = user2.getName().trim();
+        if(user2Name.indexOf(" ") != -1) user2Name = user2Name.substring(0, user2Name.indexOf(" ")); //just the first name of user 2
+        Message msg = Message.createNewMessage(taskId, mTask.getTaskTitle(), profileID, user1Name ,user1.getImageURL(), user2.getProfileId(), user2Name, user2.getImageURL(), false, message, new Date());
+        logger.info("calling GcmSender : Sender: " + user1.getName() +
+                "Profile Id: " + user1.getProfileId() +
+                " message: " + message);
+        GcmSender.sendMessageToDeviceGroup(device.getNotification_key(), message, user1.getName(), profileID, taskId);
+        return new APIGeneralResult("200", "Successfully sent message");
+    }
+    @ApiMethod(name = "sendChatMessageToTaskHelper", httpMethod = HttpMethod.POST, path="sendChatMessageToTaskHelper")
+    public APIGeneralResult sendChatMessageToTaskHelper(@Named("taskId") Long taskId, @Named("profileID") Long profileID, @Named("message") String message, HttpServletRequest req) throws APIErrorException{
+
+        MyTask mTask = DatastoreHelpers.tryLoadEntityFromDatastore(MyTask.class, taskId);
+
+        Device device = ofy().load().type(Device.class).filter("profile_key ==", mTask.getHelperUserProfileKey()).first().now();
+        if(device == null) throw new APIErrorException(500, "UADU03 - Internal Server Error. Can't find the device based on profile id " +  profileID);
+
+
+        User user1 = DatastoreHelpers.tryLoadEntityFromDatastore(User.class, "profileId", profileID);
+        User user2 = DatastoreHelpers.tryLoadEntityFromDatastore(User.class, "profileId", mTask.getHelperUserProfileKey());
+
+        if(user1 == null){
+            logger.severe("Cant find user: " + profileID);
+        }
+        if(user2 == null){
+            logger.severe("Cant find user: " + mTask.getHelperUserProfileKey());
+        }
+        if(user1 == null) return new APIGeneralResult("400", "No user exists for the profileID: " + profileID);
+        if(user2 == null) return new APIGeneralResult("400", "No user exists for the taskID: " + mTask.getHelperUserProfileKey());
+
+        logger.info("Calling sendChatMessageToTaskHelper method. Task id: " + taskId +
+                ", title: " + mTask.getTaskTitle() +
+                ", profile ID: " + profileID +
+                ", Sender: " + user1.getName() +
+                ", Sender ID: " + user1.getProfileId() +
+                ", user profile key: " + mTask.getHelperUserProfileKey() +
+                ", Recipient: " + user2.getName() +
+                ", Recipient ID: " + user2.getProfileId() +
+                ", user image url: " + user1.getImageURL() +
+                ", image URL: " + user2.getImageURL() +
+                ", message:  " + message);
+
+
+        String user1Name = user1.getName().trim();
+        if(user1Name.indexOf(" ") != -1) user1Name = user1Name.substring(0,user1Name.indexOf(" ")); //just the first name of user 1
+        String user2Name = user2.getName().trim();
+        if(user2Name.indexOf(" ") != -1) user2Name = user2Name.substring(0, user2Name.indexOf(" ")); //just the first name of user 2
+        Message msg = Message.createNewMessage(taskId, mTask.getTaskTitle(), mTask.getUserProfileKey(), user1Name ,user1.getImageURL(), mTask.getHelperUserProfileKey(), user2Name, user2.getImageURL(), false, message, new Date());
+
+        logger.info("calling GcmSender : Sender: " + user1.getName() +
+                    "Profile Id: " + user1.getProfileId() +
+                    " message: " + message);
+        //GcmSender.sendMessageToDeviceGroup(device.getNotification_key(), message);
+        GcmSender.sendMessageToDeviceGroup(device.getNotification_key(), message, user1.getName(), user1.getProfileId(), taskId);
+
+        return new APIGeneralResult("200", "Successfully sent message");
+    }
+    @ApiMethod(name = "getChatRoomMessages", httpMethod = HttpMethod.GET, path="getChatRoomMessages")
+    public CollectionResponse<Message> getChatRoomMessages(
+                                            @Named("taskId") Long taskId,
+                                            @Named("profileID") Long profileID,
+                                            HttpServletRequest req) throws APIErrorException {
+
+        Query<Message> query = ofy().load().type(Message.class).filter("taskID", taskId);
+        List<Message> records = new ArrayList<>();
+        QueryResultIterator<Message> iterator = query.iterator();
+        logger.info("Iterating through Chat room messages");
+        while (iterator.hasNext()) {
+            Message message = iterator.next();
+            String str = message.getUserFromName() + ": " + message.getContent();
+            logger.info(str);
+            records.add(message);
+        }
+        return CollectionResponse.<Message>builder().setItems(records).build();
+    }
+
+    @ApiMethod(name = "getChatRooms", httpMethod = HttpMethod.GET, path="getChatRooms")
+    public CollectionResponse<MyTask> getChatRooms(
+            @Named("profileID") Long profileID,
+            HttpServletRequest req) throws APIErrorException {
+        List<MyTask> records = new ArrayList<>();
+
+        Query<Message> query = ofy().load().type(Message.class).project("taskID").distinct(true);
+
+        QueryResultIterator<Message> iterator = query.iterator();
+        logger.info("Iterating through ChatRooms");
+        while (iterator.hasNext()) {
+            Message message = iterator.next();
+            MyTask mTask = DatastoreHelpers.tryLoadEntityFromDatastore(MyTask.class, message.getTaskID());
+            String str = "Task id is: " + message.getTaskID() + ": " + mTask.getTaskTitle();
+            logger.info(str);
+            records.add(mTask);
+        }
+        logger.info("done iterating");
+        return CollectionResponse.<MyTask>builder().setItems(records).build();
     }
 
     @ApiMethod(name = "markComplete", httpMethod = HttpMethod.POST)
@@ -403,12 +557,6 @@ public class MyTaskEndpoint {
     {
         logger.info("Calling markComplete method. task id is: " + taskId);
 
-       /* ThyNSession currentSession = SecurityUtilities.enforceAuthenticationForCurrentAPICall(req);
-        User sessionUser = currentSession.getSessionUser();
-        if(sessionUser == null)
-            throw new APIErrorException(401, "UADU01 - Unauthorized.");
-*/
-        //Long profileID = sessionUser.getProfileId();
         MyTask mTask = DatastoreHelpers.tryLoadEntityFromDatastore(MyTask.class, taskId);
 
         mTask.setIsSolved(true);
@@ -417,23 +565,32 @@ public class MyTaskEndpoint {
 
         log("COMPLETED", profileID, mTask.getUserProfileKey(), taskId, 10);
         /* Retrieve the profile */
-        Profile prof = DatastoreHelpers.tryLoadEntityFromDatastore(Profile.class,profileID);
+        Profile prof = DatastoreHelpers.tryLoadEntityFromDatastore(Profile.class, profileID);
 
         //Device device = DatastoreHelpers.tryLoadEntityFromDatastore(Device.class, "profile_key ==", profileID.toString());
         // the above line didnt work because profile_key is Long but the profileID that I was passing is String. So made sure profileID is passed as Long.
         Device device = ofy().load().type(Device.class).filter("profile_key ==", mTask.getUserProfileKey()).first().now();
         if(device == null) throw new APIErrorException(500, "UADU03 - Internal Server Error. Can't find the device based on profile id " +  profileID);
-        GcmSender.sendMessageToDeviceGroup(device.getNotification_key(), "Yay! " + prof.getFirstName() + " " + prof.getLastName() + " has marked the task Complete.");
+
+        User user1 = DatastoreHelpers.tryLoadEntityFromDatastore(User.class, "profileKey ==", profileID);
+        User user2 = DatastoreHelpers.tryLoadEntityFromDatastore(User.class, "profileKey ==", mTask.getUserProfileKey());
+
+        String user1Name = user1.getName().trim();
+        if(user1Name.indexOf(" ") != -1) user1Name = user1Name.substring(0,user1Name.indexOf(" ")); //just the first name of user 1
+        String user2Name = user2.getName().trim();
+        if(user2Name.indexOf(" ") != -1) user2Name = user2Name.substring(0, user2Name.indexOf(" ")); //just the first name of user 2
+
+        GcmSender.sendMessageToDeviceGroup(device.getNotification_key(), "Yay! " + prof.getFirstName() + " " + prof.getLastName() + " has marked the task Complete.", user1.getName(), user1.getProfileId(), taskId);
 
         /* Subu Update Message 12/14/16 */
             /* Saving a notification for the user who is being helped. */
         String content = mTask.getHelperProfileName() + " is saying that they helped you.";
-        Message message = Message.createNewMessage(taskId, mTask.getUserProfileKey(), true, content, new Date());
-        DatastoreHelpers.trySaveEntityOnDatastore(message);
+        Message message = Message.createNewMessage(taskId, mTask.getTaskTitle(), mTask.getUserProfileKey(), user1Name, user1.getImageURL(), profileID, user2Name, user2.getImageURL(), true, content, new Date());
+        //DatastoreHelpers.trySaveEntityOnDatastore(message);
             /* Saving a notification for the user who is helping */
         content = "Thank you! You have indicated that you helped " + mTask.getUserProfileName();
-        message = Message.createNewMessage(taskId, profileID, true, content, new Date());
-        DatastoreHelpers.trySaveEntityOnDatastore(message);
+        message = Message.createNewMessage(taskId, mTask.getTaskTitle(), profileID, user2Name, user2.getImageURL(), mTask.getUserProfileKey(), user1Name, user1.getImageURL(), true, content, new Date());
+        //DatastoreHelpers.trySaveEntityOnDatastore(message);
     }
 
    /* private MyTask findRecord(Class<T> classType, Long key) {

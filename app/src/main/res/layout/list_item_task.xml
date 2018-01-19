@@ -34,7 +34,6 @@
         android:text="Looking to borrow shears"
         android:textSize="20dp"
         android:layout_marginLeft="20dp"
-
         android:textIsSelectable="true"
         android:layout_toRightOf="@id/task_list_user_image"
         android:layout_alignParentTop="true"

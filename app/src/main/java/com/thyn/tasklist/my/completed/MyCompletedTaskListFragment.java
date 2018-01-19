@@ -26,8 +26,8 @@ import java.util.List;
 import com.thyn.collection.Task;
 import com.thyn.common.MyServerSettings;
 import com.thyn.connection.GoogleAPIConnector;
-import com.thyn.task.TaskActivity;
-import com.thyn.task.TaskFragment;
+import com.thyn.task.edit.TaskActivity;
+import com.thyn.task.edit.TaskFragment;
 import com.thyn.collection.MyCompletedTaskLab;
 
 import android.support.v7.widget.RecyclerView;

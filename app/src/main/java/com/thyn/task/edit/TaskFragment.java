@@ -1,4 +1,4 @@
-package com.thyn.task;
+package com.thyn.task.edit;
 
 
 import android.content.Intent;
@@ -11,8 +11,6 @@ import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 
-import android.support.v4.app.NavUtils;
-import android.support.v4.content.ContextCompat;
 import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -30,12 +28,8 @@ import java.util.Date;
 
 import android.annotation.TargetApi;
 
-import android.view.MenuItem;
-
 import android.util.Log;
 import android.app.Activity;
-
-import java.util.Calendar;
 
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
@@ -51,15 +45,12 @@ import com.thyn.collection.Task;
 import com.thyn.collection.MyTaskLab;
 import com.thyn.common.MyServerSettings;
 import com.thyn.connection.GoogleAPIConnector;
-import com.thyn.field.AddressActivity;
-import com.thyn.field.AddressFragment;
 
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.thyn.android.backend.myTaskApi.MyTaskApi;
 import com.thyn.android.backend.myTaskApi.model.MyTask;
 
 import java.text.SimpleDateFormat;
@@ -68,9 +59,8 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 import com.thyn.R;
-import com.thyn.tab.DashboardFragment;
-import com.thyn.task.view.edit.TaskPagerEditOnlyFragment;
-import com.thyn.tasklist.my.MyTaskListFragment;
+import com.thyn.task.DateRangePickerFragment;
+import com.thyn.task.ThumbsUpActivity;
 
 import org.florescu.android.rangeseekbar.RangeSeekBar;
 
@@ -173,7 +163,7 @@ public class TaskFragment extends Fragment {
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 mTask.setTaskDescription(charSequence.toString());
-                contentChanged = true;
+
             }
 
             @Override
@@ -198,7 +188,7 @@ public class TaskFragment extends Fragment {
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 mTask.setTaskTitle(charSequence.toString());
-                contentChanged = true;
+
             }
 
             @Override
@@ -227,7 +217,7 @@ public class TaskFragment extends Fragment {
                         DateRangePickerFragment dialog = DateRangePickerFragment.newInstance(false);
                         dialog.setTargetFragment(TaskFragment.this, REQUEST_DATE);
                         dialog.show(fm, DIALOG_DATE);
-                        contentChanged = true;
+
                     }
                 }
         );
@@ -242,7 +232,7 @@ public class TaskFragment extends Fragment {
                     DateRangePickerFragment dialog = DateRangePickerFragment.newInstance(true);
                     dialog.setTargetFragment(TaskFragment.this, REQUEST_DATE);
                     dialog.show(fm, DIALOG_DATE);
-                    contentChanged = true;
+
 
                 }
             }
@@ -275,8 +265,6 @@ public class TaskFragment extends Fragment {
                 mTaskTime.setTextColor(Color.BLACK);
                 String timeStr = rangeSeekBar.valueToString(minValue) + " - " + rangeSeekBar.valueToString(maxValue);
                 mTaskTime.setText(timeStr);
-                contentChanged = true;
-                Log.d(TAG, "contentChanged True in OnRangeSeekBarVauesChanged");
             }
         });
 // Add to layout
@@ -284,7 +272,6 @@ public class TaskFragment extends Fragment {
         layout.addView(rangeSeekBar);
         final TimeFoo tfoo= new TimeFoo();
         mTimeFlexible = (CheckBox)v.findViewById(R.id.t_time_flex);
-
         mTimeFlexible.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -298,8 +285,6 @@ public class TaskFragment extends Fragment {
                     mTaskTime.setTextColor(Color.BLACK);
                     mTaskTime.setText(tfoo.getTime());
                 }
-                contentChanged = true;
-                Log.d(TAG, "contentChanged True in mTimeFlexible");
             }
         });
 
@@ -310,8 +295,6 @@ public class TaskFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 callPlaceAutocompleteActivityIntent();
-                contentChanged = true;
-                Log.d(TAG, "contentChanged True in mTaskLocation");
             }
         });
 
@@ -321,16 +304,11 @@ public class TaskFragment extends Fragment {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
                     mTaskLocation.setText(MyServerSettings.getUserAddress(getActivity()));
-                    contentChanged = true;
-                    Log.d(TAG, "contentChanged True in mUseMyAddress");
                 }
             }
         });
 
         mTaskDone = (Button)v.findViewById(R.id.task_done);
-        if(IS_EDIT_SCREEN){
-            mTaskDone.setText("Save");
-        }
         mTaskDone.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
 
@@ -343,45 +321,21 @@ public class TaskFragment extends Fragment {
 
                 Log.d(TAG, "Done button clicked. Task id is: " + mTask.getId());
                 Log.d(TAG, "LAT/Long/city is" + mLAT + " " + mLONG + " " + mCity);
-                if (IS_EDIT_SCREEN && contentChanged) {
-                    mTask.setTaskTitle(mTitle.getText().toString());
-                    mTask.setTaskDescription(mTaskDescriptionField.getText().toString());
-                    mTask.setTaskFromDate(startDate);
-                    mTask.setTaskToDate(endDate);
-                    mTask.setTaskTimeRange(mTaskTime.getText().toString());
-                    mTask.setBeginLocation(mTaskLocation.getText().toString());
-                    mTask.setLAT(mLAT);
-                    mTask.setLONG(mLONG);
-                    mTask.setCity(mCity);
+                mTask.setTaskTitle(mTitle.getText().toString());
+                mTask.setTaskDescription(mTaskDescriptionField.getText().toString());
+                mTask.setTaskFromDate(startDate);
+                mTask.setTaskToDate(endDate);
+                mTask.setTaskTimeRange(mTaskTime.getText().toString());
+                mTask.setBeginLocation(mTaskLocation.getText().toString());
+                mTask.setLAT(mLAT);
+                mTask.setLONG(mLONG);
+                mTask.setCity(mCity);
 
-                    UpdateAsyncTask utask = new UpdateAsyncTask();
-                    utask.execute(mTask);
+                UpdateAsyncTask utask = new UpdateAsyncTask();
+                utask.execute(mTask);
                 }
                // we have to go back to the originial screen using manager.beginTransaction().replace(R.id.navigation_fragment_container
-                if (IS_EDIT_SCREEN) {
-                    FragmentManager manager = getActivity().getSupportFragmentManager();
-                    //manager.popBackStack();
-                    //MyTaskListFragment myTaskListFragment = MyTaskListFragment.newInstance(true);
 
-                    if(contentChanged) {
-                        // Refreshing the content to incorporate the new update made.
-                        //myTaskListFragment.refreshContent(pmanager, getActivity());
-                        contentChanged = false;
-                    }
-                   /* manager.beginTransaction().replace(R.id.navigation_fragment_container,
-                            myTaskListFragment,
-                            myTaskListFragment.getTag()).commit();
-                    */
-
-                    Log.d(TAG, "Setting IS_EDIT_SCREEN to false");
-                    IS_EDIT_SCREEN = false;
-                }
-                else{
-                    Intent intent =
-                            new Intent(getActivity(), ThumbsUpActivity.class);
-                    startActivity(intent);
-                }
-            }
         });
 
     return v;
@@ -600,6 +554,9 @@ public class TaskFragment extends Fragment {
             // TODO Update the UI thread with the final result
             if(result == 1) {
                 Log.d(TAG, "In OnPostExecute. The task was updated successfully on the server.");
+                Intent intent =
+                        new Intent(getActivity(), ThumbsUpActivity.class);
+                startActivity(intent);
             }
             else{
                 Log.d(TAG, "In OnPostExecute. The task wasn't updated successfully on the server");

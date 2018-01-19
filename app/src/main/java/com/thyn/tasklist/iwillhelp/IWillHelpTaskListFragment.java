@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.ListFragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
@@ -27,6 +28,7 @@ import com.thyn.common.MyServerSettings;
 import com.thyn.connection.GoogleAPIConnector;
 import com.thyn.db.thynTaskDBHelper;
 import com.thyn.graphics.MLRoundedImageView;
+import com.thyn.task.view.TaskPagerViewOnlyFragment;
 import com.thyn.task.view.iwillhelp.TaskIWillHelpPagerViewOnlyActivity;
 import com.thyn.task.view.iwillhelp.TaskIWillHelpPagerViewOnlyFragment;
 
@@ -132,9 +134,11 @@ public class IWillHelpTaskListFragment extends ListFragment{
             // The id argument will be Task ID; CursorAdapter gives this to us for FREE
             Log.d(TAG, "The id given by the cursor adapter is: " + id);
 
-            Intent i = new Intent(getActivity(), TaskIWillHelpPagerViewOnlyActivity.class);
-            i.putExtra(TaskIWillHelpPagerViewOnlyFragment.EXTRA_TASK_ID, id);
-            startActivity(i);
+            TaskIWillHelpPagerViewOnlyFragment tpViewOnlyFragment = TaskIWillHelpPagerViewOnlyFragment.newInstance(id);
+            FragmentManager manager = getActivity().getSupportFragmentManager();
+            manager.beginTransaction().replace(R.id.navigation_fragment_container,
+                    tpViewOnlyFragment,
+                    tpViewOnlyFragment.getTag()).addToBackStack(null).commit();
         }
 
         private void refreshContent(){
@@ -253,8 +257,9 @@ public class IWillHelpTaskListFragment extends ListFragment{
                 //MyTaskLab.get(getActivity()).removeAllTasks();
                 //manager.removeAllTasks();
                 Log.d(TAG, "The data count sent from the server is: " + result.size());
-                Log.d(TAG, "LOCAL-CACHE is " + MyServerSettings.getLocalTaskCache(getContext()));
+
                 if(!manager.doesLocalCacheExist()){
+
                     Log.d(TAG, "LOCAL-CACHE variable not set");
                     while (i.hasNext()) {
                         MyTask myTask = (MyTask) i.next();
@@ -264,6 +269,9 @@ public class IWillHelpTaskListFragment extends ListFragment{
                     }
                     Log.d(TAG, "setting the LOCAL-CACHE variable...");
                     manager.initializeLocalCache();
+                    Log.d(TAG, "LOCAL-CACHE is " + MyServerSettings.getLocalTaskCache(getContext()));
+                }
+                else{
                     Log.d(TAG, "LOCAL-CACHE is " + MyServerSettings.getLocalTaskCache(getContext()));
                 }
                 mCursor = manager.queryTasksIWillHelp(userprofileid);

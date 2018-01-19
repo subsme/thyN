@@ -3,6 +3,7 @@ package com.thyn.task.view.iwillhelp;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -25,6 +26,7 @@ import java.util.Date;
 
 
 import com.squareup.picasso.Picasso;
+import com.thyn.broadcast.GcmRegistrationIntentService;
 import com.thyn.collection.Task;
 import com.thyn.collection.MyTaskLab;
 import com.thyn.common.MyServerSettings;
@@ -33,12 +35,12 @@ import com.thyn.connection.GoogleAPIConnector;
 
 import com.thyn.R;
 import com.thyn.graphics.MLRoundedImageView;
+import com.thyn.navigate.NavigationActivity;
 import com.thyn.tab.DashboardActivity;
 import com.thyn.tab.DashboardFragment;
-import com.thyn.tab.WelcomePageActivity;
-import com.thyn.task.ThumbsUpActivity;
+
 import com.thyn.task.ThumbsUpFragment;
-import com.thyn.task.view.AcceptTaskDialogFragment;
+import com.thyn.task.view.chat.ChatRoomFragment;
 
 import android.widget.LinearLayout;
 
@@ -64,6 +66,7 @@ public class TaskIWillHelpPagerViewOnlyFragment extends Fragment {
     private TextView mTaskWhenStartDateField;
     private TextView mTaskWhenEndDateField;
 
+    private Button mChatButton;
     private Button mCancelButton;
     private Button mDoneButton;
     private Button mTaskBackToDashboard;
@@ -161,7 +164,24 @@ public class TaskIWillHelpPagerViewOnlyFragment extends Fragment {
         mTaskCreateDateField.setText(mTask.getDateReadableFormat());
 
         Log.d(LOG_TAG, "task description is: " + mTask.getTaskDescription());
-        Log.d(LOG_TAG, "isAccepted is " +mTask.isAccepted());
+        Log.d(LOG_TAG, "isAccepted is " + mTask.isAccepted());
+
+        mChatButton = (Button) v.findViewById(R.id.chat);
+
+        mChatButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d(LOG_TAG, "Chat button clicked.");
+
+                ChatRoomFragment chatRoomFragment = ChatRoomFragment.newInstance(mTask.getId(),false);
+                FragmentManager manager = ((NavigationActivity) getActivity()).getSupportFragmentManager();
+                manager.beginTransaction().replace(R.id.navigation_fragment_container,
+                        chatRoomFragment,
+                        chatRoomFragment.getTag()).commit();
+
+            }
+        });
+
         if(!mTask.isAccepted()) {//Only the tasks that aren't accepted will show a Accept button.
 
             LinearLayout lm = (LinearLayout) v.findViewById(R.id.linear_layout_task_view);
@@ -199,7 +219,7 @@ public class TaskIWillHelpPagerViewOnlyFragment extends Fragment {
                     Log.d(LOG_TAG, "Done button clicked. Task descr: " + mTask.getTaskDescription());
                     FragmentManager fm = getActivity().getSupportFragmentManager();
                     CANCEL_OR_COMPLETE = CancelOrCompleteTaskDialogFragment.DONE;
-                    CancelOrCompleteTaskDialogFragment dialog = CancelOrCompleteTaskDialogFragment.newInstance(mTask.getUserProfileName(),CancelOrCompleteTaskDialogFragment.DONE);
+                    CancelOrCompleteTaskDialogFragment dialog = CancelOrCompleteTaskDialogFragment.newInstance(mTask.getUserProfileName(), CancelOrCompleteTaskDialogFragment.DONE);
                     dialog.setTargetFragment(com.thyn.task.view.iwillhelp.TaskIWillHelpPagerViewOnlyFragment.this, 0);
                     dialog.show(fm, DIALOG_CANCEL_TASK);
                 }
@@ -211,6 +231,12 @@ public class TaskIWillHelpPagerViewOnlyFragment extends Fragment {
                     getActivity().finish();
                 }
             });
+        }
+         /*Subu I am hiding the floating button that is available in the NavigationActivity layout (see the include file - app_bar_navigation.xml
+
+         */
+        if (getActivity() instanceof NavigationActivity) {
+            ((NavigationActivity) getActivity()).hideFloatingActionButton();
         }
         return v;
     }
@@ -228,19 +254,18 @@ public class TaskIWillHelpPagerViewOnlyFragment extends Fragment {
             i.putExtra("TAB","2");
             startActivity(i);*/
             if(CancelOrCompleteTaskDialogFragment.DONE == CANCEL_OR_COMPLETE) {
-                /*Intent i = new Intent(getActivity(), ThumbsUpActivity.class);
-                i.putExtra(ThumbsUpFragment.EXTRA_THUMBS_TITLE, "THANK YOU!");
-                i.putExtra(ThumbsUpFragment.EXTRA_THUMBS_DESCRIPTION, "Awesome! Thanks for helping your neighbr " + mTask.getUserProfileName() + ".");
-                startActivity(i);*/
                 ThumbsUpFragment thumbsUpFragment = ThumbsUpFragment.newInstance("THANK YOU!", "Awesome! Thanks for helping your neighbr " + mTask.getUserProfileName() + ".");
                 FragmentManager manager = getActivity().getSupportFragmentManager();
                 manager.beginTransaction().replace(R.id.navigation_fragment_container,
                         thumbsUpFragment,
                         thumbsUpFragment.getTag()).commit();
+                Log.d(LOG_TAG, "Unsubscribing the user from the Topic: topic_thyN_" + mTask.getId());
+                Intent intent = new Intent(getActivity(), GcmRegistrationIntentService.class);
+                intent.putExtra(GcmRegistrationIntentService.KEY, GcmRegistrationIntentService.UNSUBSCRIBE);
+                intent.putExtra(GcmRegistrationIntentService.TOPIC, mTask.getId());
+                getActivity().startService(intent);
             }
             else {
-                /*Intent i = new Intent(getActivity(), DashboardActivity.class);
-                startActivity(i);*/
                 DashboardFragment dashFragment = new DashboardFragment();
                 FragmentManager manager = getActivity().getSupportFragmentManager();
                 manager.beginTransaction().replace(R.id.navigation_fragment_container,
@@ -261,6 +286,7 @@ public class TaskIWillHelpPagerViewOnlyFragment extends Fragment {
         }
         return rtn;
     }
+
 
 
     private class SendToServerAsyncTask extends AsyncTask<Task, Void, String> {

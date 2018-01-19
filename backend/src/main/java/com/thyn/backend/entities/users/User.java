@@ -24,7 +24,9 @@ public class User extends EntityObject{
     private String email;
     private Date creationTime;
     private String displayName;
-    private Long profileKey;
+    @Index
+    private Long profileId;
+
     @Index
     private String fbUserId;
     @Index
@@ -94,7 +96,7 @@ public class User extends EntityObject{
         }
 
         Profile prof = Profile.createNewProfileOnDatastore(firstName, lastName);
-        this.profileKey = prof.getId();
+        this.profileId = prof.getId();
 
         if(!isExternal)
             prof.setPassword(password);
@@ -117,14 +119,16 @@ public class User extends EntityObject{
         this.userStatus = userStatus;
         return DatastoreHelpers.trySaveEntityOnDatastore(this)!=null;
     }
-    public Long getProfileId() {
-        return profileKey;
-    }
+
     public boolean setProfileId(Long profileId) {
-        if(this.profileKey == profileId)
+        if(this.profileId == profileId)
             return true;
-        this.profileKey = profileId;
+        this.profileId = profileId;
         return DatastoreHelpers.trySaveEntityOnDatastore(this) != null;
+    }
+
+    public Long getProfileId() {
+        return profileId;
     }
     public String getFbUserId() {
         return fbUserId;

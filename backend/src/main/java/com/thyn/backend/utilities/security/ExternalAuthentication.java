@@ -82,7 +82,13 @@ public class ExternalAuthentication {
                 message = sb.toString();
         }
 
-        logger.info(message);
+        if(message == null){ //Facebook doesnt have any information regarding this new user.
+            logger.severe("The message is null");
+            return null;
+        }
+        else logger.info("Message is: " + message);
+
+
         JSONObject myObject = new JSONObject(message);
         JSONObject data = myObject.getJSONObject("data");
         String userId= data.getString("user_id");

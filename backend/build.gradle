@@ -47,8 +47,9 @@ appengine {
       email = "subusundaram@gmail.com"
   }
   endpoints {
-    getClientLibsOnBuild = true
-    getDiscoveryDocsOnBuild = true
+      googleClientVersion = '1.23.0'
+      getClientLibsOnBuild = true
+      getDiscoveryDocsOnBuild = true
   }
 }
 

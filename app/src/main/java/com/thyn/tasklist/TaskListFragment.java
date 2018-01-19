@@ -1,10 +1,8 @@
 package com.thyn.tasklist;
 
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.database.Cursor;
 import android.os.AsyncTask;
-import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.ListFragment;
 import android.os.Bundle;
@@ -37,16 +35,10 @@ import com.thyn.common.MyServerSettings;
 import com.thyn.connection.GoogleAPIConnector;
 import com.thyn.db.thynTaskDBHelper;
 import com.thyn.graphics.MLRoundedImageView;
-import com.thyn.navigate.NavigationActivity;
 import com.thyn.tab.DashboardFragment;
-import com.thyn.task.TaskActivity;
-import com.thyn.task.TaskFragment;
 import com.thyn.collection.MyTaskLab;
 import com.thyn.R;
-import com.thyn.tab.DashboardActivity;
-import com.thyn.task.view.TaskPagerViewOnlyActivity;
 import com.thyn.task.view.TaskPagerViewOnlyFragment;
-import com.thyn.task.view.edit.TaskPagerEditOnlyActivity;
 import com.thyn.task.view.edit.TaskPagerEditOnlyFragment;
 
 
@@ -199,7 +191,8 @@ public class TaskListFragment extends ListFragment{
         Task t = MyTaskLab.get(getActivity()).getTask(id);
         Long userprofileid = MyServerSettings.getUserProfileId(getActivity());
         Log.i(TAG, "user profile id is: " + userprofileid);
-        Log.i(TAG, "my profile key is: " + t.getUserProfileKey());
+        if(t != null) Log.i(TAG, "my profile key is: " + t.getUserProfileKey());
+        else    Log.e(TAG, "profile key is null");
         Intent i = null;
         if(userprofileid.equals(t.getUserProfileKey())) {
             Log.i(TAG, "the ids are the same");
@@ -326,7 +319,7 @@ public class TaskListFragment extends ListFragment{
             titleTextView.setText(task.getTaskTitle());
 
 
-                    MLRoundedImageView imageView = (com.thyn.graphics.MLRoundedImageView) view.findViewById(R.id.task_list_user_image);
+            MLRoundedImageView imageView = (com.thyn.graphics.MLRoundedImageView) view.findViewById(R.id.task_list_user_image);
             if(task.getImageURL() != null) {
                 Picasso.with(c)
                         //.load("https://scontent.xx.fbcdn.net/v/t1.0-1/p50x50/11156187_10205188530126207_4481467444246362898_n.jpg?oh=2dee76ec7e202649b84c7a71b4c86721&oe=58ADEBE1")
@@ -373,6 +366,8 @@ public class TaskListFragment extends ListFragment{
                 public void onClick(View v) {
                    // Intent intent = new Intent(getActivity().getApplicationContext(), DashboardActivity.class);
                    // startActivity(intent);
+
+                    Log.d(TAG, "Debug - before crash?");
                     DashboardFragment dashboardFragment = new DashboardFragment();
                     FragmentManager manager = getActivity().getSupportFragmentManager();
                     manager.beginTransaction().replace(R.id.navigation_fragment_container,

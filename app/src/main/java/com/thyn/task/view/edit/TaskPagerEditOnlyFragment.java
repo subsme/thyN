@@ -27,11 +27,9 @@ import com.thyn.common.MyServerSettings;
 import com.thyn.connection.GoogleAPIConnector;
 import com.thyn.graphics.MLRoundedImageView;
 import com.thyn.navigate.NavigationActivity;
-import com.thyn.task.TaskActivity;
-import com.thyn.task.TaskFragment;
-import com.thyn.task.ThumbsUpActivity;
+import com.thyn.task.edit.TaskEditFragment;
 import com.thyn.task.ThumbsUpFragment;
-import com.thyn.task.view.AcceptTaskDialogFragment;
+import com.thyn.task.view.chat.ChatRoomFragment;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -43,6 +41,8 @@ public class TaskPagerEditOnlyFragment extends Fragment {
     private static final String LOG_TAG = "TaskPagerEditOnlyFragment";
     public static final String EXTRA_TASK_ID =
             "com.android.android.thyn.form.view.task_id";
+    public static final String EDIT_EXISTING_TASK =
+            "com.android.android.thyn.form.view.edit_existing_task";
     private static final String DIALOG_CANCEL_TASK = "cancelTaskDialog";
 
     private Task mTask;
@@ -73,6 +73,13 @@ public class TaskPagerEditOnlyFragment extends Fragment {
         taskID = (Long) getArguments().getSerializable(EXTRA_TASK_ID);
         Log.d(LOG_TAG, "The Task ID here is: " + taskID);
         mTask = MyTaskLab.get(getActivity()).getTask(taskID);
+        if(mTask == null){
+            Log.e(LOG_TAG, "No Task found with id: " + taskID);
+            throw new NullPointerException("Task is null");
+        }
+        else{
+            Log.d(LOG_TAG, "Task id: " + taskID + " found");
+        }
         setHasOptionsMenu(true);
     }
 
@@ -85,6 +92,7 @@ public class TaskPagerEditOnlyFragment extends Fragment {
 
         return fragment;
     }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -130,7 +138,7 @@ public class TaskPagerEditOnlyFragment extends Fragment {
 
         mTaskBackToDashboard    =   (Button) v.findViewById(R.id.task_BackToDashboard);
 
-        mTaskDetailedLocation.setText(mTask.getBeginLocation());
+        if(mTask.getBeginLocation() != null) mTaskDetailedLocation.setText(mTask.getBeginLocation());
         mTaskWhenTimeField.setText(mTask.getTaskTimeRange());
 
         if(mTask.getTaskFromDate() != null)
@@ -159,17 +167,26 @@ public class TaskPagerEditOnlyFragment extends Fragment {
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
             mEditButton = (Button) v.findViewById(R.id.edit);
+
+            if(mTask.isAccepted()) mEditButton.setText("Chat"); //Enabling chat
+
             mEditButton.setOnClickListener(new View.OnClickListener(){
                 @Override
                 public void onClick(View v) {
-                    /*Intent i = new Intent(getActivity(), TaskActivity.class);
-                    i.putExtra(TaskFragment.EXTRA_TASK_ID, taskID);
-                    startActivity(i);*/
-                    TaskFragment taskFragment = TaskFragment.newInstance(taskID);
-                    FragmentManager manager = getActivity().getSupportFragmentManager();
-                    manager.beginTransaction().replace(R.id.navigation_fragment_container,
-                            taskFragment,
-                            taskFragment.getTag()).commit();
+                    if(!mTask.isAccepted()) {
+                        TaskEditFragment taskEditFragment = TaskEditFragment.newInstance(taskID);
+                        FragmentManager manager = getActivity().getSupportFragmentManager();
+                        manager.beginTransaction().replace(R.id.navigation_fragment_container,
+                                taskEditFragment,
+                                taskEditFragment.getTag()).commit();
+                    }
+                    else{ //ChatRoom is opened if it is a Chat button.
+                        ChatRoomFragment chatRoomFragment = ChatRoomFragment.newInstance(mTask.getId(),true);
+                        FragmentManager manager = ((NavigationActivity) getActivity()).getSupportFragmentManager();
+                        manager.beginTransaction().replace(R.id.navigation_fragment_container,
+                                chatRoomFragment,
+                                chatRoomFragment.getTag()).commit();
+                    }
                 }
             });
             mDeleteButton = (Button) v.findViewById(R.id.delete_this_request);
@@ -214,7 +231,10 @@ public class TaskPagerEditOnlyFragment extends Fragment {
             startActivity(i);*/
             ThumbsUpFragment thumbsUpFragment = ThumbsUpFragment.newInstance("THANK YOU!", "Your task is deleted now. Please create another one if you need some other help.");
             FragmentManager manager = getActivity().getSupportFragmentManager();
-            manager.beginTransaction().replace(R.id.navigation_fragment_container,
+            /*manager.beginTransaction().replace(R.id.navigation_fragment_container,
+                    thumbsUpFragment,
+                    thumbsUpFragment.getTag()).commit();*/
+            manager.beginTransaction().add(R.id.navigation_fragment_container,
                     thumbsUpFragment,
                     thumbsUpFragment.getTag()).commit();
         } else Log.d(LOG_TAG, "RESult is CANCEL");

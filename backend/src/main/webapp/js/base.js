@@ -20,10 +20,11 @@ google.appengine.samples.hello = google.appengine.samples.hello || {};
  * Prints a greeting to the greeting log.
  * param {Object} greeting Greeting to print.
  */
-google.appengine.samples.hello.print = function(greeting) {
+google.appengine.samples.hello.print = function(response) {
   var element = document.createElement('div');
   element.classList.add('row');
-  element.innerHTML = greeting.message;
+  //element.innerHTML = response.content;
+  element.innerHTML = response.taskTitle;
   document.querySelector('#outputLog').appendChild(element);
 };
 
@@ -33,12 +34,17 @@ google.appengine.samples.hello.print = function(greeting) {
  */
 google.appengine.samples.hello.getGreeting = function(id) {
   var requestData = {};
-  requestData.taskId = '5200313652871168';
-  requestData.profileId = id;
-  gapi.client.myTaskApi.getChatRoomMessages(requestData).execute(
+  //requestData.taskId = '5200313652871168';
+  requestData.profileID = id;
+  //gapi.client.myTaskApi.getChatRoomMessages(requestData).execute(
+  gapi.client.myTaskApi.getChatRooms(requestData).execute(
       function(resp) {
         if (!resp.code) {
-          google.appengine.samples.hello.print(resp);
+          //google.appengine.samples.hello.print(resp);
+          resp.items = resp.items || [];
+          for (var i = 0; i < resp.items.length; i++) {
+                      google.appengine.samples.hello.print(resp.items[i]);
+          }
         }
       });
 };

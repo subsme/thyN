@@ -14,7 +14,7 @@ import java.security.NoSuchAlgorithmException;
 
 import com.thyn.backend.utilities.security.SecurityUtilities;
 /**
- * Created by shalu on 3/4/16.
+ * Created by Subu Sundaram on 3/4/16.
  * @original author: Angelo Agatino Nicolosi
  */
 @Entity
