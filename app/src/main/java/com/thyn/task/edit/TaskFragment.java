@@ -46,6 +46,7 @@ import com.google.android.gms.maps.model.LatLng;
 
 import com.google.api.client.util.DateTime;
 import com.thyn.android.backend.myTaskApi.model.APIGeneralResult;
+import com.thyn.collection.MyPersonalTaskLab;
 import com.thyn.collection.Task;
 import com.thyn.collection.MyTaskLab;
 import com.thyn.common.MyServerSettings;
@@ -67,6 +68,9 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 import com.thyn.R;
+import com.thyn.tab.DashboardFragment;
+import com.thyn.task.view.edit.TaskPagerEditOnlyFragment;
+import com.thyn.tasklist.my.MyTaskListFragment;
 
 import org.florescu.android.rangeseekbar.RangeSeekBar;
 
@@ -76,7 +80,8 @@ import org.florescu.android.rangeseekbar.RangeSeekBar;
 public class TaskFragment extends Fragment {
     private static final String TAG = "TaskFragment";
     public static final String EXTRA_TASK_ID =
-            "com.android.android.thyn.task_id";
+            "com.android.thyn.TaskFragment.task_id";
+    public static boolean IS_EDIT_SCREEN = false;
 
     private static final int PLACE_AUTOCOMPLETE_REQUEST_CODE=1;
 
@@ -108,10 +113,13 @@ public class TaskFragment extends Fragment {
     private static double mLONG;
     private static String mCity;
 
+    private MyPersonalTaskLab pmanager;
+
     @Override
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         myTaskLab = MyTaskLab.get(getActivity());
+        if(pmanager == null) pmanager = MyPersonalTaskLab.get(getActivity());
         Bundle args = getArguments();
         if(args != null) {
             long taskID = args.getLong(EXTRA_TASK_ID, -1);
@@ -134,7 +142,19 @@ public class TaskFragment extends Fragment {
 
         return fragment;
     }
+    public static TaskFragment newInstance(Long taskId, boolean isEdit){
 
+        Bundle args = new Bundle();
+        args.putSerializable(EXTRA_TASK_ID, taskId);
+        if(isEdit) {
+            IS_EDIT_SCREEN = true;
+        }
+
+        TaskFragment fragment = new TaskFragment();
+        fragment.setArguments(args);
+
+        return fragment;
+    }
     @TargetApi(11)
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -153,6 +173,7 @@ public class TaskFragment extends Fragment {
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 mTask.setTaskDescription(charSequence.toString());
+                contentChanged = true;
             }
 
             @Override
@@ -177,6 +198,7 @@ public class TaskFragment extends Fragment {
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 mTask.setTaskTitle(charSequence.toString());
+                contentChanged = true;
             }
 
             @Override
@@ -205,6 +227,7 @@ public class TaskFragment extends Fragment {
                         DateRangePickerFragment dialog = DateRangePickerFragment.newInstance(false);
                         dialog.setTargetFragment(TaskFragment.this, REQUEST_DATE);
                         dialog.show(fm, DIALOG_DATE);
+                        contentChanged = true;
                     }
                 }
         );
@@ -219,6 +242,7 @@ public class TaskFragment extends Fragment {
                     DateRangePickerFragment dialog = DateRangePickerFragment.newInstance(true);
                     dialog.setTargetFragment(TaskFragment.this, REQUEST_DATE);
                     dialog.show(fm, DIALOG_DATE);
+                    contentChanged = true;
 
                 }
             }
@@ -251,6 +275,8 @@ public class TaskFragment extends Fragment {
                 mTaskTime.setTextColor(Color.BLACK);
                 String timeStr = rangeSeekBar.valueToString(minValue) + " - " + rangeSeekBar.valueToString(maxValue);
                 mTaskTime.setText(timeStr);
+                contentChanged = true;
+                Log.d(TAG, "contentChanged True in OnRangeSeekBarVauesChanged");
             }
         });
 // Add to layout
@@ -272,6 +298,8 @@ public class TaskFragment extends Fragment {
                     mTaskTime.setTextColor(Color.BLACK);
                     mTaskTime.setText(tfoo.getTime());
                 }
+                contentChanged = true;
+                Log.d(TAG, "contentChanged True in mTimeFlexible");
             }
         });
 
@@ -282,6 +310,8 @@ public class TaskFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 callPlaceAutocompleteActivityIntent();
+                contentChanged = true;
+                Log.d(TAG, "contentChanged True in mTaskLocation");
             }
         });
 
@@ -291,11 +321,16 @@ public class TaskFragment extends Fragment {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
                     mTaskLocation.setText(MyServerSettings.getUserAddress(getActivity()));
+                    contentChanged = true;
+                    Log.d(TAG, "contentChanged True in mUseMyAddress");
                 }
             }
         });
 
         mTaskDone = (Button)v.findViewById(R.id.task_done);
+        if(IS_EDIT_SCREEN){
+            mTaskDone.setText("Save");
+        }
         mTaskDone.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
 
@@ -308,22 +343,44 @@ public class TaskFragment extends Fragment {
 
                 Log.d(TAG, "Done button clicked. Task id is: " + mTask.getId());
                 Log.d(TAG, "LAT/Long/city is" + mLAT + " " + mLONG + " " + mCity);
+                if (IS_EDIT_SCREEN && contentChanged) {
+                    mTask.setTaskTitle(mTitle.getText().toString());
+                    mTask.setTaskDescription(mTaskDescriptionField.getText().toString());
+                    mTask.setTaskFromDate(startDate);
+                    mTask.setTaskToDate(endDate);
+                    mTask.setTaskTimeRange(mTaskTime.getText().toString());
+                    mTask.setBeginLocation(mTaskLocation.getText().toString());
+                    mTask.setLAT(mLAT);
+                    mTask.setLONG(mLONG);
+                    mTask.setCity(mCity);
 
-                mTask.setTaskTitle(mTitle.getText().toString());
-                mTask.setTaskDescription(mTaskDescriptionField.getText().toString());
-                mTask.setTaskFromDate(startDate);
-                mTask.setTaskToDate(endDate);
-                mTask.setTaskTimeRange(mTaskTime.getText().toString());
-                mTask.setBeginLocation(mTaskLocation.getText().toString());
-                mTask.setLAT(mLAT);
-                mTask.setLONG(mLONG);
-                mTask.setCity(mCity);
-                new UpdateAsyncTask().execute(mTask);
-                //}
+                    UpdateAsyncTask utask = new UpdateAsyncTask();
+                    utask.execute(mTask);
+                }
+               // we have to go back to the originial screen using manager.beginTransaction().replace(R.id.navigation_fragment_container
+                if (IS_EDIT_SCREEN) {
+                    FragmentManager manager = getActivity().getSupportFragmentManager();
+                    //manager.popBackStack();
+                    //MyTaskListFragment myTaskListFragment = MyTaskListFragment.newInstance(true);
 
-                Intent intent =
-                        new Intent(getActivity(), ThumbsUpActivity.class);
-                startActivity(intent);
+                    if(contentChanged) {
+                        // Refreshing the content to incorporate the new update made.
+                        //myTaskListFragment.refreshContent(pmanager, getActivity());
+                        contentChanged = false;
+                    }
+                   /* manager.beginTransaction().replace(R.id.navigation_fragment_container,
+                            myTaskListFragment,
+                            myTaskListFragment.getTag()).commit();
+                    */
+
+                    Log.d(TAG, "Setting IS_EDIT_SCREEN to false");
+                    IS_EDIT_SCREEN = false;
+                }
+                else{
+                    Intent intent =
+                            new Intent(getActivity(), ThumbsUpActivity.class);
+                    startActivity(intent);
+                }
             }
         });
 
@@ -511,25 +568,44 @@ public class TaskFragment extends Fragment {
         }
         public String getTime(){return timeStr;}
     }
-    private class UpdateAsyncTask extends AsyncTask<Task, String, Void> {
+    private class UpdateAsyncTask extends AsyncTask<Task, String, Integer> {
 
 
         @Override
-        protected Void doInBackground(Task... params) {
+        protected Integer doInBackground(Task... params) {
+            APIGeneralResult result = null;
             try {
                 MyTask a = copyToEndpointTask(params[0]);
-
                 Log.d(TAG, "Sending task:" + a.getId());
                 String socialID = MyServerSettings.getUserSocialId(getActivity());
                 int socialType = MyServerSettings.getUserSocialType(getActivity());
-                APIGeneralResult result = GoogleAPIConnector.connect_TaskAPI().updateMyTask(socialType, socialID, a).execute();
-                Log.d(TAG, "response from the server is: " + result.getMessage());
+                result = GoogleAPIConnector.connect_TaskAPI().updateMyTask(socialType, socialID, a).execute();
+                Log.d(TAG, "response from the server is - Code: " + result.getCode() + ", Message: " + result.getMessage());
+
             } catch (IOException e) {
                 e.getMessage();
             }
-            return null;
+            if(result.getCode()==1){
+                Log.d(TAG, "Task updated successfully in the server. Will have to handle this in onPostExecute");
+            }
+            return result.getCode();
+            //return a boolean value based on result.getMessage();
         }
+        /**
+         * Called after doInBackground() method
+         * This method runs on the UI thread
+         */
 
+        protected void onPostExecute(Integer result) {
+            // TODO Update the UI thread with the final result
+            if(result == 1) {
+                Log.d(TAG, "In OnPostExecute. The task was updated successfully on the server.");
+            }
+            else{
+                Log.d(TAG, "In OnPostExecute. The task wasn't updated successfully on the server");
+            }
+
+        }
 
         private MyTask copyToEndpointTask(Task task){
             MyTask myTask = new MyTask();
@@ -541,8 +617,8 @@ public class TaskFragment extends Fragment {
             myTask.setLong(task.getLONG());
             myTask.setCity(task.getCity());
 
-            myTask.setServiceDate(new DateTime(task.getTaskFromDate()));
-            myTask.setServiceToDate(new DateTime(dateToString(task.getTaskToDate())));
+            if(task.getTaskFromDate() != null) myTask.setServiceDate(new DateTime(task.getTaskFromDate()));
+            if(task.getTaskToDate() != null) myTask.setServiceToDate(new DateTime(dateToString(task.getTaskToDate())));
             myTask.setServiceTimeRange(task.getTaskTimeRange());
 
             return myTask;
@@ -554,4 +630,5 @@ public class TaskFragment extends Fragment {
             return converter.format(d);
         }
     }
+
 }

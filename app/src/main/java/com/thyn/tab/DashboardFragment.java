@@ -90,7 +90,7 @@ public class DashboardFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_dashboard, container, false);
 
         Toolbar myToolbar = (Toolbar) view.findViewById(R.id.my_toolbar);
-        ((AppCompatActivity)getActivity()).getSupportActionBar().setTitle("Requests and Errands");
+        ((AppCompatActivity)getActivity()).getSupportActionBar().setTitle("Home");
 
         mViewPager = (ViewPager)view.findViewById(R.id.viewpager);
         mSlidingTabLayout = (SlidingTabLayout)view.findViewById(R.id.sliding_tabs);

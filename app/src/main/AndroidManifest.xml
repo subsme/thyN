@@ -62,7 +62,7 @@
             android:label="@string/app_name"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".task.TaskActivity"
+            android:name=".task.edit.TaskActivity"
             android:label="@string/app_name"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="stateHidden">
@@ -80,7 +80,7 @@
             android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.thyn.task.TaskActivity" />
+                android:value="com.thyn.task.edit.TaskActivity" />
         </activity>
         <activity
             android:name=".user.SignupActivity"

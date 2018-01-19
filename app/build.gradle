@@ -4,7 +4,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 23
-    buildToolsVersion "23.0.2"
+    buildToolsVersion '25.0.0'
     defaultConfig {
         applicationId "com.thyn"
         minSdkVersion 16
@@ -40,5 +40,8 @@ dependencies {
     compile 'com.google.android.gms:play-services-auth:9.6.1'
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile 'com.google.android.gms:play-services-places:9.6.1'
+    compile 'com.google.api-client:google-api-client:1.23.0'
 }
 apply plugin: 'com.google.gms.google-services'
+//sourceCompatibility = 1.8  // App Engine Standard uses Java 8
+//targetCompatibility = 1.8  // App Engine Standard uses Java 8

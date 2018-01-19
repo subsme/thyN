@@ -358,6 +358,7 @@ public class thynTaskDBHelper  extends SQLiteOpenHelper {
 
             task.setTaskTimeRange(getString(getColumnIndex(COLUMN_TASK_TIME_SERVICED)));
             task.setDistance(getDouble(getColumnIndex(COLUMN_TASK_DISTANCE)));
+            if(getString(getColumnIndex(COLUMN_TASK_HELPER_PROFILE_KEY)) != null) task.setIsAccepted(true);// If someone accepted to help.
 
             return task;
         }

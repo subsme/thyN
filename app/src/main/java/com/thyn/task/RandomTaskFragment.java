@@ -3,6 +3,7 @@ package com.thyn.task;
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.location.Address;
@@ -43,6 +44,7 @@ import com.google.api.client.util.DateTime;
 import com.thyn.R;
 import com.thyn.android.backend.myTaskApi.model.MyTask;
 import com.thyn.android.backend.userAPI.model.APIGeneralResult;
+import com.thyn.broadcast.GcmRegistrationIntentService;
 import com.thyn.collection.Task;
 import com.thyn.common.MyServerSettings;
 import com.thyn.connection.GoogleAPIConnector;
@@ -300,6 +302,13 @@ public class RandomTaskFragment extends Fragment {
                 manager.beginTransaction().replace(R.id.navigation_fragment_container,
                         thumbsUpFragment,
                         thumbsUpFragment.getTag()).commit();
+
+                Log.d(TAG, "Registering the user to the Topic: topic_thyN_" + mTask.getId()); //mtask.getid() is null
+                Context c = getActivity().getApplicationContext();
+                Intent intent = new Intent(c, GcmRegistrationIntentService.class);
+                intent.putExtra(GcmRegistrationIntentService.KEY, GcmRegistrationIntentService.SUBSCRIBE);
+                intent.putExtra(GcmRegistrationIntentService.TOPIC, mTask.getId());
+                getActivity().startService(intent);
             }
         });
         /* Subu Hiding the floating action button
@@ -402,8 +411,8 @@ public class RandomTaskFragment extends Fragment {
                 mTaskLocation.setText(place.getAddress());
 
                 LatLng LatLong = place.getLatLng();
-                mLAT = LatLong.latitude;
-                mLONG = LatLong.longitude;
+                this.mLAT = LatLong.latitude;
+                this.mLONG = LatLong.longitude;
                 Geocoder mGeocoder = new Geocoder(getActivity(), Locale.getDefault());
                 try {
                     List<Address> addresses = mGeocoder.getFromLocation(mLAT, mLONG, 1);
@@ -491,7 +500,7 @@ public class RandomTaskFragment extends Fragment {
                 String socialID = MyServerSettings.getUserSocialId(getActivity());
                 int socialType = MyServerSettings.getUserSocialType(getActivity());
                 //Log.d(TAG, "Sending user profile id:" + userprofileid);
-                //GoogleAPIConnector.connect_TaskAPI().insertMyTask(userprofileid, a).execute();
+                //GoogleAPIConnector.connect_TaskAPI().sMyTask(userprofileid, a).execute();
                 Log.d(TAG, "Sending user profile id:" + (socialType==0?"facebook":"google") + ", socialID: " + socialID );
                 GoogleAPIConnector.connect_TaskAPI().insertMyTaskWithSocialID(socialID, socialType, a).execute();
                 //return myApiService2.sayHi("joojoo").execute().getData();
@@ -501,15 +510,17 @@ public class RandomTaskFragment extends Fragment {
 
             return null;
         }
-
+        /**
+         * Called after doInBackground() method
+         * This method runs on the UI thread
+         */
         @Override
         protected void onPostExecute(Void v) {
 
             if (dialog != null && dialog.isShowing()) {
                 dialog.dismiss();
             }
-
-        }
+         }
 
         private MyTask copyToEndpointTask(Task task){
             MyTask myTask = new MyTask();

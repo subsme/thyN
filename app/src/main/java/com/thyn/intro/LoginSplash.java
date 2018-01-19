@@ -76,6 +76,7 @@ public class LoginSplash extends AppCompatActivity {
         private Activity activity;
         private boolean shouldWeShowBasicProfileScreen = false;
         Context c = null;
+        private boolean databaseCorrupt = false;
 
         public SendToServerAsyncTask(Activity activity) {
             this.activity = activity;
@@ -107,26 +108,35 @@ public class LoginSplash extends AppCompatActivity {
                 if (rslt != null && rslt.getResult().getStatusCode() != null) {
 
                     String message = rslt.getResult().getMessage();
-                    Log.d(TAG, "78The message from the server is: " + message);
-                    Log.d(TAG, "The user profile id is: " + rslt.getProfileID());
-                    MyServerSettings.initializeUserProfileID(c, rslt.getProfileID());
-                    MyServerSettings.initializeUserName(c, rslt.getName());
-                    Log.d(TAG, "Profile ID set: " + MyServerSettings.getUserProfileId(c));
-                    Log.d(TAG, "Neighbors helped" + rslt.getNumNeighbrsHelped());
-                    Log.d(TAG, "points gathered " + rslt.getThyNPoints());
-                    MyServerSettings.initializeNumNeighbrsIHelped(c, rslt.getNumNeighbrsHelped());
-                    MyServerSettings.initializePoints(c, rslt.getThyNPoints());
-                    MyServerSettings.initializeUserAddress(c, rslt.getAddress(), rslt.getAptNo(), rslt.getCity(), Double.toString(rslt.getLatitude()), Double.toString(rslt.getLongitude()));
-                    MyServerSettings.initializeUserPhone(c, rslt.getPhone());
-                    Log.d(TAG, "Setting local cache with user info from the server:- "
-                            + "address: " + rslt.getAddress()
-                            + "aptno: " + rslt.getAptNo()
-                            + " city: " + rslt.getCity()
-                            + " LAT: " + MyServerSettings.getUserLAT(c)
-                            + " LONG: " + MyServerSettings.getUserLNG(c));
-                    if (!rslt.getBasicprofileInfo()) {
-                        Log.d(TAG, "We dont have profile information(phone, address) for the user");
-                        shouldWeShowBasicProfileScreen = true;
+                    Log.d(TAG, "The message from the server is: " + message);
+                    if(message != null && message.equalsIgnoreCase("Database Corrupt")){
+                        MyServerSettings.clearDefaultCache(c); // clear the cache because production/dev database is corrupt and it doesnt have user information.
+                        databaseCorrupt = true;
+                        Log.d(TAG, "Calling on cancel");
+                        cancel(true);
+
+                    }
+                    else {
+                        Log.d(TAG, "The user profile id is: " + rslt.getProfileID());
+                        MyServerSettings.initializeUserProfileID(c, rslt.getProfileID());
+                        MyServerSettings.initializeUserName(c, rslt.getName());
+                        Log.d(TAG, "Profile ID set: " + MyServerSettings.getUserProfileId(c));
+                        Log.d(TAG, "Neighbors helped" + rslt.getNumNeighbrsHelped());
+                        Log.d(TAG, "points gathered " + rslt.getThyNPoints());
+                        MyServerSettings.initializeNumNeighbrsIHelped(c, rslt.getNumNeighbrsHelped());
+                        MyServerSettings.initializePoints(c, rslt.getThyNPoints());
+                        MyServerSettings.initializeUserAddress(c, rslt.getAddress(), rslt.getAptNo(), rslt.getCity(), Double.toString(rslt.getLatitude()), Double.toString(rslt.getLongitude()));
+                        MyServerSettings.initializeUserPhone(c, rslt.getPhone());
+                        Log.d(TAG, "Setting local cache with user info from the server:- "
+                                + "address: " + rslt.getAddress()
+                                + "aptno: " + rslt.getAptNo()
+                                + " city: " + rslt.getCity()
+                                + " LAT: " + MyServerSettings.getUserLAT(c)
+                                + " LONG: " + MyServerSettings.getUserLNG(c));
+                        if (!rslt.getBasicprofileInfo()) {
+                            Log.d(TAG, "We dont have profile information(phone, address) for the user");
+                            shouldWeShowBasicProfileScreen = true;
+                        }
                     }
                 }
             } catch (Exception e) {
@@ -140,6 +150,15 @@ public class LoginSplash extends AppCompatActivity {
           /*  dialog = new ProgressDialog(activity);
             dialog.setMessage("Please wait");
             dialog.show();*/
+        }
+
+        @Override
+        protected void onCancelled(Void aVoid) {
+            super.onCancelled(aVoid);
+            Log.d(TAG, "Database corrupt. User doesnt exist. in OnCancelled. Starting IntroLogin...");
+            Intent intent = new Intent(getApplicationContext(), IntroLogin.class);
+            startActivity(intent);
+            finish();
         }
 
         @Override

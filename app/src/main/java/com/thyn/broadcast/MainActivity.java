@@ -62,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
                         .getBoolean(GCMPreferences.SENT_TOKEN_TO_SERVER, false);
                 if (sentToken) {
                     //mInformationTextView.setText(getString(R.string.gcm_send_message));
-                    Log.d(TAG, "The token has already been sent to the server. Starting MyTaskListActivity.class");
+                    Log.d(TAG, "The token has already been sent to the server. Starting WelcomePageActivity.class");
                     Intent i = new Intent(getBaseContext(), WelcomePageActivity.class);
                     startActivity(i);
                 } else {

@@ -1,32 +1,25 @@
 package com.thyn.tab;
 
-import android.content.Intent;
 import android.os.Bundle;
 
 
 
 import com.thyn.tab.view.SlidingTabLayout;
-import com.thyn.task.RandomTaskActivity;
 import com.thyn.task.RandomTaskFragment;
-import com.thyn.task.TaskActivity;
 import com.thyn.tasklist.TaskListFragment;
 import com.thyn.tasklist.iwillhelp.IWillHelpTaskListFragment;
-import com.thyn.tasklist.my.MyTaskListFragment;
 
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ImageView;
 
 
@@ -99,6 +92,7 @@ public class DashboardActivity extends AppCompatActivity {
     private void createNewTask(){
         RandomTaskFragment randomTaskFragment = new RandomTaskFragment();
         FragmentManager manager = getSupportFragmentManager();
+        Log.d(TAG, "creating New Task");
         manager.beginTransaction().replace(R.id.navigation_fragment_container,
                 randomTaskFragment,
                 randomTaskFragment.getTag()).commit();

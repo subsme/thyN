@@ -333,7 +333,8 @@ public class MyServerSettings {
     }
 
     public static int getFilterRadius(Context c){
-        return PreferenceManager.getDefaultSharedPreferences(c).getInt(MyServerSettings.PREF_FILTER_RADIUS,20);
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(c);
+        return sp.getInt(MyServerSettings.PREF_FILTER_RADIUS,20);
     }
 
 }

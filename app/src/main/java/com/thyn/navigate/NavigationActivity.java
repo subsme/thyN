@@ -19,6 +19,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
@@ -34,22 +35,52 @@ import com.thyn.tab.DashboardFragment;
 import com.thyn.tab.FilterFragment;
 import com.thyn.tab.WelcomePageFragment;
 import com.thyn.task.RandomTaskFragment;
+import com.thyn.task.view.chat.ChatRoomFragment;
+import com.thyn.task.view.iwillhelp.TaskIWillHelpPagerViewOnlyFragment;
 import com.thyn.tasklist.my.MyTaskListFragment;
+import com.thyn.user.notification.NotificationFragment;
+import com.thyn.user.notification.dummy.DummyContent;
+import com.thyn.utilities.Utility;
 
 import java.io.File;
 
 public class NavigationActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, FilterFragment.OnFragmentInteractionListener {
+        implements NavigationView.OnNavigationItemSelectedListener,
+        FilterFragment.OnFragmentInteractionListener,
+        NotificationFragment.OnListFragmentInteractionListener
+        {
     private static String TAG="NavigationActivity";
     private FloatingActionButton fab = null;
     private MyTaskLab manager;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Subu 05/15/17 Hiding soft keyboard when NavigationActivity is pressed.
+        //Subu - 05/15/17 Need to test this piece below to hide the keyboard input.
+        //doesnt work - delete thisUtility.hideKeyboard(this);
+        Log.d(TAG, "NavigationActivity onCreate()....");
         setContentView(R.layout.activity_navigation);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         Context c = getApplicationContext();
+
+        /* If I get notified by a message, then I go to the task that the message is associated with */
+        String chatroomBroadcast = (String)getIntent().getSerializableExtra("broadcast");
+        if(chatroomBroadcast != null){
+            String taskID = (String) getIntent()
+                    .getSerializableExtra(com.thyn.task.view.iwillhelp.TaskIWillHelpPagerViewOnlyFragment.EXTRA_TASK_ID);
+            Long taskIDLong = null;
+            if(taskID != null) {
+                taskIDLong = Long.parseLong(taskID);
+            }
+            Log.d(TAG, "chatroombroadcast set to yes. Task Id is " +  taskID);
+            TaskIWillHelpPagerViewOnlyFragment tFragment = new TaskIWillHelpPagerViewOnlyFragment();
+            FragmentManager manager = getSupportFragmentManager();
+            manager.beginTransaction().replace(R.id.navigation_fragment_container,
+                    tFragment,
+                    tFragment.getTag()).commit();
+
+        }
 
         fab = (FloatingActionButton) findViewById(R.id.fab);
 
@@ -61,7 +92,28 @@ public class NavigationActivity extends AppCompatActivity
         });
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close){
+            @Override
+            public void onDrawerClosed(View drawerView) {
+                super.onDrawerClosed(drawerView);
+            }
+
+            @Override
+            public void onDrawerOpened(View drawerView) {
+                super.onDrawerOpened(drawerView);
+                InputMethodManager inputMethodManager = (InputMethodManager)
+                        getSystemService(Context.INPUT_METHOD_SERVICE);
+                inputMethodManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+            }
+
+            @Override
+            public void onDrawerSlide(View drawerView, float slideOffset) {
+                super.onDrawerSlide(drawerView, slideOffset);
+                InputMethodManager inputMethodManager = (InputMethodManager)
+                        getSystemService(Context.INPUT_METHOD_SERVICE);
+                inputMethodManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+            }
+        };
         drawer.addDrawerListener(toggle);
         toggle.syncState();
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
@@ -75,7 +127,7 @@ public class NavigationActivity extends AppCompatActivity
 
         TextView nav_address1 = (TextView) hView.findViewById(R.id.nav_address1);
         String address1 = MyServerSettings.getUserAddress(c);
-        if (address1.indexOf(",") > 0) {
+        if (address1 != null && address1.indexOf(",") > 0) {
             nav_address1.setText(address1.substring(0, address1.indexOf(",")));
         }
         TextView nav_address2 = (TextView) hView.findViewById(R.id.nav_address2);
@@ -118,6 +170,7 @@ public class NavigationActivity extends AppCompatActivity
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
+
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
@@ -178,6 +231,13 @@ public class NavigationActivity extends AppCompatActivity
                     basicProfileFragment,
                     basicProfileFragment.getTag()).commit();
         }
+        /*else if (id == R.id.nav_notification) {
+            NotificationFragment notificationFragment = NotificationFragment.newInstance(1);
+            FragmentManager manager = getSupportFragmentManager();
+            manager.beginTransaction().replace(R.id.navigation_fragment_container,
+                    notificationFragment,
+                    notificationFragment.getTag()).commit();
+        }*/
         else if(id == R.id.nav_openlogfolder && MyServerSettings.LOCAL_DEBUG){
 
             Intent emailIntent = new Intent(Intent.ACTION_SEND);
@@ -194,11 +254,10 @@ public class NavigationActivity extends AppCompatActivity
             emailIntent.putExtra(Intent.EXTRA_STREAM, uri);
             startActivity(Intent.createChooser(emailIntent, "Pick an Email provider"));
 
-        }
-        /*else if(id == R.id.nav_opendatabase && MyServerSettings.LOCAL_DEBUG){
+        }else if(id == R.id.nav_opendatabase && MyServerSettings.LOCAL_DEBUG){
             Intent dbmanager = new Intent(getApplicationContext(), AndroidDatabaseManager.class);
             startActivity(dbmanager);
-        }*/
+        }
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
@@ -211,7 +270,7 @@ public class NavigationActivity extends AppCompatActivity
     public void hideFloatingActionButton() {
         fab.hide();
     }
-    private void createNewTask(){
+    private void createNewTask() {
         /*Intent i = new Intent(this, RandomTaskActivity.class);
         startActivity(i);*/
         RandomTaskFragment randomTaskFragment = new RandomTaskFragment();
@@ -221,6 +280,7 @@ public class NavigationActivity extends AppCompatActivity
                 randomTaskFragment.getTag()).commit();
 
     }
+     @Override
     public void onFragmentInteraction(Filter filter){
         //To be implemeted eventually.
 
@@ -236,4 +296,10 @@ public class NavigationActivity extends AppCompatActivity
 
 
     }
-}
+
+     @Override
+      public void onListFragmentInteraction(DummyContent.MessageItem item) {
+         Log.d(TAG, "Working on " + item.content);
+       }
+
+ }
