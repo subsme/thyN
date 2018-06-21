@@ -44,6 +44,10 @@ public class MyTask extends EntityObject{
     @Ignore
     private double distanceFromOrigin;
 
+    @Index
+    private Long groupId;
+    private String groupName;
+
     public String getImageURL() {
         return imageURL;
     }
@@ -220,5 +224,21 @@ public class MyTask extends EntityObject{
 
     public void setDistanceFromOrigin(double distanceFromOrigin) {
         this.distanceFromOrigin = distanceFromOrigin;
+    }
+
+    public Long getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(Long groupId) {
+        this.groupId = groupId;
+    }
+
+    public String getGroupName() {
+        return groupName;
+    }
+
+    public void setGroupName(String groupName) {
+        this.groupName = groupName;
     }
 }

@@ -8,6 +8,7 @@ import com.thyn.backend.entities.MyTask;
 
 import com.thyn.backend.entities.log.Log_Action;
 import com.thyn.backend.entities.users.communication.Message;
+import com.thyn.backend.entities.users.userGroups.UserGroup;
 import com.thyn.backend.utilities.Logger;
 import com.thyn.backend.entities.users.User;
 import com.thyn.backend.entities.users.Profile;
@@ -24,6 +25,7 @@ public class OfyService {
         factory().register(Device.class);
         factory().register(Log_Action.class);
         factory().register(Message.class);
+        factory().register(UserGroup.class);
         Logger.logInfo("Performed Classes registrations");
     }
 

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:clickable="true"
+    tools:context="com.thyn.user.userGroup.JoinUserGroupFragment">
+    <TextView
+        android:id="@+id/group_text_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/hello_blank_fragment" />
+    <EditText android:id="@+id/join_group_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="text"
+        />
+    <Button android:id="@+id/join_group_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:text="JOIN GROUP"
+        style="?android:attr/borderlessButtonStyle"
+        />
+    <Button android:id="@+id/start_group_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:text="START GROUP"
+        style="?android:attr/borderlessButtonStyle"
+        />
+    </LinearLayout>
+

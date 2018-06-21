@@ -21,8 +21,8 @@
             android:id="@+id/nav_openlogfolder"
             android:title="Email Log File" />
         <item
-            android:id="@+id/nav_openlogfolder"
-            android:title="Email Log File" />
+            android:id="@+id/nav_join_group"
+            android:title="Join Group" />
         <item
             android:id="@+id/nav_opendatabase"
             android:title="Email Log File" />

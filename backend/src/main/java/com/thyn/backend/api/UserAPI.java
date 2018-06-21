@@ -18,6 +18,8 @@ import com.googlecode.objectify.cmd.Query;
 import com.thyn.backend.entities.MyTask;
 import com.thyn.backend.entities.log.Log_Action;
 import com.thyn.backend.entities.users.communication.Message;
+import com.thyn.backend.entities.users.userGroups.UserGroup;
+import com.thyn.backend.entities.users.userGroups.UserGroupAssociation;
 import com.thyn.backend.gcm.GcmSender;
 import com.thyn.backend.utilities.security.ExternalAuthentication;
 import com.thyn.backend.utilities.security.ExternalLogonPackage;
@@ -356,6 +358,64 @@ public class UserAPI {
         user.setPhone(phone);
         ofy().save().entity(user).now();
         return new APIGeneralResult("OK", "Extra profile information added.");
+    }
+
+    @ApiMethod(name = "joinGroup", httpMethod = HttpMethod.POST, path="joinGroup")
+    public APIGeneralResult joinGroup(@Named("socialType") int socialType, @Named("socialID") String socialID, @Named("groupName") String groupName){
+        logger.info("User: " + socialID + ", socialType: " + socialType + " is joining the group: " + groupName);
+
+        User user = null;
+        if(socialType == 0) {//Facebook login
+            user = DatastoreHelpers.tryLoadEntityFromDatastore(User.class, "fbUserId ==", socialID);
+        }
+        else{//Google Login
+            user = DatastoreHelpers.tryLoadEntityFromDatastore(User.class, "googUserId ==", socialID);
+        }
+        if(user == null) return new APIGeneralResult(0, "Fail", "User is null in joinGroup");
+
+        UserGroup ug = null;
+        groupName = groupName.trim();
+        if(groupName != null || !groupName.equals("")){
+            ug = DatastoreHelpers.tryLoadEntityFromDatastore(UserGroup.class, "groupName ==", groupName);
+        }
+        if(ug == null) return new APIGeneralResult(0, "Fail", "UserGroup retrieved from the database is null");
+        UserGroupAssociation ugs = new UserGroupAssociation(user.getId(), user.getName(), ug.getId(), ug.getGroupName(),true);
+
+        try {
+            ofy().save().entity(ugs).now();
+        }
+        catch(Exception e){
+            return new APIGeneralResult(0, "Fail", "Exception raised while saving the UserGroupAssociation object");
+        }
+        return new APIGeneralResult("OK", "New Group Created.");
+
+    }
+
+    @ApiMethod(name = "startGroup", httpMethod = HttpMethod.POST, path="startGroup")
+    public APIGeneralResult startGroup(@Named("socialType") int socialType, @Named("socialID") String socialID, @Named("groupID") String groupName){
+        logger.info("User: " + socialID + ", socialType: " + socialType + " is starting the group " + groupName);
+
+        User user = null;
+        if(socialType == 0) {//Facebook login
+            user = DatastoreHelpers.tryLoadEntityFromDatastore(User.class, "fbUserId ==", socialID);
+        }
+        else{//Google Login
+            user = DatastoreHelpers.tryLoadEntityFromDatastore(User.class, "googUserId ==", socialID);
+        }
+
+        if(user == null) return new APIGeneralResult(0, "Fail", "User is null in startGroup");
+
+        UserGroup ug = new UserGroup(groupName,new Date(),null);
+        UserGroupAssociation ugs = new UserGroupAssociation(user.getId(), user.getName(), ug.getId(), ug.getGroupName(),true);
+        try {
+            ofy().save().entity(ugs).now();
+            ofy().save().entity(ug).now();
+        }
+        catch(Exception e){
+            e.printStackTrace();
+            return new APIGeneralResult(0, "Fail", "Exception raised while saving the UserGroup and UserGroupAssociation object in the database");
+        }
+        return new APIGeneralResult("OK", "New Group Created.");
     }
 
         @ApiMethod(name = "insertMyTaskWithSocialID", httpMethod = HttpMethod.POST, path="mytask/insertmytaskwithsocialid")

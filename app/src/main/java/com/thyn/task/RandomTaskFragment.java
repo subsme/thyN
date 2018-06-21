@@ -496,7 +496,7 @@ public class RandomTaskFragment extends Fragment {
                 //Log.d(TAG, params[0].toString());
                 //a.setTaskDescription("take off homie 2");
                 //return myApiService.replay(2,a).execute().getTaskDescription();
-                Long userprofileid = MyServerSettings.getUserProfileId(getActivity());
+               // Long userprofileid = MyServerSettings.getUserProfileId(getActivity());
                 String socialID = MyServerSettings.getUserSocialId(getActivity());
                 int socialType = MyServerSettings.getUserSocialType(getActivity());
                 //Log.d(TAG, "Sending user profile id:" + userprofileid);

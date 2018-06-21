@@ -40,6 +40,7 @@ import com.thyn.task.view.iwillhelp.TaskIWillHelpPagerViewOnlyFragment;
 import com.thyn.tasklist.my.MyTaskListFragment;
 import com.thyn.user.notification.NotificationFragment;
 import com.thyn.user.notification.dummy.DummyContent;
+import com.thyn.user.userGroup.JoinUserGroupFragment;
 import com.thyn.utilities.Utility;
 
 import java.io.File;
@@ -230,6 +231,13 @@ public class NavigationActivity extends AppCompatActivity
             manager.beginTransaction().replace(R.id.navigation_fragment_container,
                     basicProfileFragment,
                     basicProfileFragment.getTag()).commit();
+        }
+        else if (id == R.id.nav_join_group) {
+            JoinUserGroupFragment joinUserGroupFragment = JoinUserGroupFragment.newInstance("", "");
+            FragmentManager manager = getSupportFragmentManager();
+            manager.beginTransaction().replace(R.id.navigation_fragment_container,
+                    joinUserGroupFragment,
+                    joinUserGroupFragment.getTag()).commit();
         }
         /*else if (id == R.id.nav_notification) {
             NotificationFragment notificationFragment = NotificationFragment.newInstance(1);
